@@ -1,0 +1,23 @@
+{
+  "name": "vortex",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Vortex / GOS3 v2.4 — runtime padrão de invocação verificável para LLMs",
+  "gos3": {
+    "fase": "Discovery → Technical Refinement",
+    "proposer": "Claude",
+    "papel": "NxN · Proposer",
+    "registro": "docs/proposals/claude/README.md"
+  },
+  "scripts": {
+    "test:grok": "ts-node src/agents/grok/tests/contract.test.ts",
+    "grok:ping": "ts-node src/agents/grok/adapter/index.ts --fixture=ping",
+    "grok:echo": "ts-node src/agents/grok/adapter/index.ts --fixture=echo",
+    "grok:dry": "ts-node src/agents/grok/adapter/index.ts --fixture=dry"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4",
+    "ts-node": "^10.9.2",
+    "@types/node": "^20.14.10"
+  }
+}

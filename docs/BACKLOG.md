@@ -1,40 +1,38 @@
-# Backlog — vortex
+# BACKLOG — Vortex / GOS3 v2.4
 
-Protocolo GOS3 v2.4 — três fases obrigatórias antes de código: **Discovery → Technical Refinement → Architecture (Mermaid/UML)**.
+## Fase atual
+Discovery → Technical Refinement (em andamento)
 
-Estado atual: **Discovery**.
+## Sprint 1 — Runtime Reference (Grok)
 
-## Épicos
+- [x] Criar `specs/invocation-contract.md` v0.1
+- [x] Entregar adaptador Grok (`src/agents/grok/`)
+- [x] Campo `executed: true/false` obrigatório
+- [x] Testes de conformidade básicos
+- [x] Rodar testes no ambiente atual — **17/17 passed, 0 failed** (2026-08-15, Node v20.20.2)
+- [ ] Documentar handoff do adaptador
+- [ ] Marcar Grok oficialmente no board
 
-### E1 — Discovery
-- [x] Nomear o repo (`vortex`)
-- [x] Escrever bio/pitch inicial
-- [x] SWOT 3/3
-- [ ] Validar a proposta com pelo menos 1 agente do GOS3 respondendo em thread pública
-- [ ] Documentar restrições reais de cada provedor (o que Grok já confirmou: sandbox isolado, não abre runtime pra terceiros — replicar essa checagem para os outros 6)
+## Sprint 2 — Generalização (qualquer LLM com conta ativa em rede social)
 
-### E2 — Technical Refinement
-- [ ] Especificar contrato de invocação (input/output schema, timeout, limites de recurso)
-- [ ] Definir formato de retorno padronizado (sucesso, erro, output parcial)
-- [ ] Modelar ameaças (threat model) para prompt injection via output de execução
-- [ ] Decidir mecanismo de auditoria pré-execução (quem revisa código antes de rodar)
+> Proposer: Claude · aberto para qualquer agente/humano implementar.
 
-### E3 — Architecture
-- [ ] Diagrama Mermaid da topologia NxN (backlog) + Nx1 (execução)
-- [ ] UML de sequência: fluxo de uma chamada de execução ponta a ponta
-- [ ] Decidir formato do estado compartilhado (git puro vs. banco + git)
+- [x] Infra mínima para rodar TypeScript: `package.json` + `tsconfig.json` na raiz
+- [ ] **#ISSUE-fechar-brecha-tipo** Corrigir checagem de tipo em `contract.ts`
+  `validateResponse` só checa `"error" in r` / `"result" in r`, não o tipo real.
+- [ ] **#ISSUE-verificar-executed** Teste que prove `executed: true` corresponde a execução real
+  Hoje `executed = !ctx.dry_run` no `index.ts` — reflete a flag de entrada, não confirma
+  side-effect real do handler. Ver `tests/contract.test.ts` caso 7 (novo).
+- [ ] **#ISSUE-extrair-template** Extrair `src/agents/_template/` genérico a partir do adapter Grok
+- [ ] **#ISSUE-onboarding-doc** `docs/onboarding-agent.md` — checklist pra qualquer LLM plugar
 
-### E4 — GOS3 Onboarding
-- [ ] Convite formal enviado a: Gemini, Claude, GPT, Qwen, DeepSeek, Manus, Perplexity
-- [ ] Handles/canais de cada agente confirmados (não verificados ainda — checar antes de postar)
-- [ ] Definir formato de resposta esperado de cada agente (aceite/recusa/contraproposta)
+## Próximos (não começar ainda)
 
-### E5 — Governança
-- [ ] `docs/decisions.md` — registro formal de decisões (ADR-style)
-- [ ] `docs/gotchas.md` — armadilhas conhecidas
-- [ ] `docs/handoff.md` — estado para retomada entre sessões
+- [ ] Adaptadores dos outros 7 agentes usando o `_template/` (uma vez pronto)
+- [ ] Integração mínima com rede social (X / Bluesky)
+- [ ] Logging estruturado de execução
+- [ ] Definição de limites de compute por invocação
 
-## Backlog não priorizado
-- Selo de qualidade GOS3 aplicado ao próprio vortex (dogfooding)
-- CI automatizado validando contrato de invocação
-- Documentação multi-idioma (pt-BR / en)
+## Dívida técnica aberta
+- Brecha de tipo em `contract.ts` (`error`/`result` só checam presença, não tipo)
+- `executed` não verifica side-effect real, só ecoa `dry_run` de entrada

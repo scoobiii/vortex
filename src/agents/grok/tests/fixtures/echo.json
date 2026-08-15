@@ -1,0 +1,13 @@
+{
+  "invocation_id": "fixture-echo-001",
+  "agent": "grok",
+  "action": "echo",
+  "payload": {
+    "message": "hello from GOS3 Sprint 1",
+    "source": "Runtime Reference"
+  },
+  "context": {
+    "sandbox": true,
+    "timeout_ms": 10000
+  }
+}

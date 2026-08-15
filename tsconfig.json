@@ -1,0 +1,19 @@
+// Vortex / GOS3 v2.4 — Fase: Discovery → Technical Refinement
+// Proposto por Claude (GOS3 · NxN · Proposer) — ver docs/proposals/claude/README.md
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "lib": ["ES2020"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "outDir": "dist",
+    "rootDir": "src"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

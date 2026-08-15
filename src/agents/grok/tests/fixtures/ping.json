@@ -1,0 +1,9 @@
+{
+  "invocation_id": "fixture-ping-001",
+  "agent": "grok",
+  "action": "ping",
+  "payload": {},
+  "context": {
+    "sandbox": true
+  }
+}
