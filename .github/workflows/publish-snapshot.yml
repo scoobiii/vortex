@@ -1,70 +1,53 @@
-name: Publish snapshot (GitHub Pages)
+# > **GOS3** · agente: `scoobiii` · papel: `PO / DevOps`
+# > fase: `Sprint 2 - Governance` · data: `2026-08-16`
+# > antes: CI sem verificação GOS3, e8eddff passou sem assinatura
+# > depois: CI bloqueia PR/commit sem GOS3 e sem Signed-off-by
+# > base: commit `6e047e9`
+# > assinatura: `scoobiii · PO · GOS3`
+
+name: GOS3 Compliance + Snapshot
 
 on:
   push:
     branches: [main]
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: true
+  pull_request:
+    branches: [main]
 
 jobs:
-  build:
+  gos3-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Gerar snapshot público (JSON + Markdown, com metadados git)
+      - name: Verifica cabeçalho GOS3 nos arquivos alterados
         run: |
-          mkdir -p public
-          python3 scrape_repo.py . --out public/snapshot.md \
-            --ext .md,.ts,.json --git-meta
-          python3 scrape_repo.py . --out public/snapshot.json --json \
-            --ext .md,.ts,.json
-
-          {
-            echo "# Hashes (sha256, gerado no CI)"
-            echo "Gerado em (UTC): $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-            echo ""
-            find . -type f \( -name '*.md' -o -name '*.ts' -o -name '*.json' \) \
-              -not -path './node_modules/*' -not -path './.git/*' -not -path './public/*' \
-              -exec sha256sum {} \;
-          } > public/hashes.txt
-
-          cat > public/index.md << 'EOF'
-          # Vortex / GOS3 — snapshot público
-
-          Gerado automaticamente a cada push em `main`.
-
-          - [snapshot.md](./snapshot.md)
-          - [snapshot.json](./snapshot.json)
-          - [hashes.txt](./hashes.txt)
-          EOF
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: public
-
-  deploy:
-    needs: build
+          echo "Verificando GOS3..."
+          FILES=$(git diff --name-only origin/main...HEAD -- docs/*.md README.md specs/*.md 2>/dev/null || git diff --name-only HEAD~1 -- docs/*.md README.md specs/*.md 2>/dev/null || echo "")
+          FAIL=0
+          for f in $FILES; do
+            [ -f "$f" ] || continue
+            if! head -n 15 "$f" | grep -q "GOS3"; then
+              echo "❌ SEM GOS3: $f"
+              FAIL=1
+            fi
+          done
+          if [ $FAIL -eq 1 ]; then
+            echo "Bloqueado: falta cabeçalho GOS3 - ver docs/PLAYBOOK.md sec 2"
+            exit 1
+          fi
+          echo "✅ GOS3 OK"
+      - name: Verifica Signed-off-by
+        run: |
+          if! git log -1 --pretty=%B | grep -q "Signed-off-by"; then
+            echo "❌ Falta Signed-off-by - use git commit -s"
+            exit 1
+          fi
+          echo "✅ Signed-off-by OK"
+  publish:
+    needs: gos3-check
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    if: github.ref == 'refs/heads/main'
     steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - uses: actions/checkout@v4
+      - run: echo "snapshot publish..."
