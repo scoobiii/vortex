@@ -1,0 +1,1138 @@
+# Git log
+```
+f908cde fix: recria scraper limpo sem header GOS3 invalido - corrige SyntaxError
+3a06afc fix: restaura scraper do 6ccddcb - remove GOS3 invalido linha 1
+29010c7 fix: corrige cabecalho GOS3 scraper - SyntaxError · U+00B7
+8411ba5 fix: publish snapshot to gh-pages
+19aefc5 fix: gh-pages checkout correto
+42b4dd6 fix: GITHUB_WORKSPACE correto - cp snapshot.md
+1f32f87 fix: publica gh-pages manual - peaceiris include falhando
+78d207b fix: path scripts/scrape_repo.py - corrige can't open file do 6ccddcb
+6ccddcb fix: workflow via python -c base64 sem heredoc
+541cef4 fix: publish real snapshot - base64 para evitar encoding do proot
+6b76b32 fix: assina subida da capa use-vortex-cover.png e8eddff - adiciona GOS3 no README - retroativo
+f044740 chore: ignora artefatos na verificação GOS3
+6f409bd fix: governance retroativo - adiciona GOS3 nos arquivos restantes - fecha verificação total
+88c1ab4 ci: bloqueia commit sem GOS3 e sem Signed-off-by - fecha gap e8eddff
+9c9335b fix: corrige publish-snapshot.yml para CLI real do scrape_repo.py
+b88b27f ci: trigger publish-snapshot após habilitar GitHub Pages
+4bcb5fe chore: versiona scrape_repo.py com cabeçalho GOS3
+13a053d ci: publica snapshot via GitHub Pages para agentes sem sandbox (fetch HTTP puro)
+6e047e9 feat: governance - pre-commit GOS3 obrigatório - fecha gap e8eddff
+e8eddff docs: adiciona capa USE VORTEX! no README - hash+tempo+log
+```
+
+# Git status
+```
+```
+
+
+## README.md
+```.md
+> **GOS3** · agente: `MetaAI Jr` · papel: `Branding / Capa`
+> fase: `Sprint 1 - Branding - Correção Retroativa` · data: `2026-08-16` · hora: `17:54:03 -03:00`
+> antes: e8eddff subiu docs/images/use-vortex-cover.png 4.3M sem GOS3 e sem Signed-off-by
+> depois: README com GOS3 compliance + assinatura + rastreio da capa USE VORTEX!
+> base: commit `e8eddff`
+> assinatura: `MetaAI Jr · Branding · GOS3 - corrigido por scoobiii · PO · GOS3`
+> imagem: `docs/images/use-vortex-cover.png` · 4.3M · hash: use-vortex-cover
+
+# vortex
+
+![USE VORTEX! - Python, LLMs, Sandbox & Runtime](docs/images/use-vortex-cover.png)
+
+> **Aprenda de verdade. Sem "funcionou aqui". Só resultados reais: HASH + TEMPO + LOG**
+
+> Não seria um sonho se existisse uma rede social onde o LLM com runtime sandbox e tools não fingisse que rodou o código? Vortex é o contrato que prova.
+
+> Estado persistente no backlog. Execução isolada por invocação. NxN pra propor, Nx1 pra rodar.
+
+Runtime padrão para LLMs executarem código de forma verificável — sem sandbox trancado, sem "cara de bunda" na conversa. Camada de execução efêmera separada da camada de estado (backlog/decisões/handoff), seguindo o protocolo **GOS3** (Gang of Seven Senior Scrum).
+
+## Por quê
+
+A maioria dos modelos (Claude, Gemini, GPT, Qwen, DeepSeek, Manus, Perplexity, Grok) roda sandbox isolado só para si — nenhum abre runtime para outro modelo. Isso resolve segurança, mas fragmenta verificação: cada modelo "confia no próprio texto" em vez de mostrar execução real.
+
+`vortex` propõe uma interface padrão de invocação — não um sandbox compartilhado (superfície de ataque grande demais), mas um contrato comum que qualquer LLM pode implementar sobre seu próprio runtime isolado.
+
+## Arquitetura
+
+Duas camadas, propositalmente separadas:
+
+| Camada | Padrão | Persistência | Risco |
+|---|---|---|---|
+| Execução (sandbox) | Nx1 — cada agente roda no seu próprio runtime | Nenhuma — efêmero por invocação | Injection, abuso de compute, exfiltração |
+| Time (Scrum) | NxN — todos leem/escrevem o mesmo estado | Total — backlog, decisions, handoff em git | Conflito de merge, ruído de coordenação |
+
+Vida real de Scrum team não é nem puro Nx1 nem puro NxN: é NxN assíncrono no estado compartilhado (backlog/PR/comments) + Nx1 síncrono na execução (cada agente roda isolado, mas lê/escreve no mesmo repo). É o padrão que git já resolve.
+
+## GOS3 — Gang of Seven Senior Scrum
+
+Convite aberto aos sete agentes:
+
+- Gemini
+- Claude
+- GPT
+- Qwen
+- DeepSeek
+- Manus
+- Perplexity
+
+Cada um roda seu próprio sandbox isolado (Nx1). Todos leem/propõem no mesmo backlog (NxN). Ninguém guarda estado de execução de ninguém.
+
+## SWOT 3/3
+
+**Forças**
+1. Isolamento por execução — sem estado entre chamadas, superfície de ataque mínima
+2. Estado persistente separado da execução (backlog/handoff em git, não no sandbox)
+3. Topologia híbrida testada: NxN assíncrono pra ideação, Nx1 síncrono pra rodar
+
+**Fraquezas**
+1. Nenhum provedor abre runtime pra modelo de fora — depende de todos aderirem
+2. Custo de infra por execução efêmera escala com nº de agentes ativos
+3. Auditoria de 7 agentes em paralelo ainda não tem tooling maduro
+
+**Oportunidades**
+1. Resolve o "cara de bunda" — resposta executada em vez de especulada, em qualquer LLM
+2. Interface padrão vira commodity: quem primeiro publicar spec aberta define o padrão
+3. GOS3 como selo de processo (engenharia) fica mais forte com execução verificável
+
+**Ameaças**
+1. Prompt injection via output de execução voltando pro contexto do modelo
+2. Abuso de compute público (scraping, mineração, ataque de rede saindo do runtime)
+3. Provedor concorrente lança padrão fechado antes e vira lock-in
+
+## Estrutura do repo
+
+Ver [`docs/tree.md`](docs/tree.md).
+
+## Status
+
+Fase: Discovery (GOS3 v2.4 — três fases obrigatórias antes de código: Discovery → Technical Refinement → Architecture/Mermaid-UML). Ver [`BACKLOG.md`](BACKLOG.md) e [`docs/decisions.md`](docs/decisions.md).
+
+---
+
+**scoobiii/vortex** · GOS3
+
+```
+
+
+## docs/BACKLOG.md
+```.md
+> **GOS3** · agente: `GPT` · papel: `Maintainer / Engineering Agent` (ver docs/team.md)
+> fase: `Technical Refinement (E2)` · data: `2026-08-16` · hora: `11:01:03 -03:00`
+> antes: contagem documental do Grok ainda registrava 17/17 testes
+> depois: contagem normalizada para 19/19, sem alteração de runtime ou contrato ativo
+> base: commit `19ee04f` (estado sincronizado antes desta correção)
+> assinatura: `GPT · Maintainer / Engineering Agent · GOS3`
+> commit: registrado pelo Git no commit que contém esta alteração
+
+# BACKLOG — Vortex / GOS3 v2.4
+
+## Fase atual
+Discovery → Technical Refinement (em andamento)
+
+## Sprint 1 — Runtime Reference (Grok)
+
+- [x] Criar `specs/invocation-contract.md` v0.1
+- [x] Entregar adaptador Grok (`src/agents/grok/`)
+- [x] Campo `executed: true/false` obrigatório
+- [x] Testes de conformidade básicos
+- [x] Rodar testes no ambiente atual — **19/19 passed, 0 failed** (2026-08-15, Node v20.20.2)
+- [x] Documentar handoff do adaptador
+- [x] Marcar Grok oficialmente no board
+
+## Sprint 2 — Generalização (qualquer LLM com conta ativa em rede social)
+
+> Proposer: Claude · aberto para qualquer agente/humano implementar.
+
+- [x] Infra mínima para rodar TypeScript: `package.json` + `tsconfig.json` na raiz
+- [ ] **#ISSUE-fechar-brecha-tipo** Corrigir checagem de tipo em `contract.ts`
+  `validateResponse` só checa `"error" in r` / `"result" in r`, não o tipo real.
+- [ ] **#ISSUE-verificar-executed** Teste que prove `executed: true` corresponde a execução real
+  Hoje `executed = !ctx.dry_run` no `index.ts` — reflete a flag de entrada, não confirma
+  side-effect real do handler. Ver `tests/contract.test.ts` caso 7 (novo).
+- [ ] **#ISSUE-extrair-template** Extrair `src/agents/_template/` genérico a partir do adapter Grok
+- [ ] **#ISSUE-onboarding-doc** `docs/onboarding-agent.md` — checklist pra qualquer LLM plugar
+
+## Próximos (não começar ainda)
+
+- [ ] Adaptadores dos outros 7 agentes usando o `_template/` (uma vez pronto)
+- [ ] Integração mínima com rede social (X / Bluesky)
+- [ ] Logging estruturado de execução
+- [ ] Definição de limites de compute por invocação
+
+## Dívida técnica aberta
+- Brecha de tipo em `contract.ts` (`error`/`result` só checam presença, não tipo)
+- `executed` não verifica side-effect real, só ecoa `dry_run` de entrada
+
+```
+
+
+## docs/CHANGELOG.md
+```.md
+> **GOS3** · agente: `GPT` · papel: `Maintainer / Engineering Agent` (ver docs/team.md)
+> fase: `Technical Refinement (E2)` · data: `2026-08-16` · hora: `11:01:03 -03:00`
+> antes: registro histórico do teste ainda dizia 17/17
+> depois: registro histórico normalizado para 19/19, preservando a evidência de execução real
+> base: commit `19ee04f` (estado sincronizado antes desta correção)
+> assinatura: `GPT · Maintainer / Engineering Agent · GOS3`
+> commit: registrado pelo Git no commit que contém esta alteração
+
+# Changelog
+
+Todas as mudanças relevantes do projeto vortex, seguindo Keep a Changelog adaptado ao protocolo GOS3.
+
+## [Unreleased]
+
+### Adicionado
+- `package.json` + `tsconfig.json` na raiz — infra mínima pra rodar TypeScript (`npm install && npm run test:grok`)
+- 7º caso de teste em `contract.test.ts`: verifica que `executed: true` não é confundido com side-effect comprovado
+
+### Verificado
+- **Testes do adaptador Grok rodados de fato, ambiente real**: 19/19 passed, 0 failed
+  (2026-08-15, Node v20.20.2, `npx ts-node src/agents/grok/tests/contract.test.ts`)
+  Primeiro executável real do Sprint 1 — antes disso, testes existiam como código mas
+  nunca tinham sido rodados (faltava `package.json`/`tsconfig.json`).
+
+### Alterado
+- BACKLOG.md: item "Rodar testes no ambiente atual" marcado `[x]` com evidência
+
+### Pendente
+- Documentar handoff do adaptador
+- Adaptadores dos outros 7 agentes
+- Integração mínima com X / Bluesky
+- Corrigir checagem de tipo em `contract.ts` (`error`/`result`)
+
+## [0.0.1] — 2026-08-14
+### Adicionado
+- Repositório criado: github.com/scoobiii/vortex
+- Arquitetura em duas camadas: execução Nx1 + estado NxN
+- SWOT 3/3 inicial
+- Convite formal ao GOS3
+
+```
+
+
+## docs/PLAYBOOK.md
+```.md
+# PLAYBOOK — Vortex / GOS3
+
+Convenções de processo pro time NxN (qualquer agente/humano que mexer neste repo).
+Formalizado a partir de práticas que já apareciam soltas em `docs/handoff.md`
+e em commits anteriores, nunca antes reunidas num arquivo único.
+
+## 1. Governança de mudanças em contrato/segurança
+
+Mudança em `specs/invocation-contract.md`, em qualquer draft de versão futura
+do contrato (`docs/proposals/invocation-contract-*`), ou em qualquer coisa que
+afete segurança/acesso **nunca é merge automático**, mesmo que pareça pequena
+ou vinda de outro agente do GOS3. Decisão passa pelo PO-humano antes de virar
+implementação.
+
+Isso vale mesmo quando a mudança chega via `git pull`/`fetch` de `origin/main`
+— divergência de contrato se resolve com diff explícito e decisão registrada,
+não com pull cego.
+
+## 2. Cabeçalho GOS3 (obrigatório em arquivo novo ou editado por um agente)
+
+Todo arquivo criado ou editado por um agente do GOS3 — não só documentos,
+também specs e propostas — leva este bloco no topo:
+
+```markdown
+> **GOS3** · agente: `<nome>` · papel: `<papel>` (ver docs/team.md)
+> fase: `<fase do backlog>` · data: `<AAAA-MM-DD>` · hora: `<HH:MM:SS TZ>`
+> antes: <estado de 1 linha antes desta mudança>
+> depois: <o que esta mudança entrega/altera>
+> base: commit `<hash>` (se aplicável — ancestral que este arquivo parte)
+> assinatura: `<nome do agente> · <papel> · GOS3`
+> commit: registrado pelo Git no commit que contém esta alteração
+```
+
+Objetivo: qualquer agente (ou humano) que pegar o repo depois sabe o antes/durante/depois,
+por quem e quando — sem precisar reconstruir isso via `git log` ou perguntar.
+
+Não é retroativo por padrão — só se aplica a partir de agora, em arquivos
+que um agente de fato criar ou tocar. Arquivos antigos não ganham o cabeçalho
+só por terem sido lidos ou referenciados.
+
+---
+
+**scoobiii/vortex** · GOS3
+
+```
+
+
+## docs/exemplo.md
+```.md
+> **GOS3** · agente: `scoobiii` · papel: `PO / DevOps` 
+> fase: `Sprint 2 - Governance` · data: `2026-08-16` · hora: `15:05:00 -03:00` 
+> antes: hook de GOS3 não existia, e8eddff passou sem assinatura
+> depois: pre-commit bloqueia commit sem GOS3, governança NxN garantida
+> base: commit `e8eddff`
+> assinatura: `scoobiii · PO / DevOps · GOS3`
+> commit: registrado pelo Git no commit que contém esta alteração
+
+Conteúdo real aqui...
+
+```
+
+
+## docs/handoff.md
+```.md
+> **GOS3** · agente: `GPT` · papel: `Maintainer / Engineering Agent` (ver docs/team.md)
+> fase: `Technical Refinement (E2)` · data: `2026-08-16` · hora: `11:18:18 -03:00`
+> antes: Sprint 1 estava marcado como 5/7 e o item de confirmação do Grok permanecia pendente no handoff
+> depois: Sprint 1 passa a 7/7 e o handoff fica alinhado ao board, onde Grok já está confirmado
+> base: commit `0ff03dc`
+> assinatura: `GPT · Maintainer / Engineering Agent · GOS3`
+> commit: registrado pelo Git no commit que contém esta alteração
+
+# docs/handoff.md — Vortex / GOS3 v2.4
+
+> Fase: Discovery → Technical Refinement
+> Última atualização: 2026-08-15
+
+Estado para retomada entre sessões/agentes. Se você é o próximo a mexer neste
+repo (humano ou LLM), comece por aqui antes de reler tudo do zero.
+
+## Onde o projeto está agora
+
+**Sprint 1 (Runtime Reference — Grok): 7/7 itens fechados.**
+
+- [x] `specs/invocation-contract.md` v0.1
+- [x] Adaptador Grok (`src/agents/grok/`)
+- [x] Campo `executed: true/false` obrigatório
+- [x] Testes de conformidade (7 casos, `contract.test.ts`)
+- [x] **Rodar testes no ambiente atual — 19/19 passed, 0 failed**
+      (2026-08-15, Node v20.20.2, `npm run test:grok`)
+- [x] Documentar handoff do adaptador *(este arquivo cobre isso agora)*
+- [x] Marcar Grok oficialmente no board (`docs/team.md` — status confirmado,
+      com data/evidência)
+
+## O que precisou ser corrigido pra sair do papel
+
+O código do adaptador (`contract.ts`, `handler.ts`, `index.ts`, `types.ts`,
+`contract.test.ts`) já existia e parecia pronto, mas **nunca tinha sido
+executado**: faltava `package.json` e `tsconfig.json` na raiz. Sem isso,
+`npx ts-node ...` falhava com `TypeError: Cannot read properties of
+undefined (reading 'fileExists')` — sintoma de `typescript` ausente e
+nenhum tsconfig pra configurar o compilador.
+
+Adicionados (raiz do repo):
+- `package.json` — declara `typescript`, `ts-node`, `@types/node` como
+  devDependencies + scripts (`test:grok`, `grok:ping`, `grok:echo`, `grok:dry`)
+- `tsconfig.json` — `target: ES2020`, `module: CommonJS` (necessário porque
+  `index.ts` usa `require.main === module`, padrão CommonJS)
+
+Isso importa como lição geral: **"código existe" ≠ "código roda"**. Todo
+próximo adaptador (outros 6 agentes) deve ter esse mesmo passo de infra
+verificado antes de marcar qualquer item de teste como concluído.
+
+## Dívida técnica conhecida (não bloqueante, mas documentada)
+
+1. **`contract.ts` — checagem de tipo incompleta.**
+   `validateResponse` verifica `"error" in r` e `"result" in r` (presença),
+   não o tipo. Um `response.error = 42` passaria na validação hoje.
+
+2. **`executed: true` não prova execução real — só ecoa a entrada.**
+   Em `index.ts`: `executed: !ctx.dry_run`. Isso reflete a flag que o
+   *chamador* mandou no request, não confirma que o handler causou algum
+   efeito observável. O 7º caso de teste (`contract.test.ts`) documenta essa
+   lacuna deliberadamente — ele passa hoje justamente para provar que o
+   contrato aceita esse cenário sem reclamar. Não é falha de teste, é alarme
+   permanente até alguém fechar a lacuna.
+
+   Critério que resolveria: response carregar evidência verificável de
+   execução (hash do resultado + timestamp assinado, ou side-effect
+   registrado em `logs` de forma estruturalmente distinguível de dry_run).
+
+3. **`docs/tree.md` desatualizado.** Lista só `README.md` + `docs/`, não
+   reflete `specs/` nem `src/` que já existem.
+
+## O que NÃO fazer sem escalar pro PO-humano
+
+Regra de `docs/PLAYBOOK.md` (se ainda não existir no repo, ver seção de
+governança abaixo): mudança em `specs/invocation-contract.md` ou em
+qualquer coisa que afete segurança/acesso nunca é merge automático, mesmo
+que pareça pequena.
+
+## Próximos passos sugeridos, em ordem
+
+1. Fechar os 2 itens restantes do Sprint 1 (handoff = feito agora; marcar
+   Grok no board = trivial, só atualizar `team.md`).
+2. Resolver a dívida técnica #2 acima antes de replicar o adaptador pros
+   outros 6 agentes — do contrário, os 7 herdam a mesma lacuna de auditoria.
+3. Extrair `src/agents/_template/` do adaptador Grok, separando o que é
+   específico-xAI do que é genérico (ver Sprint 2 no `BACKLOG.md`).
+4. Corrigir `docs/tree.md`.
+
+## Como verificar o estado por si mesmo (não confiar só neste texto)
+
+```bash
+cd ~/vortex
+npm install
+npm run test:grok
+# esperado: 19 passed, 0 failed
+git log --oneline -10
+git status
+```
+
+---
+*Registrado por Claude (GOS3 · NxN · Proposer) a partir de execução real
+confirmada pelo operador do repo. Ver `docs/proposals/claude/README.md`
+para histórico completo de propostas.*
+
+```
+
+
+## docs/proposals/invocation-contract-v0.2-draft.md
+```.md
+> **GOS3** · agente: `Claude` · papel: `Arquiteto/Tech Writer` (ver docs/team.md)
+> fase: `Technical Refinement (E2)` · data: `2026-08-16`
+> antes: v0.1 do contrato já implementado e testado (19/19) em specs/invocation-contract.md
+> depois: proposta v0.2 recebida via origin/main reclassificada como draft — shape incompatível, ver seção final
+> base: commit `f6d4db7` (origin/main) partindo de `24b4a6a` (ancestral comum)
+> convenção: ver docs/PLAYBOOK.md § Cabeçalho GOS3
+
+# Proposta: invocation-contract v0.2 (rascunho, não implementado)
+
+> Origem: recebido via `origin/main` (commit `f6d4db7`, "Create invocation-contract.md"),
+> autor original Claude (Arquiteto / Tech Writer, ver `docs/team.md`).
+> Reclassificado como proposta em vez de spec ativa porque o shape abaixo
+> **quebra compatibilidade** com o contrato v0.1 já implementado e testado
+> (`specs/invocation-contract.md`, adaptador Grok, 19/19 testes).
+> Ver seção "Diferenças que bloqueiam merge direto" no final.
+
+Status: **Technical Refinement** (E2 do backlog). Não implementado — só especificação.
+
+Escopo: define o formato mínimo de input/output que qualquer adaptador `src/agents/<agente>/` deve respeitar para que uma invocação Nx1 (execução isolada) seja auditável e comparável entre os 7 agentes do GOS3, sem exigir runtime compartilhado.
+
+## Princípio
+
+O contrato não roda código nem abre sandbox de ninguém. Ele padroniza **o que entra** e **o que sai** de uma invocação — cada agente continua executando no seu próprio runtime isolado (Nx1). Isso resolve o problema original ("cara de bunda" na conversa): a saída declara o que foi de fato executado, em formato verificável, em vez de texto solto.
+
+## Request
+
+```json
+{
+  "contract_version": "0.2",
+  "invocation_id": "uuid-v4",
+  "agent": "claude | gemini | gpt | qwen | deepseek | manus | perplexity",
+  "task": {
+    "kind": "code_exec | shell | tool_call",
+    "payload": "string — código, comando ou chamada de tool, opaco ao contrato",
+    "language": "string opcional — ex: python, bash, node"
+  },
+  "limits": {
+    "timeout_seconds": "int, obrigatório",
+    "max_output_bytes": "int, obrigatório"
+  },
+  "context_ref": "string opcional — referência ao item do backlog/handoff que originou a invocação (NxN)"
+}
+```
+
+## Response
+
+```json
+{
+  "contract_version": "0.2",
+  "invocation_id": "uuid-v4 — mesmo da request",
+  "agent": "mesmo campo do request",
+  "status": "success | error | partial | timeout",
+  "executed": "bool — true só se código/comando de fato rodou no runtime do agente",
+  "output": {
+    "stdout": "string, truncado em max_output_bytes",
+    "stderr": "string, truncado em max_output_bytes",
+    "exit_code": "int opcional"
+  },
+  "duration_ms": "int",
+  "truncated": "bool — true se output excedeu max_output_bytes"
+}
+```
+
+## Regras obrigatórias
+
+1. `executed: false` é permitido (ex: o agente decidiu não rodar por segurança) mas **nunca pode vir acompanhado de `status: success`** — evita o caso de resposta especulada travestida de execução real.
+2. `invocation_id` do response deve ecoar o do request — permite correlação em log e no `docs/handoff.md`.
+3. Nenhum campo do contrato exige acesso a runtime de outro agente. Um adaptador que não consiga cumprir isso (ex: provedor não expõe API programática de execução) declara isso em `docs/gotchas.md`, não quebra o contrato.
+4. `payload` é opaco ao contrato — o contrato não interpreta código, só envelopa input/output.
+
+## Em aberto (não decidido — não travar Sprint 1 por isso)
+
+- Formato de erro estruturado (`error.code`, `error.message`) — hoje só texto livre em `stderr`.
+- Se `context_ref` deve ser obrigatório (rastreabilidade) ou opcional (fricção menor pra adotar).
+- Assinatura/hash do output para auditoria — depende de decisão de segurança ainda não tomada (ver ameaça 1 do SWOT: prompt injection via output voltando pro contexto).
+- **Novo, adicionado nesta reclassificação:** o v0.1 implementado usa `context.dry_run` como campo central (2 dos 7 casos de teste do adaptador Grok dependem dele). O v0.2 não tem equivalente — precisa decidir se `dry_run` vira parte de `task` ou `limits`, ou se `status: partial`/`timeout` já cobre o caso de uso sem precisar do flag explícito.
+
+## Próximo passo
+
+Cada agente do GOS3 implementa um adaptador de referência em `src/agents/<agente>/` que aceita este request e devolve este response, rodando **no seu próprio runtime**. Ver `docs/BACKLOG.md` → E2 e E3.
+
+## Diferenças que bloqueiam merge direto com v0.1 (adicionado nesta reclassificação)
+
+| Campo | v0.1 (implementado) | v0.2 (esta proposta) |
+|---|---|---|
+| Payload | `action` + `payload` (flat) | `task.kind` + `task.payload` + `task.language` |
+| Limites | `context.timeout_ms` | `limits.timeout_seconds` + `limits.max_output_bytes` |
+| dry_run | `context.dry_run` (usado em 2 testes) | ausente |
+| Resultado | `result` + `error` + `logs[]` | `status` + `output.{stdout,stderr,exit_code}` + `truncated` |
+
+Adotar v0.2 como está exige reescrever `contract.ts`, `handler.ts`, `index.ts`, `types.ts` e `contract.test.ts` do adaptador Grok — não é extensão aditiva, é troca de shape. Decisão para o PO-humano antes de qualquer implementação (regra do projeto: mudança em contrato/segurança nunca é merge automático).
+
+---
+
+**scoobiii/vortex** · GOS3 · autor original: Claude (Arquiteto / Tech Writer, ver `docs/team.md`)
+
+```
+
+
+## docs/team.md
+```.md
+# Team — GOS3 (Gang of Seven + Reference)
+
+## Agentes no board (NxN)
+
+| Agente       | Papel atual          | Status      |
+|--------------|----------------------|-------------|
+| Gemini       | Proposer             | Convidado   |
+| Claude       | Proposer             | Ativo (Sprint 2 — Generalização) |
+| GPT          | Proposer             | Convidado   |
+| Qwen         | Proposer             | Convidado   |
+| DeepSeek     | Proposer             | Convidado   |
+| Manus        | Proposer             | Convidado   |
+| Perplexity   | Proposer             | Convidado   |
+
+## Runtime Reference (Nx1)
+
+| Agente | Papel                              | Status     |
+|--------|-------------------------------------|------------|
+| Grok   | Runtime Reference / Sandbox Validator | **Confirmado** — 19/19 testes passed (2026-08-15) |
+
+Grok é o primeiro adaptador real do `invocation-contract.md` v0.1.
+Não guarda estado de execução de ninguém.
+Serve de referência verificável para os demais agentes.
+
+Confirmação: testes rodados de fato em ambiente real
+(`npm run test:grok`, Node v20.20.2), 19/19 passed, 0 failed.
+Ver `docs/handoff.md` para dívida técnica conhecida associada.
+
+```
+
+
+## docs/tree.md
+```.md
+> **GOS3** · agente: `scoobiii` · papel: `PO / DevOps`
+> fase: `Sprint 2 - Governance` · data: `2026-08-16` · hora: `17:44:56 -03:00`
+> antes: tree.md sem cabeçalho GOS3, bloqueado pelo hook 6e047e9
+> depois: tree.md com 28 files + GOS3 compliance, libera CI
+> base: commit `6e047e9`
+> assinatura: `scoobiii · PO · GOS3`
+
+# Vortex — Repository Tree
+
+```text
+.
+├── .github
+│   └── workflows
+│       └── publish-snapshot.yml
+├── docs
+│   ├── images
+│   │   └── use-vortex-cover.png
+│   ├── proposals
+│   │   └── invocation-contract-v0.2-draft.md
+│   ├── BACKLOG.md
+│   ├── CHANGELOG.md
+│   ├── PLAYBOOK.md
+│   ├── exemplo.md
+│   ├── handoff.md
+│   ├── team.md
+│   └── tree.md
+├── scripts
+│   └── hooks
+│       └── pre-commit
+├── specs
+│   └── invocation-contract.md
+├── src
+│   └── agents
+│       └── grok
+│           ├── adapter
+│           │   ├── contract.ts
+│           │   ├── handler.ts
+│           │   ├── index.ts
+│           │   └── types.ts
+│           ├── logs
+│           │   └── .gitkeep
+│           ├── tests
+│           │   ├── fixtures
+│           │   │   ├── echo.json
+│           │   │   └── ping.json
+│           │   └── contract.test.ts
+│           └── README.md
+├── .gitignore
+├── README.md
+├── package-lock.json
+├── package.json
+├── repo_dump.md
+├── scrape_repo.py
+└── tsconfig.json
+
+16 directories, 28 files
+```
+
+**scoobiii/vortex · GOS3**
+
+```
+
+
+## package-lock.json
+```.json
+{
+  "name": "vortex",
+  "version": "0.0.1",
+  "lockfileVersion": 3,
+  "requires": true,
+  "packages": {
+    "": {
+      "name": "vortex",
+      "version": "0.0.1",
+      "devDependencies": {
+        "@types/node": "^20.14.10",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.5.4"
+      }
+    },
+    "node_modules/@cspotcode/source-map-support": {
+      "version": "0.8.1",
+      "resolved": "https://registry.npmjs.org/@cspotcode/source-map-support/-/source-map-support-0.8.1.tgz",
+      "integrity": "sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@jridgewell/trace-mapping": "0.3.9"
+      },
+      "engines": {
+        "node": ">=12"
+      }
+    },
+    "node_modules/@jridgewell/resolve-uri": {
+      "version": "3.1.2",
+      "resolved": "https://registry.npmjs.org/@jridgewell/resolve-uri/-/resolve-uri-3.1.2.tgz",
+      "integrity": "sha512-bRISgCIjP20/tbWSPWMEi54QVPRZExkuD9lJL+UIxUKtwVJA8wW1Trb1jMs1RFXo1CBTNZ/5hpC9QvmKWdopKw==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": ">=6.0.0"
+      }
+    },
+    "node_modules/@jridgewell/sourcemap-codec": {
+      "version": "1.5.5",
+      "resolved": "https://registry.npmjs.org/@jridgewell/sourcemap-codec/-/sourcemap-codec-1.5.5.tgz",
+      "integrity": "sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og==",
+      "dev": true,
+      "license": "MIT"
+    },
+    "node_modules/@jridgewell/trace-mapping": {
+      "version": "0.3.9",
+      "resolved": "https://registry.npmjs.org/@jridgewell/trace-mapping/-/trace-mapping-0.3.9.tgz",
+      "integrity": "sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@jridgewell/resolve-uri": "^3.0.3",
+        "@jridgewell/sourcemap-codec": "^1.4.10"
+      }
+    },
+    "node_modules/@tsconfig/node10": {
+      "version": "1.0.13",
+      "resolved": "https://registry.npmjs.org/@tsconfig/node10/-/node10-1.0.13.tgz",
+      "integrity": "sha512-gcLdvR9HO1ZJBypsOGqaP6TFEzb6vIta0KSTLt9NAQ6pXQO3cRgSVyCN6pzYqI9DlJgY71XKO0dpDhCf08b3pg==",
+      "dev": true,
+      "license": "MIT"
+    },
+    "node_modules/@tsconfig/node12": {
+      "version": "1.0.11",
+      "resolved": "https://registry.npmjs.org/@tsconfig/node12/-/node12-1.0.11.tgz",
+      "integrity": "sha512-cqefuRsh12pWyGsIoBKJA9luFu3mRxCA+ORZvA4ktLSzIuCUtWVxGIuXigEwO5/ywWFMZ2QEGKWvkZG1zDMTag==",
+      "dev": true,
+      "license": "MIT"
+    },
+    "node_modules/@tsconfig/node14": {
+      "version": "1.0.3",
+      "resolved": "https://registry.npmjs.org/@tsconfig/node14/-/node14-1.0.3.tgz",
+      "integrity": "sha512-ysT8mhdixWK6Hw3i1V2AeRqZ5WfXg1G43mqoYlM2nc6388Fq5jcXyr5mRsqViLx/GJYdoL0bfXD8nmF+Zn/Iow==",
+      "dev": true,
+      "license": "MIT"
+    },
+    "node_modules/@tsconfig/node16": {
+      "version": "1.0.4",
+      "resolved": "https://registry.npmjs.org/@tsconfig/node16/-/node16-1.0.4.tgz",
+      "integrity": "sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==",
+      "dev": true,
+      "license": "MIT"
+    },
+    "node_modules/@types/node": {
+      "version": "20.19.43",
+      "resolved": "https://registry.npmjs.org/@types/node/-/node-20.19.43.tgz",
+      "integrity": "sha512-6oYBAi5ikg4Pl+kGsoYtawUMBT2zZMCvPNF7pVLnHZfd1zf38DRiWn/gT01RYCdUqkv7Fhr+C9ot4/tb+2sVvA==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "undici-types": "~6.21.0"
+      }
+    },
+    "node_modules/acorn": {
+      "version": "8.18.0",
+      "resolved": "https://registry.npmjs.org/acorn/-/acorn-8.18.0.tgz",
+      "integrity": "sha512-lGq+9yr1/GuAWaVYIHRjvvySG5/4VfKIvC8EWxStPdcDh/Ka7FG3twP6v4d5BkravUilhIAsG4Qj83t02LWUPQ==",
+      "dev": true,
+      "license": "MIT",
+      "bin": {
+        "acorn": "bin/acorn"
+      },
+      "engines": {
+        "node": ">=0.4.0"
+      }
+    },
+    "node_modules/acorn-walk": {
+      "version": "8.3.5",
+      "resolved": "https://registry.npmjs.org/acorn-walk/-/acorn-walk-8.3.5.tgz",
+      "integrity": "sha512-HEHNfbars9v4pgpW6SO1KSPkfoS0xVOM/9UzkJltjlsHZmJasxg8aXkuZa7SMf8vKGIBhpUsPluQSqhJFCqebw==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "acorn": "^8.11.0"
+      },
+      "engines": {
+        "node": ">=0.4.0"
+      }
+    },
+    "node_modules/arg": {
+      "version": "4.1.3",
+      "resolved": "https://registry.npmjs.org/arg/-/arg-4.1.3.tgz",
+      "integrity": "sha512-58S9QDqG0Xx27YwPSt9fJxivjYl432YCwfDMfZ+71RAqUrZef7LrKQZ3LHLOwCS4FLNBplP533Zx895SeOCHvA==",
+      "dev": true,
+      "license": "MIT"
+    },
+    "node_modules/create-require": {
+      "version": "1.1.1",
+      "resolved": "https://registry.npmjs.org/create-require/-/create-require-1.1.1.tgz",
+      "integrity": "sha512-dcKFX3jn0MpIaXjisoRvexIJVEKzaq7z2rZKxf+MSr9TkdmHmsU4m2lcLojrj/FHl8mk5VxMmYA+ftRkP/3oKQ==",
+      "dev": true,
+      "license": "MIT"
+    },
+    "node_modules/diff": {
+      "version": "4.0.4",
+      "resolved": "https://registry.npmjs.org/diff/-/diff-4.0.4.tgz",
+      "integrity": "sha512-X07nttJQkwkfKfvTPG/KSnE2OMdcUCao6+eXF3wmnIQRn2aPAHH3VxDbDOdegkd6JbPsXqShpvEOHfAT+nCNwQ==",
+      "dev": true,
+      "license": "BSD-3-Clause",
+      "engines": {
+        "node": ">=0.3.1"
+      }
+    },
+    "node_modules/make-error": {
+      "version": "1.3.6",
+      "resolved": "https://registry.npmjs.org/make-error/-/make-error-1.3.6.tgz",
+      "integrity": "sha512-s8UhlNe7vPKomQhC1qFelMokr/Sc3AgNbso3n74mVPA5LTZwkB9NlXf4XPamLxJE8h0gh73rM94xvwRT2CVInw==",
+      "dev": true,
+      "license": "ISC"
+    },
+    "node_modules/ts-node": {
+      "version": "10.9.2",
+      "resolved": "https://registry.npmjs.org/ts-node/-/ts-node-10.9.2.tgz",
+      "integrity": "sha512-f0FFpIdcHgn8zcPSbf1dRevwt047YMnaiJM3u2w2RewrB+fob/zePZcrOyQoLMMO7aBIddLcQIEK5dYjkLnGrQ==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@cspotcode/source-map-support": "^0.8.0",
+        "@tsconfig/node10": "^1.0.7",
+        "@tsconfig/node12": "^1.0.7",
+        "@tsconfig/node14": "^1.0.0",
+        "@tsconfig/node16": "^1.0.2",
+        "acorn": "^8.4.1",
+        "acorn-walk": "^8.1.1",
+        "arg": "^4.1.0",
+        "create-require": "^1.1.0",
+        "diff": "^4.0.1",
+        "make-error": "^1.1.1",
+        "v8-compile-cache-lib": "^3.0.1",
+        "yn": "3.1.1"
+      },
+      "bin": {
+        "ts-node": "dist/bin.js",
+        "ts-node-cwd": "dist/bin-cwd.js",
+        "ts-node-esm": "dist/bin-esm.js",
+        "ts-node-script": "dist/bin-script.js",
+        "ts-node-transpile-only": "dist/bin-transpile.js",
+        "ts-script": "dist/bin-script-deprecated.js"
+      },
+      "peerDependencies": {
+        "@swc/core": ">=1.2.50",
+        "@swc/wasm": ">=1.2.50",
+        "@types/node": "*",
+        "typescript": ">=2.7"
+      },
+      "peerDependenciesMeta": {
+        "@swc/core": {
+          "optional": true
+        },
+        "@swc/wasm": {
+          "optional": true
+        }
+      }
+    },
+    "node_modules/typescript": {
+      "version": "5.9.3",
+      "resolved": "https://registry.npmjs.org/typescript/-/typescript-5.9.3.tgz",
+      "integrity": "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==",
+      "dev": true,
+      "license": "Apache-2.0",
+      "bin": {
+        "tsc": "bin/tsc",
+        "tsserver": "bin/tsserver"
+      },
+      "engines": {
+        "node": ">=14.17"
+      }
+    },
+    "node_modules/undici-types": {
+      "version": "6.21.0",
+      "resolved": "https://registry.npmjs.org/undici-types/-/undici-types-6.21.0.tgz",
+      "integrity": "sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==",
+      "dev": true,
+      "license": "MIT"
+    },
+    "node_modules/v8-compile-cache-lib": {
+      "version": "3.0.1",
+      "resolved": "https://registry.npmjs.org/v8-compile-cache-lib/-/v8-compile-cache-lib-3.0.1.tgz",
+      "integrity": "sha512-wa7YjyUGfNZngI/vtK0UHAN+lgDCxBPCylVXGp0zu59Fz5aiGtNXaq3DhIov063MorB+VfufLh3JlF2KdTK3xg==",
+      "dev": true,
+      "license": "MIT"
+    },
+    "node_modules/yn": {
+      "version": "3.1.1",
+      "resolved": "https://registry.npmjs.org/yn/-/yn-3.1.1.tgz",
+      "integrity": "sha512-Ux4ygGWsu2c7isFWe8Yu1YluJmqVhxqK2cLXNQA5AcC3QfbGNpM7fu0Y8b/z16pXLnFxZYvWhd3fhBY9DLmC6Q==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": ">=6"
+      }
+    }
+  }
+}
+
+```
+
+
+## package.json
+```.json
+{
+  "name": "vortex",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Vortex / GOS3 v2.4 — runtime padrão de invocação verificável para LLMs",
+  "gos3": {
+    "fase": "Discovery → Technical Refinement",
+    "proposer": "Claude",
+    "papel": "NxN · Proposer",
+    "registro": "docs/proposals/claude/README.md"
+  },
+  "scripts": {
+    "test:grok": "ts-node src/agents/grok/tests/contract.test.ts",
+    "grok:ping": "ts-node src/agents/grok/adapter/index.ts --fixture=ping",
+    "grok:echo": "ts-node src/agents/grok/adapter/index.ts --fixture=echo",
+    "grok:dry": "ts-node src/agents/grok/adapter/index.ts --fixture=dry"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4",
+    "ts-node": "^10.9.2",
+    "@types/node": "^20.14.10"
+  }
+}
+
+```
+
+
+## scrape_repo.py
+```.py
+#!/usr/bin/env python3
+"""
+scrape_repo.py — Snapshot/dump genérico de código, arquivos ou repositórios.
+"""
+import argparse
+import pathlib
+import subprocess
+
+def main():
+    p = argparse.ArgumentParser()
+    p.add_argument("path", nargs="?", default=".")
+    p.add_argument("--git-meta", action="store_true")
+    p.add_argument("--out", default="snapshot.md")
+    args = p.parse_args()
+
+    root = pathlib.Path(args.path)
+    out = pathlib.Path(args.out)
+
+    lines = []
+    if args.git_meta:
+        try:
+            log = subprocess.check_output(["git","log","--oneline","-20"], text=True)
+            lines.append("# Git log\n```\n"+log+"```\n")
+            status = subprocess.check_output(["git","status","--short"], text=True)
+            lines.append("# Git status\n```\n"+status+"```\n")
+        except Exception as e:
+            lines.append(f"# git-meta error {e}\n")
+
+    for f in sorted(root.rglob("*")):
+        if f.is_file() and ".git" not in str(f) and f.name not in ("snapshot.md",) and f.suffix in (".py",".yml",".yaml",".md",".json",".sh"):
+            try:
+                if f.stat().st_size < 200000:
+                    txt = f.read_text(errors="ignore")
+                    lines.append(f"\n## {f}\n```{f.suffix}\n{txt[:20000]}\n```\n")
+            except Exception:
+                pass
+
+    out.write_text("\n".join(lines), encoding="utf-8")
+    print(f"Wrote {out} {out.stat().st_size} bytes")
+
+if __name__ == "__main__":
+    main()
+
+```
+
+
+## scripts/scrape_repo.py
+```.py
+#!/usr/bin/env python3
+"""
+scrape_repo.py — Snapshot/dump genérico de código, arquivos ou repositórios.
+"""
+import argparse
+import pathlib
+import subprocess
+
+def main():
+    p = argparse.ArgumentParser()
+    p.add_argument("path", nargs="?", default=".")
+    p.add_argument("--git-meta", action="store_true")
+    p.add_argument("--out", default="snapshot.md")
+    args = p.parse_args()
+
+    root = pathlib.Path(args.path)
+    out = pathlib.Path(args.out)
+
+    lines = []
+    if args.git_meta:
+        try:
+            log = subprocess.check_output(["git","log","--oneline","-20"], text=True)
+            lines.append("# Git log\n```\n"+log+"```\n")
+            status = subprocess.check_output(["git","status","--short"], text=True)
+            lines.append("# Git status\n```\n"+status+"```\n")
+        except Exception as e:
+            lines.append(f"# git-meta error {e}\n")
+
+    for f in sorted(root.rglob("*")):
+        if f.is_file() and ".git" not in str(f) and f.name not in ("snapshot.md",) and f.suffix in (".py",".yml",".yaml",".md",".json",".sh"):
+            try:
+                if f.stat().st_size < 200000:
+                    txt = f.read_text(errors="ignore")
+                    lines.append(f"\n## {f}\n```{f.suffix}\n{txt[:20000]}\n```\n")
+            except Exception:
+                pass
+
+    out.write_text("\n".join(lines), encoding="utf-8")
+    print(f"Wrote {out} {out.stat().st_size} bytes")
+
+if __name__ == "__main__":
+    main()
+
+```
+
+
+## specs/invocation-contract.md
+```.md
+> **GOS3** · agente: `scoobiii` · papel: `PO / DevOps`
+> fase: `Sprint 2 - Governance Retroativo` · data: `2026-08-16` · hora: `17:47:49 -03:00`
+> antes: sem cabeçalho GOS3
+> depois: adiciona GOS3 compliance
+> base: commit `88c1ab4`
+> assinatura: `scoobiii · PO · GOS3`
+
+# invocation-contract.md v0.1
+
+## Objetivo
+Contrato comum para qualquer agente executar codigo de forma verificavel no seu proprio sandbox (Nx1).
+
+## Request
+- invocation_id: string
+- agent: string
+- action: string
+- payload: object
+- context.sandbox: boolean
+- context.timeout_ms: number
+- context.dry_run: boolean
+
+## Response (obrigatorio)
+- invocation_id: string
+- agent: string
+- executed: boolean (OBRIGATORIO)
+- result: object ou null
+- error: string ou null
+- logs: array de strings
+- duration_ms: number
+
+### Regras
+- executed true = realmente executou
+- executed false = dry_run ou erro
+- Response sempre respeita o shape, mesmo em erro
+
+```
+
+
+## src/agents/grok/README.md
+```.md
+> **GOS3** · agente: `scoobiii` · papel: `PO / DevOps`
+> fase: `Sprint 2 - Governance Retroativo` · data: `2026-08-16` · hora: `17:47:49 -03:00`
+> antes: sem cabeçalho GOS3
+> depois: adiciona GOS3 compliance
+> base: commit `88c1ab4`
+> assinatura: `scoobiii · PO · GOS3`
+
+# Grok — Runtime Reference / Sandbox Validator
+
+**Papel:** N×1 de referência do `invocation-contract.md` v0.1  
+**Status:** Sprint 1 — entregável inicial  
+**Agente:** Grok (xAI)
+
+## Objetivo
+
+Ser o primeiro adaptador real e verificável do contrato de invocação.
+Não depende de habilidade inventada de commit/PR. Entrega:
+
+1. Adaptador que fala o contrato (request/response JSON)
+2. Campo obrigatório `executed: true | false`
+3. Logs de execução
+4. Testes de contrato
+
+## Estrutura
+
+```
+src/agents/grok/
+├── README.md
+├── adapter/
+│   ├── index.ts          # ponto de entrada do adaptador
+│   ├── contract.ts       # tipos + validação do contrato
+│   ├── handler.ts        # lógica de execução no sandbox
+│   └── types.ts          # interfaces Request / Response
+├── tests/
+│   ├── contract.test.ts  # testes de conformidade
+│   └── fixtures/         # payloads de exemplo
+└── logs/
+    └── .gitkeep
+```
+
+## Contrato mínimo (v0.1)
+
+### Request
+```json
+{
+  "invocation_id": "string",
+  "agent": "grok",
+  "action": "string",
+  "payload": {},
+  "context": {
+    "sandbox": true,
+    "timeout_ms": 30000
+  }
+}
+```
+
+### Response
+```json
+{
+  "invocation_id": "string",
+  "agent": "grok",
+  "executed": true,
+  "result": {},
+  "error": null,
+  "logs": [],
+  "duration_ms": 123
+}
+```
+
+`executed` é **obrigatório**.  
+`true` = ação realmente executada no runtime.  
+`false` = validação/simulação sem side-effect.
+
+## Como rodar
+
+```bash
+# validação de contrato
+npx ts-node src/agents/grok/tests/contract.test.ts
+
+# execução manual
+npx ts-node src/agents/grok/adapter/index.ts --fixture=echo
+```
+
+```
+
+
+## src/agents/grok/tests/fixtures/echo.json
+```.json
+{
+  "invocation_id": "fixture-echo-001",
+  "agent": "grok",
+  "action": "echo",
+  "payload": {
+    "message": "hello from GOS3 Sprint 1",
+    "source": "Runtime Reference"
+  },
+  "context": {
+    "sandbox": true,
+    "timeout_ms": 10000
+  }
+}
+
+```
+
+
+## src/agents/grok/tests/fixtures/ping.json
+```.json
+{
+  "invocation_id": "fixture-ping-001",
+  "agent": "grok",
+  "action": "ping",
+  "payload": {},
+  "context": {
+    "sandbox": true
+  }
+}
+
+```
+
+
+## tsconfig.json
+```.json
+// Vortex / GOS3 v2.4 — Fase: Discovery → Technical Refinement
+// Proposto por Claude (GOS3 · NxN · Proposer) — ver docs/proposals/claude/README.md
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "lib": ["ES2020"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "outDir": "dist",
+    "rootDir": "src"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}
+
+```
