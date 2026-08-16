@@ -8,7 +8,7 @@ repo (humano ou LLM), comece por aqui antes de reler tudo do zero.
 
 ## Onde o projeto está agora
 
-**Sprint 1 (Runtime Reference — Grok): 5/7 itens fechados.**
+**Sprint 1 (Runtime Reference — Grok): 7/7 itens fechados.**
 
 - [x] `specs/invocation-contract.md` v0.1
 - [x] Adaptador Grok (`src/agents/grok/`)
@@ -16,7 +16,7 @@ repo (humano ou LLM), comece por aqui antes de reler tudo do zero.
 - [x] Testes de conformidade (7 casos, `contract.test.ts`)
 - [x] **Rodar testes no ambiente atual — 19/19 passed, 0 failed**
       (2026-08-15, Node v20.20.2, `npm run test:grok`)
-- [ ] Documentar handoff do adaptador *(este arquivo cobre isso agora)*
+- [x] Documentar handoff do adaptador *(este arquivo cobre isso agora)*
 - [ ] Marcar Grok oficialmente no board (`docs/team.md` — trocar status de
       "Ativo (Sprint 1)" para confirmado, com data/evidência)
 

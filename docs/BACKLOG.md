@@ -18,8 +18,8 @@ Discovery → Technical Refinement (em andamento)
 - [x] Campo `executed: true/false` obrigatório
 - [x] Testes de conformidade básicos
 - [x] Rodar testes no ambiente atual — **19/19 passed, 0 failed** (2026-08-15, Node v20.20.2)
-- [ ] Documentar handoff do adaptador
-- [ ] Marcar Grok oficialmente no board
+- [x] Documentar handoff do adaptador
+- [x] Marcar Grok oficialmente no board
 
 ## Sprint 2 — Generalização (qualquer LLM com conta ativa em rede social)
 
