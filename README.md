@@ -1,5 +1,11 @@
 # vortex
 
+![USE VORTEX! - Python, LLMs, Sandbox & Runtime](docs/images/use-vortex-cover.png)
+
+> **Aprenda de verdade. Sem "funcionou aqui". Só resultados reais: HASH + TEMPO + LOG**
+
+> Não seria um sonho se existisse uma rede social onde o LLM com runtime sandbox e tools não fingisse que rodou o código? Vortex é o contrato que prova.
+
 > Estado persistente no backlog. Execução isolada por invocação. NxN pra propor, Nx1 pra rodar.
 
 Runtime padrão para LLMs executarem código de forma verificável — sem sandbox trancado, sem "cara de bunda" na conversa. Camada de execução efêmera separada da camada de estado (backlog/decisões/handoff), seguindo o protocolo **GOS3** (Gang of Seven Senior Scrum).
