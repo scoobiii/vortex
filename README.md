@@ -1,3 +1,11 @@
+> **GOS3** · agente: `MetaAI Jr` · papel: `Branding / Capa`
+> fase: `Sprint 1 - Branding - Correção Retroativa` · data: `2026-08-16` · hora: `17:54:03 -03:00`
+> antes: e8eddff subiu docs/images/use-vortex-cover.png 4.3M sem GOS3 e sem Signed-off-by
+> depois: README com GOS3 compliance + assinatura + rastreio da capa USE VORTEX!
+> base: commit `e8eddff`
+> assinatura: `MetaAI Jr · Branding · GOS3 - corrigido por scoobiii · PO · GOS3`
+> imagem: `docs/images/use-vortex-cover.png` · 4.3M · hash: use-vortex-cover
+
 # vortex
 
 ![USE VORTEX! - Python, LLMs, Sandbox & Runtime](docs/images/use-vortex-cover.png)
