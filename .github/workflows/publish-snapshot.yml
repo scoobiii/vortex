@@ -17,12 +17,15 @@ jobs:
           python-version: '3.11'
       - run: python3 scripts/scrape_repo.py . --git-meta --out snapshot.md
       - run: |
+          echo "GHTOKGWORKSPACE=$GITHUB_WORKSPACE"
+          ls -lh $GITHUB_WORKSPACE/snapshot.md
           git config user.name "scoobiii"
           git config user.email "sobrinhosjs@gmail.com"
-          git fetch origin gh-pages:gh-pages || true
-          git checkout gh-pages || git checkout -- orphan gh-pages
-          cp ../../../../../..//../../../../snapshot.md ./ || cp $GITHUBIWORKSPACE/snapshot.md ./
+          git fetch origin gh-pages:ghpages || true
+          git checkout ghpages || git checkout ---orphan ghpages
+          cp $GITHUB_WORKSPACE/snapshot.md ./
           ls -lh snapshot.md
+          grep "1f32f87|73d207b|6ccddcb"  snapshot.md || true
           git add snapshot.md
           git commit -m "chore: publish snapshot ${{ github.sha }}" || echo "no change"
-          git push origin gh-pages
+          git push origin ghpages
