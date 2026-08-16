@@ -1,28 +1,48 @@
 name: GOS3 Compliance + Snapshot
+
 on:
   push:
     branches: [main]
   workflow_dispatch:
+
 jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-      - run: python3 scripts/scrape_repo.py . --git-meta --out snapshot.md
-      - run: |
-          ls -lh $GITHUB_WORKSPACE/snapshot.md
+          python-version: "3.11"
+
+      - name: Generate snapshot
+        run: |
+          python3 scripts/scrape_repo.py . --git-meta --out snapshot.md
+          test -s snapshot.md
+          cp snapshot.md /tmp/snapshot.md
+          echo "Snapshot:"
+          wc -c /tmp/snapshot.md
+
+      - name: Publish to gh-pages
+        run: |
           git config user.name "scoobiii"
-          git config user.email "sobrinhosjs@gmail.com"
-          git fetch origin gh-pages
-          git checkout gh-pages || git checkout ---orphan gh-pages
-          cp $GITHUB_WORKSPACE/snapshot.md ./
+          git config user.email "sobrinhosj@gmail.com"
+
+          git fetch origin gh-pages || true
+
+          if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
+            git checkout -B gh-pages origin/gh-pages
+          else
+            git checkout --orphan gh-pages
+            git rm -rf . || true
+          fi
+
+          cp /tmp/snapshot.md snapshot.md
           git add snapshot.md
           git commit -m "chore: publish snapshot ${{ github.sha }}" || echo nochange
           git push origin gh-pages
