@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# **GOS3** · agente: scoobiii · papel: PO / DevOps
+# fase: Sprint 2 - Governance Retroativo · data: 2026-08-16
+# assinatura: scoobiii · PO · GOS3
+
 """
 scrape_repo.py — Snapshot/dump genérico de código, arquivos ou repositórios.
 """
