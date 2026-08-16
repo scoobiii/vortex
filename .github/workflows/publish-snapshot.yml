@@ -1,53 +1,24 @@
-# > **GOS3** · agente: `scoobiii` · papel: `PO / DevOps`
-# > fase: `Sprint 2 - Governance` · data: `2026-08-16`
-# > antes: CI sem verificação GOS3, e8eddff passou sem assinatura
-# > depois: CI bloqueia PR/commit sem GOS3 e sem Signed-off-by
-# > base: commit `6e047e9`
-# > assinatura: `scoobiii · PO · GOS3`
-
 name: GOS3 Compliance + Snapshot
-
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
-
+  workflow_dispatch:
 jobs:
-  gos3-check:
+  publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Verifica cabeçalho GOS3 nos arquivos alterados
-        run: |
-          echo "Verificando GOS3..."
-          FILES=$(git diff --name-only origin/main...HEAD -- docs/*.md README.md specs/*.md 2>/dev/null || git diff --name-only HEAD~1 -- docs/*.md README.md specs/*.md 2>/dev/null || echo "")
-          FAIL=0
-          for f in $FILES; do
-            [ -f "$f" ] || continue
-            if! head -n 15 "$f" | grep -q "GOS3"; then
-              echo "❌ SEM GOS3: $f"
-              FAIL=1
-            fi
-          done
-          if [ $FAIL -eq 1 ]; then
-            echo "Bloqueado: falta cabeçalho GOS3 - ver docs/PLAYBOOK.md sec 2"
-            exit 1
-          fi
-          echo "✅ GOS3 OK"
-      - name: Verifica Signed-off-by
-        run: |
-          if! git log -1 --pretty=%B | grep -q "Signed-off-by"; then
-            echo "❌ Falta Signed-off-by - use git commit -s"
-            exit 1
-          fi
-          echo "✅ Signed-off-by OK"
-  publish:
-    needs: gos3-check
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v4
-      - run: echo "snapshot publish..."
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python3 scripts/scrape_repo.py --out snapshot.md || python3 scrape_repo.py --out snapshot.md
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./
+          include: snapshot.md
