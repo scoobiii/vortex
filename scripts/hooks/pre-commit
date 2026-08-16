@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# pre-commit — Vortex / GOS3
+#
+# NÃO autentica quem escreveu o quê. Só garante que nenhum arquivo tocado
+# entra no commit sem o cabeçalho GOS3 preenchido manualmente. Processo
+# continua honor-system (LLM não é agente Git com identidade própria) —
+# isso aqui só reduz esquecimento humano, não substitui assinatura real.
+#
+# Instalar: cp scripts/hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+
+set -euo pipefail
+
+REQUIRED_MARKER="\*\*GOS3\*\*"
+DOC_EXTENSIONS="md"
+
+missing=()
+
+# Só cobra cabeçalho em docs/specs novos ou modificados (extensão .md por ora)
+while IFS= read -r file; do
+  [[ -z "$file" ]] && continue
+  [[ ! -f "$file" ]] && continue  # arquivo deletado, pula
+  ext="${file##*.}"
+  [[ "$ext" != "$DOC_EXTENSIONS" ]] && continue
+
+  if ! grep -qE "$REQUIRED_MARKER" "$file"; then
+    missing+=("$file")
+  fi
+done < <(git diff --cached --name-only --diff-filter=ACM)
+
+if [[ ${#missing[@]} -gt 0 ]]; then
+  echo "❌ Commit bloqueado — falta cabeçalho GOS3 nestes arquivos:"
+  printf '   - %s\n' "${missing[@]}"
+  echo ""
+  echo "   Formato esperado (ver docs/PLAYBOOK.md, seção 2):"
+  echo "   > **GOS3** · agente: \`<nome>\` · papel: \`<papel>\`"
+  echo ""
+  echo "   Lembrete: isso NÃO autentica autoria, só registra rastreabilidade."
+  echo "   Pra pular em caso excepcional: git commit --no-verify"
+  exit 1
+fi
+
+exit 0
