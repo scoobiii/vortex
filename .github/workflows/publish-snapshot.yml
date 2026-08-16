@@ -1,11 +1,3 @@
-# Vortex / GOS3 v2.4 — Fase: Discovery → Technical Refinement
-# Proposto por Claude (GOS3 · NxN · Proposer) — ver docs/proposals/claude/README.md
-#
-# Resolve o problema de agentes sem sandbox (Meta app, GPT, etc.) que só
-# conseguem HTTP fetch simples e falham quando o repo não está indexado:
-# publica um snapshot estático via GitHub Pages, com URL fixa e pública,
-# atualizado a cada push em main. Não depende de busca, não depende de
-# sandbox do lado de quem acessa — só precisa de fetch HTTP.
 name: Publish snapshot (GitHub Pages)
 
 on:
@@ -34,25 +26,31 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Gerar snapshot público (JSON + Markdown, com hash e timestamp)
+      - name: Gerar snapshot público (JSON + Markdown, com metadados git)
         run: |
           mkdir -p public
-          python3 scrape_repo.py --root . --out public/snapshot.md \
-            --ext .md,.ts,.json \
-            --include-git-meta --include-hash
-          python3 scrape_repo.py --root . --out public/snapshot.json --json \
-            --ext .md,.ts,.json \
-            --include-hash
-          # index simples pra quem chegar via navegador/fetch sem saber o path exato
+          python3 scrape_repo.py . --out public/snapshot.md \
+            --ext .md,.ts,.json --git-meta
+          python3 scrape_repo.py . --out public/snapshot.json --json \
+            --ext .md,.ts,.json
+
+          {
+            echo "# Hashes (sha256, gerado no CI)"
+            echo "Gerado em (UTC): $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo ""
+            find . -type f \( -name '*.md' -o -name '*.ts' -o -name '*.json' \) \
+              -not -path './node_modules/*' -not -path './.git/*' -not -path './public/*' \
+              -exec sha256sum {} \;
+          } > public/hashes.txt
+
           cat > public/index.md << 'EOF'
           # Vortex / GOS3 — snapshot público
 
-          Gerado automaticamente a cada push em `main`. Fonte: git local do repo,
-          não é scraping de terceiros. Ver `docs/PLAYBOOK.md` no repo original
-          para o processo completo.
+          Gerado automaticamente a cada push em `main`.
 
-          - [snapshot.md](./snapshot.md) — dump legível, todo o conteúdo em um arquivo
-          - [snapshot.json](./snapshot.json) — mesmo conteúdo, estruturado, com hash sha256 por arquivo
+          - [snapshot.md](./snapshot.md)
+          - [snapshot.json](./snapshot.json)
+          - [hashes.txt](./hashes.txt)
           EOF
 
       - name: Upload artifact
