@@ -1,4 +1,9 @@
 /**
+ * GOS3 · agente: scoobiii · papel: Dev / Grok Adapter
+ * fase: Sprint 2 - Governance Retroativo · data: 2026-08-16
+ * base: 88c1ab4 · assinatura: scoobiii · PO · GOS3
+ */
+/**
  * invocation-contract.md v0.1 — tipos de referência
  * Runtime Reference Agent (Grok)
  */

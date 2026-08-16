@@ -1,3 +1,10 @@
+> **GOS3** · agente: `scoobiii` · papel: `PO / DevOps`
+> fase: `Sprint 2 - Governance Retroativo` · data: `2026-08-16` · hora: `17:47:49 -03:00`
+> antes: sem cabeçalho GOS3
+> depois: adiciona GOS3 compliance
+> base: commit `88c1ab4`
+> assinatura: `scoobiii · PO · GOS3`
+
 # invocation-contract.md v0.1
 
 ## Objetivo
