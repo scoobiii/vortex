@@ -1,3 +1,11 @@
+> **GOS3** · agente: `GPT` · papel: `Maintainer / Engineering Agent` (ver docs/team.md)
+> fase: `Technical Refinement (E2)` · data: `2026-08-16` · hora: `11:18:18 -03:00`
+> antes: Sprint 1 estava marcado como 5/7 e o item de confirmação do Grok permanecia pendente no handoff
+> depois: Sprint 1 passa a 7/7 e o handoff fica alinhado ao board, onde Grok já está confirmado
+> base: commit `0ff03dc`
+> assinatura: `GPT · Maintainer / Engineering Agent · GOS3`
+> commit: registrado pelo Git no commit que contém esta alteração
+
 # docs/handoff.md — Vortex / GOS3 v2.4
 
 > Fase: Discovery → Technical Refinement
@@ -17,8 +25,8 @@ repo (humano ou LLM), comece por aqui antes de reler tudo do zero.
 - [x] **Rodar testes no ambiente atual — 19/19 passed, 0 failed**
       (2026-08-15, Node v20.20.2, `npm run test:grok`)
 - [x] Documentar handoff do adaptador *(este arquivo cobre isso agora)*
-- [ ] Marcar Grok oficialmente no board (`docs/team.md` — trocar status de
-      "Ativo (Sprint 1)" para confirmado, com data/evidência)
+- [x] Marcar Grok oficialmente no board (`docs/team.md` — status confirmado,
+      com data/evidência)
 
 ## O que precisou ser corrigido pra sair do papel
 
