@@ -1,5 +1,7 @@
 # Git log
 ```
+0a3d853 fix: remove snapshot antes do checkout gh-pages
+b208e04 fix: adiciona GOS3 como comentario Python valido
 f908cde fix: recria scraper limpo sem header GOS3 invalido - corrige SyntaxError
 3a06afc fix: restaura scraper do 6ccddcb - remove GOS3 invalido linha 1
 29010c7 fix: corrige cabecalho GOS3 scraper - SyntaxError · U+00B7
@@ -18,8 +20,6 @@ f044740 chore: ignora artefatos na verificação GOS3
 b88b27f ci: trigger publish-snapshot após habilitar GitHub Pages
 4bcb5fe chore: versiona scrape_repo.py com cabeçalho GOS3
 13a053d ci: publica snapshot via GitHub Pages para agentes sem sandbox (fetch HTTP puro)
-6e047e9 feat: governance - pre-commit GOS3 obrigatório - fecha gap e8eddff
-e8eddff docs: adiciona capa USE VORTEX! no README - hash+tempo+log
 ```
 
 # Git status
@@ -858,6 +858,10 @@ Ver `docs/handoff.md` para dívida técnica conhecida associada.
 ## scrape_repo.py
 ```.py
 #!/usr/bin/env python3
+# **GOS3** · agente: scoobiii · papel: PO / DevOps
+# fase: Sprint 2 - Governance Retroativo · data: 2026-08-16
+# assinatura: scoobiii · PO · GOS3
+
 """
 scrape_repo.py — Snapshot/dump genérico de código, arquivos ou repositórios.
 """
@@ -899,13 +903,16 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 ```
 
 
 ## scripts/scrape_repo.py
 ```.py
 #!/usr/bin/env python3
+# **GOS3** · agente: scoobiii · papel: PO / DevOps
+# fase: Sprint 2 - Governance Retroativo · data: 2026-08-16
+# assinatura: scoobiii · PO · GOS3
+
 """
 scrape_repo.py — Snapshot/dump genérico de código, arquivos ou repositórios.
 """
@@ -947,7 +954,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 ```
 
 
