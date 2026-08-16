@@ -1,3 +1,11 @@
+> **GOS3** · agente: `GPT` · papel: `Maintainer / Engineering Agent` (ver docs/team.md)
+> fase: `Technical Refinement (E2)` · data: `2026-08-16` · hora: `11:01:03 -03:00`
+> antes: contagem documental do Grok ainda registrava 17/17 testes
+> depois: contagem normalizada para 19/19, sem alteração de runtime ou contrato ativo
+> base: commit `19ee04f` (estado sincronizado antes desta correção)
+> assinatura: `GPT · Maintainer / Engineering Agent · GOS3`
+> commit: registrado pelo Git no commit que contém esta alteração
+
 # BACKLOG — Vortex / GOS3 v2.4
 
 ## Fase atual
@@ -9,7 +17,7 @@ Discovery → Technical Refinement (em andamento)
 - [x] Entregar adaptador Grok (`src/agents/grok/`)
 - [x] Campo `executed: true/false` obrigatório
 - [x] Testes de conformidade básicos
-- [x] Rodar testes no ambiente atual — **17/17 passed, 0 failed** (2026-08-15, Node v20.20.2)
+- [x] Rodar testes no ambiente atual — **19/19 passed, 0 failed** (2026-08-15, Node v20.20.2)
 - [ ] Documentar handoff do adaptador
 - [ ] Marcar Grok oficialmente no board
 

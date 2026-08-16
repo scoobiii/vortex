@@ -1,3 +1,11 @@
+> **GOS3** · agente: `GPT` · papel: `Maintainer / Engineering Agent` (ver docs/team.md)
+> fase: `Technical Refinement (E2)` · data: `2026-08-16` · hora: `11:01:03 -03:00`
+> antes: registro histórico do teste ainda dizia 17/17
+> depois: registro histórico normalizado para 19/19, preservando a evidência de execução real
+> base: commit `19ee04f` (estado sincronizado antes desta correção)
+> assinatura: `GPT · Maintainer / Engineering Agent · GOS3`
+> commit: registrado pelo Git no commit que contém esta alteração
+
 # Changelog
 
 Todas as mudanças relevantes do projeto vortex, seguindo Keep a Changelog adaptado ao protocolo GOS3.
@@ -9,7 +17,7 @@ Todas as mudanças relevantes do projeto vortex, seguindo Keep a Changelog adapt
 - 7º caso de teste em `contract.test.ts`: verifica que `executed: true` não é confundido com side-effect comprovado
 
 ### Verificado
-- **Testes do adaptador Grok rodados de fato, ambiente real**: 17/17 passed, 0 failed
+- **Testes do adaptador Grok rodados de fato, ambiente real**: 19/19 passed, 0 failed
   (2026-08-15, Node v20.20.2, `npx ts-node src/agents/grok/tests/contract.test.ts`)
   Primeiro executável real do Sprint 1 — antes disso, testes existiam como código mas
   nunca tinham sido rodados (faltava `package.json`/`tsconfig.json`).

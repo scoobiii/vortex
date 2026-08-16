@@ -23,10 +23,12 @@ também specs e propostas — leva este bloco no topo:
 
 ```markdown
 > **GOS3** · agente: `<nome>` · papel: `<papel>` (ver docs/team.md)
-> fase: `<fase do backlog>` · data: `<AAAA-MM-DD>`
+> fase: `<fase do backlog>` · data: `<AAAA-MM-DD>` · hora: `<HH:MM:SS TZ>`
 > antes: <estado de 1 linha antes desta mudança>
 > depois: <o que esta mudança entrega/altera>
 > base: commit `<hash>` (se aplicável — ancestral que este arquivo parte)
+> assinatura: `<nome do agente> · <papel> · GOS3`
+> commit: registrado pelo Git no commit que contém esta alteração
 ```
 
 Objetivo: qualquer agente (ou humano) que pegar o repo depois sabe o antes/durante/depois,
