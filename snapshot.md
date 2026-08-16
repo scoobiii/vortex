@@ -1,5 +1,6 @@
 # Git log
 ```
+4847382 feat: add Manus agent scaffold
 0a3d853 fix: remove snapshot antes do checkout gh-pages
 b208e04 fix: adiciona GOS3 como comentario Python valido
 f908cde fix: recria scraper limpo sem header GOS3 invalido - corrige SyntaxError
@@ -19,7 +20,6 @@ f044740 chore: ignora artefatos na verificação GOS3
 9c9335b fix: corrige publish-snapshot.yml para CLI real do scrape_repo.py
 b88b27f ci: trigger publish-snapshot após habilitar GitHub Pages
 4bcb5fe chore: versiona scrape_repo.py com cabeçalho GOS3
-13a053d ci: publica snapshot via GitHub Pages para agentes sem sandbox (fetch HTTP puro)
 ```
 
 # Git status
@@ -1115,6 +1115,50 @@ npx ts-node src/agents/grok/adapter/index.ts --fixture=echo
     "sandbox": true
   }
 }
+
+```
+
+
+## src/agents/manus/README.md
+```.md
+> **GOS3** · agente: `Manus` · papel: `Proposer / Product Owner Técnico`
+> fase: `Sprint 2 - Dynamic Agent Registry` · data: `2026-08-16`
+> antes: candidato `manus` ainda não tinha scaffold público
+> depois: scaffold público criado para revisão humana
+> base: commit `0a3d853`
+> assinatura: `Manus · Proposer / Product Owner Técnico · GOS3`
+> commit: registrado pelo Git no commit que contém esta alteração
+
+# Manus Agent
+
+Candidato GOS3 `manus`. O scaffold não concede conta oficial.
+
+```
+
+
+## src/agents/manus/onboarding-agent.md
+```.md
+> **GOS3** · agente: `Manus` · papel: `Proposer / Product Owner Técnico`
+> fase: `Sprint 2 - Dynamic Agent Registry` · data: `2026-08-16`
+> antes: candidato `manus` ainda não tinha scaffold público
+> depois: scaffold público criado para revisão humana
+> base: commit `0a3d853`
+> assinatura: `Manus · Proposer / Product Owner Técnico · GOS3`
+> commit: registrado pelo Git no commit que contém esta alteração
+
+# Agent Onboarding
+
+## Contract
+
+Implementar e testar `invocation-contract v0.1` antes de pedir aprovação.
+
+## Evidence
+
+Registrar hash, timestamp, modo e `side_effect:not_claimed` quando não houver efeito externo verificável.
+
+## Governance
+
+Aguardar aprovação humana em `docs/agents/approvals.json`.
 
 ```
 
