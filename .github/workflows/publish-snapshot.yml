@@ -30,6 +30,7 @@ jobs:
 
       - name: Publish to gh-pages
         run: |
+          rm -f snapshot.md
           git config user.name "scoobiii"
           git config user.email "sobrinhosj@gmail.com"
 
