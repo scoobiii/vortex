@@ -1,5 +1,7 @@
 # Git log
 ```
+89c838a docs(sync): sync conversation history, notes, and project sprints [GOS3] (team.md)
+67b831d docs(sync): sync conversation history, notes, and project sprints [GOS3] (specs/invocation-contract-v0.2-draft.md)
 298f7f8 docs(sync): sync conversation history, notes, and project sprints [GOS3] (specs/invocation-contract-v0.1.md)
 8584829 docs(sync): sync conversation history, notes, and project sprints [GOS3] (conversations/03-vortex-dump-gos3-sprints.md)
 87a15d6 docs(sync): sync conversation history, notes, and project sprints [GOS3] (conversations/02-grok-gpt4o-runtime-inspection.md)
@@ -18,8 +20,6 @@ a9a3133 docs(sync): sync conversation history, notes, and project sprints [GOS3]
 26ef694 docs(sync): sync conversation history, notes, and project sprints [GOS3] (conversations/02-grok-gpt4o-runtime-inspection.md)
 641bb71 docs(sync): sync conversation history, notes, and project sprints [GOS3] (conversations/01-auditoria-sandbox-telemetria.md)
 1ed0fd4 docs(sync): sync conversation history, notes, and project sprints [GOS3] (attachments/use-vortex-cover.md)
-81b95d1 docs(sync): sync conversation history, notes, and project sprints [GOS3] (attachments/Screenshot_20260816_232129_Chrome.md)
-a97da10 docs(sync): sync conversation history, notes, and project sprints [GOS3] (SWOT-UX-GUI.md)
 ```
 
 # Git status
