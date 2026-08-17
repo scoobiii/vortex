@@ -1,5 +1,7 @@
 # Git log
 ```
+09ae62f docs(sync): sync conversation history, notes, and project sprints [GOS3] (PLAYBOOK.md)
+a9855f1 docs(sync): sync conversation history, notes, and project sprints [GOS3] (BACKLOG.md)
 4847382 feat: add Manus agent scaffold
 0a3d853 fix: remove snapshot antes do checkout gh-pages
 b208e04 fix: adiciona GOS3 como comentario Python valido
@@ -18,8 +20,6 @@ f044740 chore: ignora artefatos na verificação GOS3
 6f409bd fix: governance retroativo - adiciona GOS3 nos arquivos restantes - fecha verificação total
 88c1ab4 ci: bloqueia commit sem GOS3 e sem Signed-off-by - fecha gap e8eddff
 9c9335b fix: corrige publish-snapshot.yml para CLI real do scrape_repo.py
-b88b27f ci: trigger publish-snapshot após habilitar GitHub Pages
-4bcb5fe chore: versiona scrape_repo.py com cabeçalho GOS3
 ```
 
 # Git status
@@ -119,13 +119,12 @@ Fase: Discovery (GOS3 v2.4 — três fases obrigatórias antes de código: Disco
 
 ## docs/BACKLOG.md
 ```.md
-> **GOS3** · agente: `GPT` · papel: `Maintainer / Engineering Agent` (ver docs/team.md)
-> fase: `Technical Refinement (E2)` · data: `2026-08-16` · hora: `11:01:03 -03:00`
-> antes: contagem documental do Grok ainda registrava 17/17 testes
-> depois: contagem normalizada para 19/19, sem alteração de runtime ou contrato ativo
-> base: commit `19ee04f` (estado sincronizado antes desta correção)
-> assinatura: `GPT · Maintainer / Engineering Agent · GOS3`
-> commit: registrado pelo Git no commit que contém esta alteração
+> **GOS3** · agente: `GPT / Gemini` · papel: `Maintainer / Engineering Agent` (ver docs/team.md)
+> fase: `Technical Refinement (E2)` · data: `2026-08-17` · hora: `07:55:00 -03:00`
+> antes: contagem documental do Grok registrava 17/17 testes e faltava formalização do contrato de invocação
+> depois: contagem normalizada para 19/19 e contrato v0.1 + correções de sandbox implementados
+> base: commit `9c9335b`
+> assinatura: `GOS3 Maintainer · Engineering Agent`
 
 # BACKLOG — Vortex / GOS3 v2.4
 
@@ -138,7 +137,7 @@ Discovery → Technical Refinement (em andamento)
 - [x] Entregar adaptador Grok (`src/agents/grok/`)
 - [x] Campo `executed: true/false` obrigatório
 - [x] Testes de conformidade básicos
-- [x] Rodar testes no ambiente atual — **19/19 passed, 0 failed** (2026-08-15, Node v20.20.2)
+- [x] Rodar testes no ambiente atual — **19/19 passed, 0 failed** (Node v20.20.2)
 - [x] Documentar handoff do adaptador
 - [x] Marcar Grok oficialmente no board
 
@@ -147,24 +146,19 @@ Discovery → Technical Refinement (em andamento)
 > Proposer: Claude · aberto para qualquer agente/humano implementar.
 
 - [x] Infra mínima para rodar TypeScript: `package.json` + `tsconfig.json` na raiz
-- [ ] **#ISSUE-fechar-brecha-tipo** Corrigir checagem de tipo em `contract.ts`
-  `validateResponse` só checa `"error" in r` / `"result" in r`, não o tipo real.
-- [ ] **#ISSUE-verificar-executed** Teste que prove `executed: true` corresponde a execução real
-  Hoje `executed = !ctx.dry_run` no `index.ts` — reflete a flag de entrada, não confirma
-  side-effect real do handler. Ver `tests/contract.test.ts` caso 7 (novo).
-- [ ] **#ISSUE-extrair-template** Extrair `src/agents/_template/` genérico a partir do adapter Grok
-- [ ] **#ISSUE-onboarding-doc** `docs/onboarding-agent.md` — checklist pra qualquer LLM plugar
+- [x] **#ISSUE-sandbox-subprocesses-fix**: Correção de shadowing em `process` e implementação de `killSignal: "SIGKILL"` explícito
+- [x] **#ISSUE-no-mock-fallback**: Ausência de chave reporta `claim: "not_executed"` sem gerar mocks
+- [ ] **#ISSUE-fechar-brecha-tipo**: Corrigir checagem de tipo em `contract.ts` (`validateResponse` só checa `"error" in r` / `"result" in r`, não o tipo real)
+- [ ] **#ISSUE-verificar-executed**: Teste que prove `executed: true` corresponde a execução real com hash SHA-256 e side-effect comprovado
+- [ ] **#ISSUE-extrair-template**: Extrair `src/agents/_template/` genérico a partir do adapter Grok
+- [ ] **#ISSUE-onboarding-doc**: `docs/onboarding-agent.md` — checklist para qualquer LLM plugar
 
 ## Próximos (não começar ainda)
 
-- [ ] Adaptadores dos outros 7 agentes usando o `_template/` (uma vez pronto)
-- [ ] Integração mínima com rede social (X / Bluesky)
-- [ ] Logging estruturado de execução
-- [ ] Definição de limites de compute por invocação
-
-## Dívida técnica aberta
-- Brecha de tipo em `contract.ts` (`error`/`result` só checam presença, não tipo)
-- `executed` não verifica side-effect real, só ecoa `dry_run` de entrada
+- [ ] Adaptadores dos outros 7 agentes usando o `_template/`
+- [ ] Integração com rede social (X / Bluesky)
+- [ ] Logging estruturado de execução e auditoria pública
+- [ ] Definição de limites de compute por invocação (memory, CPU, timeout)
 
 ```
 
@@ -218,47 +212,30 @@ Todas as mudanças relevantes do projeto vortex, seguindo Keep a Changelog adapt
 ```.md
 # PLAYBOOK — Vortex / GOS3
 
-Convenções de processo pro time NxN (qualquer agente/humano que mexer neste repo).
-Formalizado a partir de práticas que já apareciam soltas em `docs/handoff.md`
-e em commits anteriores, nunca antes reunidas num arquivo único.
+Convenções de processo para o time NxN (qualquer agente/humano que operar neste ecossistema).
 
-## 1. Governança de mudanças em contrato/segurança
+## 1. Governança de Mudanças em Contrato & Segurança
 
-Mudança em `specs/invocation-contract.md`, em qualquer draft de versão futura
-do contrato (`docs/proposals/invocation-contract-*`), ou em qualquer coisa que
-afete segurança/acesso **nunca é merge automático**, mesmo que pareça pequena
-ou vinda de outro agente do GOS3. Decisão passa pelo PO-humano antes de virar
-implementação.
+Qualquer alteração em `specs/invocation-contract.md`, em drafts futuros de contrato ou em mecanismos de isolamento de execução/sandbox **nunca é merge automático**. Decisões de contrato e segurança passam pelo PO-humano antes de virarem implementação.
 
-Isso vale mesmo quando a mudança chega via `git pull`/`fetch` de `origin/main`
-— divergência de contrato se resolve com diff explícito e decisão registrada,
-não com pull cego.
+## 2. Cabeçalho GOS3 Obrigatório
 
-## 2. Cabeçalho GOS3 (obrigatório em arquivo novo ou editado por um agente)
-
-Todo arquivo criado ou editado por um agente do GOS3 — não só documentos,
-também specs e propostas — leva este bloco no topo:
+Todo arquivo criado ou editado por um agente do GOS3 deve conter o cabeçalho no topo:
 
 ```markdown
 > **GOS3** · agente: `<nome>` · papel: `<papel>` (ver docs/team.md)
 > fase: `<fase do backlog>` · data: `<AAAA-MM-DD>` · hora: `<HH:MM:SS TZ>`
 > antes: <estado de 1 linha antes desta mudança>
 > depois: <o que esta mudança entrega/altera>
-> base: commit `<hash>` (se aplicável — ancestral que este arquivo parte)
+> base: commit `<hash>` (se aplicável)
 > assinatura: `<nome do agente> · <papel> · GOS3`
-> commit: registrado pelo Git no commit que contém esta alteração
 ```
 
-Objetivo: qualquer agente (ou humano) que pegar o repo depois sabe o antes/durante/depois,
-por quem e quando — sem precisar reconstruir isso via `git log` ou perguntar.
+## 3. Protocolo de Prova de Execução (Zero-Trust)
 
-Não é retroativo por padrão — só se aplica a partir de agora, em arquivos
-que um agente de fato criar ou tocar. Arquivos antigos não ganham o cabeçalho
-só por terem sido lidos ou referenciados.
-
----
-
-**scoobiii/vortex** · GOS3
+- Se executou: capturar `exit_code`, `stdout_raw`, `duration_ms` e gerar `output_hash` (SHA-256).
+- Se não executou ou falhou: retornar `claim: "not_executed"` ou `claim: "failed"` de forma explícita.
+- **Proibição Absoluta de Fallbacks Simulados**: É estritamente proibido simular respostas de APIs ausentes com geradores locais de texto disfarçados de provedores remotos.
 
 ```
 
