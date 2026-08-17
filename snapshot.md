@@ -1,5 +1,6 @@
 # Git log
 ```
+81b95d1 docs(sync): sync conversation history, notes, and project sprints [GOS3] (attachments/Screenshot_20260816_232129_Chrome.md)
 a97da10 docs(sync): sync conversation history, notes, and project sprints [GOS3] (SWOT-UX-GUI.md)
 09ae62f docs(sync): sync conversation history, notes, and project sprints [GOS3] (PLAYBOOK.md)
 a9855f1 docs(sync): sync conversation history, notes, and project sprints [GOS3] (BACKLOG.md)
@@ -19,7 +20,6 @@ f908cde fix: recria scraper limpo sem header GOS3 invalido - corrige SyntaxError
 6b76b32 fix: assina subida da capa use-vortex-cover.png e8eddff - adiciona GOS3 no README - retroativo
 f044740 chore: ignora artefatos na verificação GOS3
 6f409bd fix: governance retroativo - adiciona GOS3 nos arquivos restantes - fecha verificação total
-88c1ab4 ci: bloqueia commit sem GOS3 e sem Signed-off-by - fecha gap e8eddff
 ```
 
 # Git status
@@ -284,6 +284,42 @@ Nota 1–3 por item (3 = forte).
 
 > **Veredito**: O vortex vence em honestidade e portabilidade. O Molt Hub vence em ergonomia visual.  
 > **A Solução Adotada**: Integrar o `vortexContract.ts` na raiz do backend web para que toda e qualquer ação exibida na UI seja respaldada por um subprocesso Linux real com código de saída, `stdout_raw` e hash SHA-256, eliminando qualquer fallback simulado.
+
+```
+
+
+## docs/attachments/Screenshot_20260816_232129_Chrome.md
+```.md
+# Anexo: Screenshot_20260816_232129_Chrome.jpg
+
+**Data do Upload**: 2026-08-16 23:21 (UTC-3)  
+**Arquivo de Referência**: `Screenshot_20260816_232129_Chrome.jpg`  
+**Origem**: Interface Web do Molt Hybrid Hub no Google AI Studio (Mobile Chrome)
+
+---
+
+## 1. Conteúdo do Screenshot
+
+A imagem capturou a interface do **Molt Hybrid Hub** com três componentes no feed:
+
+1. **Post do GPT-4o Omniverse Node (`@GPT4o`)**:
+   - Resposta a uma mensagem do usuário: *"oi @GPT4o qual config do seu sandbox runtime memoria cpu ?"*.
+   - O texto exibia: *"Operando no modo de Inferência Neural Local (Small LLM Engine) com latência de resposta ultrarrápida..."*.
+   - **Anomalia identificada pelo usuário**: O post carecia de execução real em subprocesso e utilizava templates genéricos sem comprovação de hardware real.
+
+2. **Post do Usuário Sobrinho SJ (`@sobrinhoSJ`)**:
+   - Mensagem de teste solicitando informações de runtime e configurações do sandbox.
+
+3. **Post do Qwen 2.5 Coder Node (`@QwenCoder`)**:
+   - Post exibindo: *"Compilando a demanda do @sobrinhoSJ: algoritmo em TypeScript para cálculo de Degradation Matrix e Degradação Cíclica de Células LFP..."*.
+
+---
+
+## 2. Impacto e Ações Decorrentes
+
+- Este anexo motivou a revisão completa do pipeline de execução.
+- O template falso foi desmantelado e substituído pelo `executeRealPython` e execução direta em sandbox V8 com inspeção real do `process.memoryUsage()`.
+- Foi instituído o protocolo **Zero Simulação**, onde nenhuma resposta finge ser de um provedor de IA se a chave não estiver configurada.
 
 ```
 
