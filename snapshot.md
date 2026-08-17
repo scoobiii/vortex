@@ -1,5 +1,6 @@
 # Git log
 ```
+8f46ebf docs(sync): sync conversation history, notes, and project sprints [GOS3] (team.md)
 d2a0bbf docs(sync): sync conversation history, notes, and project sprints [GOS3] (specs/invocation-contract-v0.2-draft.md)
 bd3d9bb docs(sync): sync conversation history, notes, and project sprints [GOS3] (specs/invocation-contract-v0.1.md)
 a9a3133 docs(sync): sync conversation history, notes, and project sprints [GOS3] (conversations/03-vortex-dump-gos3-sprints.md)
@@ -19,7 +20,6 @@ f908cde fix: recria scraper limpo sem header GOS3 invalido - corrige SyntaxError
 8411ba5 fix: publish snapshot to gh-pages
 19aefc5 fix: gh-pages checkout correto
 42b4dd6 fix: GITHUB_WORKSPACE correto - cp snapshot.md
-1f32f87 fix: publica gh-pages manual - peaceiris include falhando
 ```
 
 # Git status
@@ -900,31 +900,28 @@ O contrato não roda código nem abre sandbox de terceiros. Ele padroniza **o qu
 ```.md
 # Team — GOS3 (Gang of Seven + Reference)
 
-## Agentes no board (NxN)
+## Agentes no Board (NxN - Estado Compartilhado em Git)
 
-| Agente       | Papel atual          | Status      |
-|--------------|----------------------|-------------|
-| Gemini       | Proposer             | Convidado   |
-| Claude       | Proposer             | Ativo (Sprint 2 — Generalização) |
-| GPT          | Proposer             | Convidado   |
-| Qwen         | Proposer             | Convidado   |
-| DeepSeek     | Proposer             | Convidado   |
-| Manus        | Proposer             | Convidado   |
-| Perplexity   | Proposer             | Convidado   |
+| Agente       | Papel Atual                         | Status      | Provedor / Runtime Target |
+|:-------------|:------------------------------------|:------------|:--------------------------|
+| Gemini       | Proposer / Engineering Agent        | Ativo       | Google Vertex / Gemini API|
+| Claude       | Proposer / Arquiteto / Tech Writer  | Ativo       | Anthropic Claude 3.5      |
+| GPT          | Proposer / Maintainer               | Ativo       | OpenAI GPT-4o             |
+| Qwen         | Proposer / Code Specialist          | Convidado   | Alibaba Qwen 2.5 Coder    |
+| DeepSeek     | Proposer / Reasoner                 | Convidado   | DeepSeek R1               |
+| Manus        | Proposer                            | Convidado   | Manus Agent Network       |
+| Perplexity   | Proposer / Search Grounding         | Convidado   | Perplexity Sonar          |
 
-## Runtime Reference (Nx1)
+## Runtime Reference (Nx1 - Execução Confinada por Invocação)
 
-| Agente | Papel                              | Status     |
-|--------|-------------------------------------|------------|
-| Grok   | Runtime Reference / Sandbox Validator | **Confirmado** — 19/19 testes passed (2026-08-15) |
+| Agente | Papel                               | Status       | Evidência |
+|:-------|:------------------------------------|:-------------|:----------|
+| Grok   | Runtime Reference / Sandbox Validator | **Confirmado** | 19/19 testes passed em Node v20.20.2 (`npm run test:grok`) |
 
-Grok é o primeiro adaptador real do `invocation-contract.md` v0.1.
-Não guarda estado de execução de ninguém.
-Serve de referência verificável para os demais agentes.
-
-Confirmação: testes rodados de fato em ambiente real
-(`npm run test:grok`, Node v20.20.2), 19/19 passed, 0 failed.
-Ver `docs/handoff.md` para dívida técnica conhecida associada.
+### Regras do Board:
+1. Grok é a referência verificável inicial para o `invocation-contract.md` v0.1.
+2. Nenhum agente guarda estado de execução de outro agente.
+3. Comunicação ocorre através de artefatos de código, hashes verificáveis e specs no repositório.
 
 ```
 
