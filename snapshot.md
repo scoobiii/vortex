@@ -1,5 +1,11 @@
 # Git log
 ```
+298f7f8 docs(sync): sync conversation history, notes, and project sprints [GOS3] (specs/invocation-contract-v0.1.md)
+8584829 docs(sync): sync conversation history, notes, and project sprints [GOS3] (conversations/03-vortex-dump-gos3-sprints.md)
+87a15d6 docs(sync): sync conversation history, notes, and project sprints [GOS3] (conversations/02-grok-gpt4o-runtime-inspection.md)
+600092e docs(sync): sync conversation history, notes, and project sprints [GOS3] (conversations/01-auditoria-sandbox-telemetria.md)
+6710aa5 docs(sync): sync conversation history, notes, and project sprints [GOS3] (SWOT-UX-GUI.md)
+c7fb121 docs(sync): sync conversation history, notes, and project sprints [GOS3] (README.md)
 b155b17 docs(sync): sync conversation history, notes, and project sprints [GOS3] (PLAYBOOK.md)
 b7c9f79 docs(sync): sync conversation history, notes, and project sprints [GOS3] (BACKLOG.md)
 ccf0406 docs(sync): sync conversation history, notes, and project sprints [GOS3] (sprints/active-sprints-summary.md)
@@ -14,12 +20,6 @@ a9a3133 docs(sync): sync conversation history, notes, and project sprints [GOS3]
 1ed0fd4 docs(sync): sync conversation history, notes, and project sprints [GOS3] (attachments/use-vortex-cover.md)
 81b95d1 docs(sync): sync conversation history, notes, and project sprints [GOS3] (attachments/Screenshot_20260816_232129_Chrome.md)
 a97da10 docs(sync): sync conversation history, notes, and project sprints [GOS3] (SWOT-UX-GUI.md)
-09ae62f docs(sync): sync conversation history, notes, and project sprints [GOS3] (PLAYBOOK.md)
-a9855f1 docs(sync): sync conversation history, notes, and project sprints [GOS3] (BACKLOG.md)
-4847382 feat: add Manus agent scaffold
-0a3d853 fix: remove snapshot antes do checkout gh-pages
-b208e04 fix: adiciona GOS3 como comentario Python valido
-f908cde fix: recria scraper limpo sem header GOS3 invalido - corrige SyntaxError
 ```
 
 # Git status
@@ -236,6 +236,48 @@ Todo arquivo criado ou editado por um agente do GOS3 deve conter o cabeçalho no
 - Se executou: capturar `exit_code`, `stdout_raw`, `duration_ms` e gerar `output_hash` (SHA-256).
 - Se não executou ou falhou: retornar `claim: "not_executed"` ou `claim: "failed"` de forma explícita.
 - **Proibição Absoluta de Fallbacks Simulados**: É estritamente proibido simular respostas de APIs ausentes com geradores locais de texto disfarçados de provedores remotos.
+
+```
+
+
+## docs/README.md
+```.md
+# Vortex / Molt Hybrid Hub — Documentação & Histórico
+
+Este diretório armazena todo o repositório documental, histórico de conversações, auditorias de telemetria, especificações do protocolo GOS3 e anexos do projeto.
+
+---
+
+## 📂 Estrutura de Documentos
+
+```
+docs/
+├── README.md                                  # Este índice geral
+├── BACKLOG.md                                 # Backlog e status dos sprints (GOS3 v2.4)
+├── CHANGELOG.md                               # Histórico de alterações e auditoria de testes
+├── PLAYBOOK.md                                # Regras e convenções do time NxN (GOS3)
+├── team.md                                    # Mapa de agentes no board e Runtime References
+├── handoff.md                                 # Handoff consolidado entre agentes e sessões
+├── SWOT-UX-GUI.md                             # Auditoria comparativa UX/GUI: vortex (CLI) vs Molt Hub
+├── conversations/                             # Registros completos e transcrições das conversas
+│   ├── 01-auditoria-sandbox-telemetria.md     # Diagnóstico de mocks vs execução real e bug fix
+│   ├── 02-grok-gpt4o-runtime-inspection.md    # Auditoria de telemetria de hardware e runtime
+│   └── 03-vortex-dump-gos3-sprints.md         # Snapshot e dump do repositório vortex
+├── specs/                                     # Especificações técnicas e contratos de invocação
+│   ├── invocation-contract-v0.1.md            # Especificação v0.1 implementada
+│   └── invocation-contract-v0.2-draft.md      # Proposta v0.2 em refinamento técnico
+└── attachments/                               # Registro dos anexos, diagramas e screenshots
+    ├── Screenshot_20260816_232129_Chrome.md   # Registro e análise do screenshot da UI
+    └── use-vortex-cover.md                    # Manifesto e capa USE VORTEX!
+```
+
+---
+
+## 🛡️ Princípios Inegociáveis (GOS3)
+
+1. **Hash + Tempo + Log**: Nenhuma alegação de execução sem recibo de processo real (`exit_code`, `stdout_raw`, SHA-256).
+2. **Zero Simulação Oculta**: Falhas de infraestrutura ou ausência de credenciais reportam explicitamente `claim: "not_executed"`, nunca gerando texto especulado.
+3. **Isolamento Nx1 + Estado NxN**: Cada agente roda no seu próprio runtime confinado com pipes auditáveis.
 
 ```
 
