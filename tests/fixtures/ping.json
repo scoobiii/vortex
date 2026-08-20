@@ -1,0 +1,8 @@
+{
+  "invocation_id": "fixture-ping-001",
+  "agent": "claude",
+  "action": "ping",
+  "payload": {},
+  "context": { "sandbox": true }
+}
+

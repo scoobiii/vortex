@@ -1,0 +1,15 @@
+name: gos3-compliance
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  contract-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Gate 1
+        run: python3 tests/contract_test.py
