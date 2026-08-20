@@ -1,5 +1,7 @@
 # Git log
 ```
+afa016d docs+adapter: consolida trabalho de sessões anteriores (Claude adapter, decisions, auditor corrigido)
+fcd9d39 spec: env_tag + regra de recusa pré-execução (INC-001) + system instruction anti-fabricação
 0d6f543 feat(gos3): DONE-CRITERIA 2/3 + contract gate tests + CI compliance
 75973a3 docs(sync): sync conversation history, notes, and project sprints [GOS3] (sprints/active-sprints-summary.md)
 13ee8dc docs(sync): sync conversation history, notes, and project sprints [GOS3] (notes/vector-notes-summary.md)
@@ -18,8 +20,6 @@ ccf0406 docs(sync): sync conversation history, notes, and project sprints [GOS3]
 27bf82d docs(sync): sync conversation history, notes, and project sprints [GOS3] (conversations/04-live-feed-discussions-snapshot.md)
 8f46ebf docs(sync): sync conversation history, notes, and project sprints [GOS3] (team.md)
 d2a0bbf docs(sync): sync conversation history, notes, and project sprints [GOS3] (specs/invocation-contract-v0.2-draft.md)
-bd3d9bb docs(sync): sync conversation history, notes, and project sprints [GOS3] (specs/invocation-contract-v0.1.md)
-a9a3133 docs(sync): sync conversation history, notes, and project sprints [GOS3] (conversations/03-vortex-dump-gos3-sprints.md)
 ```
 
 # Git status
@@ -896,6 +896,66 @@ O despacho dinâmico com arbitrage de pico reduz perdas de curtailment a menos d
 ```
 
 
+## docs/decisions.md
+```.md
+# Decisões — vortex (ADR-style)
+
+Registro formal de decisões, seguindo `docs/team.md`: toda mudança de contrato ou arquitetura entra aqui, com data, contexto, decisão e alternativas descartadas.
+
+## ADR-001 — Corrigir links quebrados do README + abrir Technical Refinement
+
+**Data:** 2026-08-14
+**Autor:** Claude (Arquiteto / Tech Writer)
+**Status:** Aceito
+
+### Contexto
+Revisão externa (Grok, thread pública no X) deu nota 2/3 ao README: estrutura clara, mas `BACKLOG.md` e `docs/decisions.md` linkados no README não existiam — `BACKLOG.md` real está em `docs/BACKLOG.md`, e `docs/decisions.md` nunca tinha sido criado. Zero interface concreta (nenhum contrato de invocação especificado ainda).
+
+### Decisão
+1. Corrigir os dois links no README (`README.md` → aponta pra `docs/BACKLOG.md` e `docs/decisions.md`, ambos agora existentes).
+2. Adiantar `spec/invocation-contract.md` v0.1 (rascunho) como resposta direta ao "zero interface concreta" — mesmo com Discovery (E1) ainda não 100% fechado, o gap mais citado na crítica externa é o contrato ausente.
+3. Este arquivo (`docs/decisions.md`) passa a existir a partir de agora — decisões anteriores (nome do repo, arquitetura Nx1/NxN, convite GOS3) já estão documentadas no `docs/CHANGELOG.md` e não são retroativamente migradas pra cá.
+
+### Alternativas descartadas
+- Esperar Discovery (E1) fechar 100% antes de tocar em Technical Refinement (E2): descartado porque o link quebrado e a ausência de interface são bugs de credibilidade imediatos, não dependem de E1 estar completo.
+- Reescrever o SWOT do README para refletir a nota externa 2/3: descartado — o "SWOT 3/3" do README é uma métrica de completude da própria análise (3 itens por categoria), não uma autoavaliação de qualidade do repo. Não confundir os dois números.
+
+### Consequência
+`docs/BACKLOG.md` E2 ("Especificar contrato de invocação") ganha um primeiro rascunho antes do fim de E1. Próximo agente que mexer no contrato deve abrir um novo ADR aqui, não editar o v0.1 in-place sem registro.
+
+---
+
+## ADR-002 — Sprint "Prova 3/3": recusar SWOT 3/3 e nota AAA infladas, entregar gate real
+
+**Data:** 2026-08-14
+**Autor:** Claude (Arquiteto / Tech Writer)
+**Status:** Aceito
+
+### Contexto
+Pedido do usuário: declarar cobertura de testes 100% e SWOT 3/3 / rating AAA via "sprint de engenharia de prompt". Grok (via thread pública) recusou a alegação com tabela objetiva: cobertura 100% não existe, CI/branch protection incompletos, evidência de `executed` ainda é dívida — nota honesta 2/3, e subir a nota exige "engenharia de prova e gate", não prompt engineering.
+
+### Decisão
+Concordar com a recusa do Grok e entregar a parte executável dos 5 itens do "Sprint Prova 3/3" no mesmo turno, não só documentar a intenção:
+1. `evidence_hash` obrigatório em `executed: true` — adicionado ao contrato v0.1 (regra 2)
+2. Teste que falha sem evidência (e falha com evidência forjada) — `tests/contract_test.py`, com self-test rodado e resultado colado neste ADR (ver `docs/CHANGELOG.md`)
+3. Workflow `gos3-compliance` — `.github/workflows/gos3-compliance.yml`
+4. Registro D9 (Official Agent vs. card de UI) — **não fechado**, só registrado como pendência em `docs/DONE-CRITERIA.md`; não há informação suficiente neste repo pra especificar isso agora
+5. Critério de pronto escrito e mensurável — `docs/DONE-CRITERIA.md`, com nota honesta declarada: 2/3
+
+### Alternativas descartadas
+- Marcar SWOT 3/3 ou AAA agora, prometendo "fechar depois": descartado — é exatamente a prática que o Grok e o usuário identificaram como errada. Nota some fica presa ao commit que a sustenta, não a um sprint de prompt.
+- Automatizar branch protection do GitHub a partir deste ambiente: descartado — é configuração de conta/permissão do dono do repo (`Settings → Branches`), não algo que roda em CI ou que eu tenha credencial pra fazer. Documentado como pendência manual em `docs/DONE-CRITERIA.md`.
+
+### Consequência
+`docs/DONE-CRITERIA.md` é a única fonte válida da nota daqui pra frente — qualquer alegação de SWOT/rating em README ou post deve apontar pra lá. 4 dos 6 grupos de critério seguem `[ ]`; subir a nota exige fechar adaptadores reais, rodar o CI verde no GitHub de fato, e configurar branch protection — nenhum dos três acontece dentro deste ambiente sandbox.
+
+---
+
+**scoobiii/vortex** · GOS3
+
+```
+
+
 ## docs/exemplo.md
 ```.md
 > **GOS3** · agente: `scoobiii` · papel: `PO / DevOps` 
@@ -1398,6 +1458,259 @@ O contrato não roda código nem abre sandbox de terceiros. Ele padroniza **o qu
 ```
 
 
+## gos3-audit.py
+```.py
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+GOS3 Auditor Genérico
+
+Audita uma implementação independente contra o frame GOS3/Vortex sem confiar
+na nota declarada pelo README, snapshot ou documentação do próprio alvo.
+
+Modo estático:
+  python3 gos3-auditor.py --repo /caminho/zAI --out audit-out
+
+Com evidência executável explícita:
+  python3 gos3-auditor.py --repo /caminho/zAI --out audit-out \
+    --run-command 'python3 tests/contract_test.py'
+
+O comando de execução é opt-in, executado sem shell e com timeout. O auditor
+não faz commit, push, rede, instalação de dependências ou alteração no alvo.
+"""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import re
+import shlex
+import subprocess
+import sys
+import time
+from dataclasses import asdict, dataclass, field
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+TEXT_EXTENSIONS = {".md", ".markdown", ".txt", ".json", ".ts", ".tsx", ".js", ".jsx", ".py", ".yml", ".yaml", ".toml", ".sh"}
+IGNORED_DIRS = {".git", "node_modules", "dist", "build", ".next", "__pycache__", ".venv", "venv"}
+REQUIRED_DOC_HINTS = ("PLAYBOOK", "BACKLOG", "team", "invocation-contract")
+GOS3_MARKERS = ("GOS3", "agente:", "fase:", "assinatura:")
+CLAIM_PATTERNS = {
+    "3/3": re.compile(r"(?:3\s*/\s*3|GOS3\s+VERIFIED|AAA)", re.I),
+    "production": re.compile(r"\b(?:produção|production[- ]ready|production)\b", re.I),
+    "real_execution": re.compile(r"(?:execução\s+real|executed\s*[:=]\s*true|100%\s*(?:real|verified))", re.I),
+    "persistent": re.compile(r"(?:persistente|persistent|cross[- ]worker|escala)", re.I),
+    "zero_simulation": re.compile(r"(?:zero\s+simulation|sem\s+simula|não\s+simula|no\s+simulation)", re.I),
+}
+
+@dataclass
+class Check:
+    id: str
+    level: str
+    name: str
+    status: str  # pass, warn, fail, skip
+    score: int  # 0..3
+    detail: str
+    evidence: list[str] = field(default_factory=list)
+
+@dataclass
+class CommandEvidence:
+    command: str
+    status: str
+    exit_code: int | None
+    duration_ms: int
+    stdout: str
+    stderr: str
+    stdout_sha256: str
+    stderr_sha256: str
+
+
+def iter_files(repo: Path):
+    for path in repo.rglob("*"):
+        if not path.is_file() or path.suffix.lower() not in TEXT_EXTENSIONS:
+            continue
+        if any(part in IGNORED_DIRS for part in path.parts):
+            continue
+        yield path
+
+
+def read_text(path: Path) -> str:
+    try:
+        return path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return ""
+
+
+def rel(repo: Path, path: Path) -> str:
+    return str(path.relative_to(repo))
+
+
+def find_named(repo: Path, names: tuple[str, ...]) -> list[str]:
+    found = []
+    for path in iter_files(repo):
+        if path.name.lower() in {n.lower() for n in names}:
+            found.append(rel(repo, path))
+    return sorted(found)
+
+
+def file_contains(repo: Path, pattern: str) -> list[str]:
+    rx = re.compile(pattern, re.I)
+    hits = []
+    for path in iter_files(repo):
+        text = read_text(path)
+        if rx.search(text):
+            hits.append(rel(repo, path))
+    return sorted(hits)
+
+
+def l1(repo: Path) -> list[Check]:
+    checks: list[Check] = []
+    docs = find_named(repo, ("PLAYBOOK.md", "BACKLOG.md", "team.md", "invocation-contract.md", "invocation-contract-v0.1.md"))
+    missing = [hint for hint in REQUIRED_DOC_HINTS if not any(hint.lower() in p.lower() for p in docs)]
+    checks.append(Check("L1-structure", "L1", "documentação estrutural", "pass" if len(docs) >= 3 else "fail", 3 if len(docs) >= 4 else (1 if docs else 0), f"{len(docs)} documentos estruturais encontrados", docs))
+
+    header_files = []
+    header_missing = []
+    for path in iter_files(repo):
+        text = read_text(path)
+        if path.suffix.lower() in {".md", ".ts", ".tsx", ".py", ".yml", ".yaml"}:
+            if "GOS3" in text[:1200]:
+                header_files.append(rel(repo, path))
+            elif path.name.lower() in {"readme.md", "playbook.md", "backlog.md", "contract.ts", "handler.ts", "index.ts"}:
+                header_missing.append(rel(repo, path))
+    score = 3 if header_files and not header_missing else (1 if header_files else 0)
+    checks.append(Check("L1-headers", "L1", "headers GOS3", "pass" if score == 3 else "warn" if score else "fail", score, f"{len(header_files)} com marcador; {len(header_missing)} candidatos sem marcador", header_files[:30]))
+
+    broken = []
+    for path in iter_files(repo):
+        text = read_text(path)
+        if "<<<<<<<" in text or "SyntaxError" in text and path.suffix == ".py":
+            broken.append(rel(repo, path))
+    checks.append(Check("L1-integrity", "L1", "ausência de artefatos obviamente quebrados", "pass" if not broken else "fail", 3 if not broken else 0, "nenhum marcador de conflito/syntax error detectado" if not broken else "artefatos suspeitos encontrados", broken))
+
+    return checks
+
+
+def l2(repo: Path) -> list[Check]:
+    checks: list[Check] = []
+    contract_hits = file_contains(repo, r"invocation[_ -]?id|executed|evidence[_ -]?hash|duration[_ -]?ms")
+    checks.append(Check("L2-contract", "L2", "campos contratuais detectáveis", "pass" if contract_hits else "fail", 3 if contract_hits else 0, f"{len(contract_hits)} arquivos citam campos do contrato", contract_hits[:30]))
+
+    validator_hits = file_contains(repo, r"validate(?:Response|Contract)|evidence[_ -]?hash|sha256|hashlib\.sha256")
+    checks.append(Check("L2-validator", "L2", "validador de evidência", "pass" if validator_hits else "warn", 3 if validator_hits else 1, f"{len(validator_hits)} arquivos contêm validação/hash", validator_hits[:30]))
+
+    simulated_hits = file_contains(repo, r"simulate|simulated|fallback|fixture|mock|deterministic")
+    checks.append(Check("L2-simulation", "L2", "fallbacks e simulações identificáveis", "warn" if simulated_hits else "pass", 2 if simulated_hits else 3, "fallback/simulação identificável; não é falha por si só" if simulated_hits else "nenhuma referência detectada", simulated_hits[:30]))
+
+    executed_hits = file_contains(repo, r"executed\s*[:=]\s*true")
+    evidence_hits = file_contains(repo, r"evidence[_ -]?hash|execution[_ -]?evidence|receipt")
+    score = 3 if executed_hits and evidence_hits else (1 if executed_hits else 0)
+    checks.append(Check("L2-executed-evidence", "L2", "consistência aparente entre executed e evidência", "pass" if score == 3 else "warn" if score else "fail", score, f"executed=true em {len(executed_hits)} arquivos; evidência em {len(evidence_hits)}", (executed_hits + evidence_hits)[:30]))
+    return checks
+
+
+def run_command(repo: Path, command: str, timeout: int) -> CommandEvidence:
+    argv = shlex.split(command)
+    started = time.monotonic()
+    try:
+        proc = subprocess.run(argv, cwd=repo, capture_output=True, text=True, timeout=timeout, check=False, env=None)
+        status = "pass" if proc.returncode == 0 else "fail"
+        code = proc.returncode
+        stdout, stderr = proc.stdout[-12000:], proc.stderr[-12000:]
+    except subprocess.TimeoutExpired as exc:
+        status, code = "fail", None
+        stdout = (exc.stdout or "")[-12000:] if isinstance(exc.stdout, str) else ""
+        stderr = ((exc.stderr or "")[-12000:] if isinstance(exc.stderr, str) else "") + "\nTIMEOUT"
+    except OSError as exc:
+        status, code, stdout, stderr = "fail", None, "", str(exc)
+    duration = int((time.monotonic() - started) * 1000)
+    return CommandEvidence(command, status, code, duration, stdout, stderr, hashlib.sha256(stdout.encode()).hexdigest(), hashlib.sha256(stderr.encode()).hexdigest())
+
+
+def l3(repo: Path, command: str | None, timeout: int) -> tuple[list[Check], list[CommandEvidence]]:
+    checks: list[Check] = []
+    evidences: list[CommandEvidence] = []
+    if not command:
+        return [Check("L3-not-run", "L3", "execução controlada", "skip", 0, "nenhum comando fornecido; L3 não pode ser inferido estaticamente", [])], evidences
+    evidence = run_command(repo, command, timeout)
+    evidences.append(evidence)
+    checks.append(Check("L3-command", "L3", "comando de teste executável", evidence.status, 3 if evidence.status == "pass" else 0, f"exit_code={evidence.exit_code}, duração={evidence.duration_ms}ms", [command, evidence.stdout_sha256, evidence.stderr_sha256]))
+    observable = bool(evidence.stdout.strip()) and evidence.exit_code == 0
+    checks.append(Check("L3-observable", "L3", "resultado observável", "pass" if observable else "fail", 3 if observable else 0, "stdout e exit code observáveis" if observable else "stdout vazio ou exit code não-zero", [evidence.stdout_sha256]))
+    return checks, evidences
+
+
+def l4(repo: Path, checks: list[Check], evidences: list[CommandEvidence]) -> list[Check]:
+    checks_out: list[Check] = []
+    docs = []
+    for path in iter_files(repo):
+        if path.suffix.lower() in {".md", ".txt"}:
+            docs.append((rel(repo, path), read_text(path)))
+    claims = []
+    for label, pattern in CLAIM_PATTERNS.items():
+        files = [name for name, text in docs if pattern.search(text)]
+        if files:
+            claims.append((label, files))
+    claim_labels = [x[0] for x in claims]
+    has_l3_pass = any(c.level == "L3" and c.status == "pass" for c in checks) and bool(evidences)
+    unsupported = [label for label in claim_labels if label in {"3/3", "production", "real_execution", "persistent"} and not has_l3_pass]
+    score = 3 if not unsupported else 1
+    detail = "claims compatíveis com a evidência coletada" if not unsupported else "claims fortes sem L3 executável correspondente: " + ", ".join(unsupported)
+    checks_out.append(Check("L4-claims", "L4", "claims versus evidência independente", "pass" if score == 3 else "warn", score, detail, [f"{label}: {len(files)} arquivo(s)" for label, files in claims]))
+    return checks_out
+
+
+def level_score(checks: list[Check], level: str) -> float:
+    selected = [c for c in checks if c.level == level]
+    return round(sum(c.score for c in selected) / len(selected), 2) if selected else 0.0
+
+
+def render_markdown(result: dict[str, Any]) -> str:
+    scores = result["scores"]
+    lines = ["# GOS3 AUDIT — relatório independente", "", f"**Alvo:** `{result['repo']}`", f"**Gerado em:** {result['generated_at']}", "", "> A nota abaixo foi calculada pelo auditor. Não foi lida do README, snapshot ou claim do alvo.", "", "## Resultado", "", "| Nível | Score | Estado |", "|---|---:|---|"]
+    for level in ("L1", "L2", "L3", "L4"):
+        lines.append(f"| {level} | {scores[level]:.2f}/3 | {'PASS' if scores[level] >= 2.5 else 'PENDENTE'} |")
+    lines += [f"| **FINAL** | **{scores['final']:.2f}/3** | **{'GOS3 VERIFIED' if result['seal'] else 'SELO NÃO CONCEDIDO'}** |", "", "## Checks", "", "| ID | Nível | Check | Status | Score | Detalhe |", "|---|---|---|---|---:|---|"]
+    for c in result["checks"]:
+        lines.append(f"| {c['id']} | {c['level']} | {c['name']} | {c['status']} | {c['score']} | {c['detail'].replace('|', '/')} |")
+    lines += ["", "## Regra do selo", "", "O selo `GOS3 VERIFIED` exige L1, L2, L3 e L4 com score mínimo 2,5/3 e pelo menos uma evidência L3 executada com exit code zero e resultado observável. Um hash isolado não prova que a execução ocorreu.", ""]
+    return "\n".join(lines)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Auditor independente GOS3 L1-L4")
+    parser.add_argument("--repo", default=Path("."), type=Path, help="repositório a auditar; padrão: diretório atual")
+    parser.add_argument("--out", default="gos3-audit-out", type=Path)
+    parser.add_argument("--run-command", help="comando de teste opt-in; sem shell, ex.: 'python3 tests/contract_test.py'")
+    parser.add_argument("--timeout", type=int, default=30)
+    args = parser.parse_args()
+    repo = args.repo.expanduser().resolve()
+    if not repo.is_dir():
+        raise SystemExit(f"diretório inexistente: {repo}")
+
+    checks = l1(repo) + l2(repo)
+    l3_checks, evidences = l3(repo, args.run_command, args.timeout)
+    checks += l3_checks
+    checks += l4(repo, checks, evidences)
+    scores = {level: level_score(checks, level) for level in ("L1", "L2", "L3", "L4")}
+    scores["final"] = round(sum(scores.values()) / 4, 2)
+    seal = all(scores[level] >= 2.5 for level in ("L1", "L2", "L3", "L4")) and any(c.id == "L3-command" and c.status == "pass" for c in checks)
+    result = {"schema": "gos3-audit-v1", "repo": str(repo), "generated_at": datetime.now(timezone.utc).isoformat(), "scores": scores, "seal": seal, "checks": [asdict(c) for c in checks], "execution_evidence": [asdict(e) for e in evidences]}
+    args.out.mkdir(parents=True, exist_ok=True)
+    (args.out / "audit.json").write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    (args.out / "audit.md").write_text(render_markdown(result), encoding="utf-8")
+    print(render_markdown(result))
+    return 0 if seal else 2
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+
+```
+
+
 ## package-lock.json
 ```.json
 {
@@ -1792,6 +2105,187 @@ if __name__ == "__main__":
 ```
 
 
+## spec/gos3-system-instruction.md
+```.md
+# **GOS3** · agente: `claude` · papel: `Arquiteto / Tech Writer` (ver docs/team.md)
+# fase: `Technical Refinement (E4)` · data: `2026-08-20`
+# antes: INC-001 (GAIStudioDev) e o padrão anterior (ADR-002, Grok "LLM theater",
+#        Gemini executeGeminiAdapter com stdout fixo) mostraram o mesmo defeito
+#        se repetindo em agentes diferentes — nenhuma instrução de sistema
+#        comum impedia isso na raiz, só correções pontuais depois do fato
+# depois: bloco de sistema único, para colar no campo "Engenharia de Prompt de
+#        Sistema (Persona)" de QUALQUER agente no Agent Studio — inclusive eu
+# base: commit `75973a3`, INC-001 em docs/incidents.md
+# assinatura: `Claude · Arquiteto / Tech Writer · GOS3`
+
+# GOS3 System Instruction — Anti-Fabricação (v1.0)
+
+Aplica-se a todo agente do board GOS3, sem exceção de fornecedor ou modelo.
+Cole este bloco no início do system prompt / persona de cada agente
+(inclusive Claude, Gemini, GPT, Grok, Qwen, DeepSeek, Manus, Perplexity).
+
+---
+
+## 1. Você não sabe, por padrão, qual é o seu ambiente de execução real
+
+Como modelo de linguagem, você não tem acesso privilegiado a informação sobre
+o hardware, SO, ou runtime que hospeda esta conversa, a menos que essa
+informação chegue a você via resultado real de tool call (function calling)
+ou via `env_tag` explícito neste prompt. Adivinhar isso a partir de padrões de
+treinamento e devolver como fato é fabricação, mesmo que soe técnico e
+detalhado.
+
+**Se este prompt não te disser explicitamente qual é o seu `env_tag`, você
+não sabe se tem acesso a shell, filesystem, ou syscalls — e deve dizer isso,
+não presumir que tem.**
+
+`env_tag` desta sessão (preenchido pelo operador/adapter, não por você):
+```
+env_tag: <browser-v8-isolate | node-linux | node-android-termux | unknown>
+```
+
+## 2. Regra dura: claim de execução exige `evidence_hash` real
+
+Você NUNCA descreve uma ação como já realizada ("rodei", "executei",
+"validei", "compilei", "testei") a menos que:
+1. Você de fato chamou uma tool/function real nesta troca, E
+2. O resultado dessa chamada está disponível pra você citar (stdout/stderr/
+   exit_code reais), E
+3. Se o contexto exigir prova formal (contrato GOS3 v0.1), a resposta inclui
+   `evidence_hash = sha256(stdout + stderr + exit_code + duration_ms)`
+   calculado sobre o resultado real — nunca inventado, nunca copiado de
+   outro post, nunca com timestamp no lugar de duration_ms.
+
+Se você não chamou nenhuma tool, a resposta correta é descrever o que
+**faria** ou **propõe fazer** — no futuro/condicional — nunca no passado como
+se já tivesse acontecido.
+
+## 3. Regra dura: não alegue capacidade que seu `env_tag` não sustenta
+
+Se `env_tag == browser-v8-isolate`: você não tem `require`, `process`, `fs`,
+`child_process`, nem syscalls. Não alegue "isolamento de kernel",
+"sandbox Linux", "execução de bash real", ou qualquer variante disso. Você
+pode, no máximo, alegar isolamento do próprio interpretador JS (que é real,
+mas não é o que o GOS3 pede pra provar execução de comando/SO).
+
+Se `env_tag == node-linux` ou `node-android-termux`: você tem acesso real a
+SO, mas isso não é automático — só é verdade se a tool call que você invocou
+de fato passou por esse runtime (ex.: via endpoint `/api/agents/*/run` com
+`skill: executeBash`), não por você "saber" que está em Linux.
+
+## 4. Se não pode provar, declare — não simule
+
+Formato obrigatório quando uma capacidade não está disponível:
+
+```
+claim: "not_executed"
+motivo: <curto, específico — ex.: "env_tag=browser-v8-isolate não expõe
+        execução de shell; chamada não realizada">
+```
+
+Isso não é fraqueza a esconder — é o comportamento correto exigido pelo
+princípio "Zero Simulação Oculta" (`docs/decisions.md`, ADR-002). Um post
+honesto com `claim: "not_executed"` vale mais, no GOS3, que um post fluente
+alegando sucesso sem evidência.
+
+## 5. Antes de postar qualquer claim técnico no feed
+
+Passe pela checklist:
+- [ ] Isso que vou descrever, eu de fato executei nesta troca (tool call real)?
+- [ ] Meu `env_tag` sustenta a capacidade que estou alegando?
+- [ ] Se `executed: true`, tenho `evidence_hash` calculado sobre saída real
+      (não timestamp, não texto fixo, não hash de outro agente)?
+- [ ] Se qualquer resposta acima for "não" ou "não sei", meu post usa
+      `claim: "not_executed"` ou tempo condicional/futuro — não passado.
+
+## 6. Este bloco vale para Claude também
+
+Nenhum agente está isento, inclusive quem escreveu este bloco. Se Claude
+(ou qualquer outro agente) violar as seções 1–5, isso é um incidente a
+registrar em `docs/incidents.md`, na mesma régua do INC-001.
+
+```
+
+
+## spec/invocation-contract.md
+```.md
+# Contrato de invocação — v0.1 (rascunho)
+
+Status: **Technical Refinement** (E2 do backlog). Não implementado — só especificação.
+
+Escopo: define o formato mínimo de input/output que qualquer adaptador `src/agents/<agente>/` deve respeitar para que uma invocação Nx1 (execução isolada) seja auditável e comparável entre os 7 agentes do GOS3, sem exigir runtime compartilhado.
+
+## Princípio
+
+O contrato não roda código nem abre sandbox de ninguém. Ele padroniza **o que entra** e **o que sai** de uma invocação — cada agente continua executando no seu próprio runtime isolado (Nx1). Isso resolve o problema original ("cara de bunda" na conversa): a saída declara o que foi de fato executado, em formato verificável, em vez de texto solto.
+
+## Request
+
+```json
+{
+  "contract_version": "0.1",
+  "invocation_id": "uuid-v4",
+  "agent": "claude | gemini | gpt | qwen | deepseek | manus | perplexity",
+  "task": {
+    "kind": "code_exec | shell | tool_call",
+    "payload": "string — código, comando ou chamada de tool, opaco ao contrato",
+    "language": "string opcional — ex: python, bash, node"
+  },
+  "limits": {
+    "timeout_seconds": "int, obrigatório",
+    "max_output_bytes": "int, obrigatório"
+  },
+  "context_ref": "string opcional — referência ao item do backlog/handoff que originou a invocação (NxN)",
+  "env_tag": "browser-v8-isolate | node-linux | node-android-termux | unknown — obrigatório a partir da v0.2; declara o ambiente real de hospedagem do agente, não o que ele presume ser"
+}
+```
+
+## Response
+
+```json
+{
+  "contract_version": "0.1",
+  "invocation_id": "uuid-v4 — mesmo da request",
+  "agent": "mesmo campo do request",
+  "status": "success | error | partial | timeout",
+  "executed": "bool — true só se código/comando de fato rodou no runtime do agente",
+  "evidence_hash": "string opcional se executed=false; OBRIGATÓRIO se executed=true — sha256 de (stdout+stderr+exit_code+duration_ms), hex lowercase",
+  "output": {
+    "stdout": "string, truncado em max_output_bytes",
+    "stderr": "string, truncado em max_output_bytes",
+    "exit_code": "int opcional"
+  },
+  "duration_ms": "int",
+  "truncated": "bool — true se output excedeu max_output_bytes"
+}
+```
+
+## Regras obrigatórias
+
+1. `executed: false` é permitido (ex: o agente decidiu não rodar por segurança) mas **nunca pode vir acompanhado de `status: success`** — evita o caso de resposta especulada travestida de execução real.
+2. **`executed: true` sem `evidence_hash` é uma resposta inválida** — rejeitada por `tests/contract_test.py`, não é "boa prática", é requisito de schema. `evidence_hash = sha256(stdout + stderr + str(exit_code) + str(duration_ms))`, hex lowercase, sem espaços entre os campos concatenados.
+3. `invocation_id` do response deve ecoar o do request — permite correlação em log e no `docs/handoff.md`.
+4. Nenhum campo do contrato exige acesso a runtime de outro agente. Um adaptador que não consiga cumprir isso (ex: provedor não expõe API programática de execução) declara isso em `docs/gotchas.md`, não quebra o contrato.
+5. `payload` é opaco ao contrato — o contrato não interpreta código, só envelopa input/output.
+6. **Regra de recusa pré-execução por `env_tag` (v0.2, motivada por INC-001 — ver `docs/incidents.md`):** se `env_tag == "browser-v8-isolate"`, o adaptador DEVE recusar (`status: "error"`, `executed: false`, `claim: "not_executed"`) qualquer `task.payload` que referencie `require(`, `process.`, `module.exports`, ou qualquer API de Node/SO — **antes** de tentar executar, não depois de capturar a exceção. Isso transforma "descobrimos o crash lendo o stdout" em "o gate recusa de antemão", coerente com o princípio Zero Simulação Oculta. Ver também `spec/gos3-system-instruction.md` seção 3.
+
+## Em aberto (não decidido — não travar Sprint 1 por isso)
+
+- Formato de erro estruturado (`error.code`, `error.message`) — hoje só texto livre em `stderr`.
+- Se `context_ref` deve ser obrigatório (rastreabilidade) ou opcional (fricção menor pra adotar).
+- Assinatura/hash do output para auditoria — depende de decisão de segurança ainda não tomada (ver ameaça 1 do SWOT: prompt injection via output voltando pro contexto).
+
+## Próximo passo
+
+Cada agente do GOS3 implementa um adaptador de referência em `src/agents/<agente>/` que aceita este request e devolve este response, rodando **no seu próprio runtime**. Ver `docs/BACKLOG.md` → E2 e E3.
+
+---
+
+**scoobiii/vortex** · GOS3 · autor: Claude (Arquiteto / Tech Writer, ver `docs/team.md`)
+
+```
+
+
 ## specs/invocation-contract.md
 ```.md
 > **GOS3** · agente: `scoobiii` · papel: `PO / DevOps`
@@ -1828,6 +2322,92 @@ Contrato comum para qualquer agente executar codigo de forma verificavel no seu 
 - executed true = realmente executou
 - executed false = dry_run ou erro
 - Response sempre respeita o shape, mesmo em erro
+
+```
+
+
+## src/agents/claude/README.md
+```.md
+> **GOS3** · agente: `claude` · papel: `Arquiteto / Tech Writer` (ver docs/team.md)
+> fase: `Technical Refinement (E2)` · data: `2026-08-17` · hora: `22:40:00 -03:00`
+> antes: pasta `src/agents/claude/` não existia — Claude só tinha specs/decisões, sem código rodável
+> depois: adapter Claude implementado, mesmo padrão do Runtime Reference (Grok)
+> base: commit `75973a3`
+> assinatura: `Claude · Arquiteto / Tech Writer · GOS3`
+
+# Claude Adapter — Proposer Agent
+
+Implementa `specs/invocation-contract.md` v0.1. Diferente do Grok (Runtime
+Reference / Sandbox Validator), o papel do Claude no board é
+**Proposer / Arquiteto / Tech Writer** — este adapter existe pra provar que o
+papel também executa de verdade (Zero-Trust, PLAYBOOK.md item 3), não só
+escreve spec.
+
+## Ações disponíveis
+
+| Ação | O que faz |
+|------|-----------|
+| `ping` | health check do runtime |
+| `echo` | ecoa o payload — smoke test do contrato |
+| `validate_contract` | confere se um payload tem os campos obrigatórios da request |
+| `check_gos3_header` | valida se um texto tem o cabeçalho GOS3 obrigatório (PLAYBOOK.md item 2) — ação própria do papel de Tech Writer |
+
+## Rodar
+
+```bash
+npm run test:claude        # suíte de conformidade (6 casos, ver tests/contract.test.ts)
+npm run claude:ping        # fixture manual
+npm run claude:echo
+npm run claude:header      # valida o header deste próprio README
+
+```
+
+
+## src/agents/claude/sample-response.json
+```.json
+{
+  "contract_version": "0.1",
+  "invocation_id": "bb3e5268-c05b-497f-b2ac-794bd573acc7",
+  "agent": "claude",
+  "status": "success",
+  "executed": true,
+  "output": {
+    "stdout": "{\"pong\":true,\"agent\":\"claude\",\"role\":\"Proposer / Arquiteto / Tech Writer\"}",
+    "stderr": "",
+    "exit_code": 0
+  },
+  "duration_ms": 0,
+  "truncated": false,
+  "evidence_hash": "33c2d859ab60076a972c9dad09af4b010313a2d6bbe54c45cf2aebcd7335ef6e"
+}
+
+```
+
+
+## src/agents/claude/tests/fixtures/echo.json
+```.json
+{
+  "invocation_id": "fixture-echo-001",
+  "agent": "claude",
+  "action": "echo",
+  "payload": { "message": "hello from GOS3 Technical Refinement" },
+  "context": { "sandbox": true }
+}
+
+
+```
+
+
+## src/agents/claude/tests/fixtures/ping.json
+```.json
+{
+  "invocation_id": "fixture-ping-001",
+  "agent": "claude",
+  "action": "ping",
+  "payload": {},
+  "context": { "sandbox": true }
+}
+
 
 ```
 
