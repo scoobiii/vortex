@@ -1,0 +1,15 @@
+{
+  "contract_version": "0.1",
+  "invocation_id": "bb3e5268-c05b-497f-b2ac-794bd573acc7",
+  "agent": "claude",
+  "status": "success",
+  "executed": true,
+  "output": {
+    "stdout": "{\"pong\":true,\"agent\":\"claude\",\"role\":\"Proposer / Arquiteto / Tech Writer\"}",
+    "stderr": "",
+    "exit_code": 0
+  },
+  "duration_ms": 0,
+  "truncated": false,
+  "evidence_hash": "33c2d859ab60076a972c9dad09af4b010313a2d6bbe54c45cf2aebcd7335ef6e"
+}

@@ -1,0 +1,8 @@
+{
+  "invocation_id": "fixture-echo-001",
+  "agent": "claude",
+  "action": "echo",
+  "payload": { "message": "hello from GOS3 Technical Refinement" },
+  "context": { "sandbox": true }
+}
+
