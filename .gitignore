@@ -2,3 +2,5 @@ node_modules/
 dist/
 *.log
 repo_dump.md
+gos3-audit-vortex/
+gos3-audit-*/
