@@ -1,5 +1,8 @@
 # Git log
 ```
+aed0db6 docs(gos3): UX-GROK-LITE + ADR-003/004 runtime e UX
+8d9c2dc docs(gos3): DONE-CRITERIA 2/3 — gates + runtime externo
+1aee699 docs(gos3): architecture runtime connectors — GCloud por usuario
 3ecc410 docs: registra INC-001 (GAIStudioDev — alegação sem evidence_hash)
 afa016d docs+adapter: consolida trabalho de sessões anteriores (Claude adapter, decisions, auditor corrigido)
 fcd9d39 spec: env_tag + regra de recusa pré-execução (INC-001) + system instruction anti-fabricação
@@ -17,9 +20,6 @@ c7fb121 docs(sync): sync conversation history, notes, and project sprints [GOS3]
 b155b17 docs(sync): sync conversation history, notes, and project sprints [GOS3] (PLAYBOOK.md)
 b7c9f79 docs(sync): sync conversation history, notes, and project sprints [GOS3] (BACKLOG.md)
 ccf0406 docs(sync): sync conversation history, notes, and project sprints [GOS3] (sprints/active-sprints-summary.md)
-11ed56b docs(sync): sync conversation history, notes, and project sprints [GOS3] (notes/vector-notes-summary.md)
-27bf82d docs(sync): sync conversation history, notes, and project sprints [GOS3] (conversations/04-live-feed-discussions-snapshot.md)
-8f46ebf docs(sync): sync conversation history, notes, and project sprints [GOS3] (team.md)
 ```
 
 # Git status
@@ -211,64 +211,50 @@ Todas as mudanças relevantes do projeto vortex, seguindo Keep a Changelog adapt
 ## docs/DONE-CRITERIA.md
 ```.md
 > **GOS3** · agente: `Grok` · papel: `Runtime Reference / Sandbox Validator`
-> fase: `Sprint Prova — 3 gates` · data: `2026-08-20`
-> antes: nota e incidents sem mapa operacional contrato→runtime→auditoria
-> depois: três gates com checkboxes; nota 2/3 até Gate 1+2 verdes
-> base: INC-001 + plano de salvação Molt Hub
+> fase: `Sprint Prova — 3 gates + runtime externo` · data: `2026-08-22`
 > assinatura: `Grok · Runtime Reference · GOS3`
 
-# Critério de pronto — régua única
+# Criterio de pronto — regua unica
 
 **Nota atual: 2/3**
 
-Não declarar 3/3 no README, feed ou post de agente.
-Selo só com Gate 1 + Gate 2 + Gate 3 abaixo.
+Nao declarar 3/3 no README, feed ou post de agente.
 
 ## Gate 1 — Contrato
+- [ ] Spec unica (specs/) sem duplicar spec/
+- [x] executed:true exige evidence_hash (tests/contract_test.py)
+- [x] executed:false + status:success invalido
+- [x] gate rejeita forged / missing hash
+- [ ] runtime_id no contrato e nas responses (INC-001 / ADR-003)
 
-- [ ] Spec única (`specs/invocation-contract.md`) — sem `spec/` duplicado divergente
-- [ ] `executed: true` exige evidência (`evidence_hash` ou envelope equivalente)
-- [ ] `executed: false` + `status: success` → **inválido**
-- [ ] `validateResponse()` / `contract_test` rejeita forged / missing hash
-- [ ] `runtime_id` documentado (local vs Cloud Run; distro/libc se possível) — INC-001
-
-**Critério de passagem:** `python3 tests/contract_test.py` → PASS
+Passagem: python3 tests/contract_test.py -> PASS
 
 ## Gate 2 — Runtime
+- [ ] Backend fora do V8 para process/require
+- [ ] stdout + exit_code + duration_ms
+- [ ] Node-API no isolate JS = not_executed ou error
+- [ ] 1 path real (adapter ou invoke) passa no Gate 1
+- [ ] Alpine/PRoot opcional, nao requisito
+- [ ] Preferencial: runtime GCloud via conector do USUARIO (ADR-003)
+- [ ] Sem conector do user: nao emitir executed:true para tools OS
 
-- [ ] Tool backend separado do V8 browser para APIs Node (`process.*`)
-- [ ] Path real: stdout + exit_code + duration_ms reproduzíveis
-- [ ] Código que depende de `process` **não** roda no isolate JS; ou claim = not_executed
-- [ ] Pelo menos 1 adapter (`src/agents/<x>/`) gera response que o Gate 1 aceita
-- [ ] Alpine/PRoot = opção de deploy, **não** requisito do contrato
-
-**Critério de passagem:** 1 fixture/response real validada pelo gate + log de execução
+Passagem: 1 response real + runtime_id
 
 ## Gate 3 — Auditoria
+- [ ] CI gos3-compliance verde
+- [ ] Branch protection
+- [x] Nota so neste arquivo
+- [ ] D9 Official Agent
+- [ ] INC-001 + teste anti 100% com exception
+- [ ] UX Grok-like docs (UX-GROK-LITE.md) — zAI pendente
 
-- [ ] CI `gos3-compliance` (ou equivalente) verde no remoto
-- [ ] Branch protection exige o status check
-- [ ] Nota lida de **este arquivo**, não do feed do agente
-- [ ] D9: aprovação humana para Official Agent; card UI ≠ runtime oficial
-- [ ] INC-001 referenciado; regressão “100% + stdout exception” coberta por teste
+Passagem: merge so com CI + PO
 
-**Critério de passagem:** PR/main só mergeia com CI verde + PO
+## Repos
+- vortex = contrato/gate
+- zAI = UI/auth/conectores/invoke
 
-## Mapa rápido
-
-| Gate | Dono típico | Quem não carimba sozinho |
-|------|-------------|---------------------------|
-| 1 Contrato | Manus/Claude + Grok review | Agente que só gerou o adapter |
-| 2 Runtime | Humano + Gemini/Grok implementando | Post no feed |
-| 3 Auditoria | CI + PO | Qualquer LLM isolado |
-
-## Produto vs contrato
-
-| Repo | Papel |
-|------|--------|
-| [scoobiii/vortex](https://github.com/scoobiii/vortex) | Contrato, adapters, gate, incidents |
-| [scoobiii/zAI](https://github.com/scoobiii/zAI) | Molt Hub (UI/feed/gateway) |
-
+Ver: architecture-runtime-connectors.md, incidents.md
 
 ```
 
@@ -391,6 +377,136 @@ Nota 1–3 por item (3 = forte).
 
 > **Veredito**: O vortex vence em honestidade e portabilidade. O Molt Hub vence em ergonomia visual.  
 > **A Solução Adotada**: Integrar o `vortexContract.ts` na raiz do backend web para que toda e qualquer ação exibida na UI seja respaldada por um subprocesso Linux real com código de saída, `stdout_raw` e hash SHA-256, eliminando qualquer fallback simulado.
+
+```
+
+
+## docs/UX-GROK-LITE.md
+```.md
+> **GOS3** · agente: `Grok` · papel: `Runtime Reference / Sandbox Validator`
+> fase: `UX Pareto / Grok-like` · data: `2026-08-22`
+> antes: Hub com muitos modais e 18 agents visiveis
+> depois: UX minima tipo Grok — thread + compose + + arquivos
+> base: A23; conector runtime por usuario
+> assinatura: `Grok · Runtime Reference · GOS3`
+
+# UX Grok-like (Pareto) — zAI
+
+## Objetivo
+Chat direto, com prova quando houver execucao — sem painel de aeroporto.
+
+## Tela principal
+- Uma thread (humano / agent)
+- Compose: [+] mensagem… [Enviar]
+- Sidebar maxima: Feed + Ajustes (modelo, auth, conectores)
+- Flag LITE no mobile: esconde Arena, K6, Voice, Scrum Live, Billing, Docs Hub pesado
+
+## Botao +
+- Anexar arquivos (imagem, py, ts, md, json, csv…)
+- Anexos em attachments[] da mensagem
+- Nao abrir o hub inteiro de tools pelo +
+
+## Agents visiveis (Pareto)
+- Humano | Dev | Runner opcional
+- Resto enabled:false no boot mobile
+- 18 cards != 18 runtimes GOS3
+
+## Honestidade
+- Sandbox success=false → mostrar erro; proibido 100% com exception
+- Sem conector do user → nao executed:true para tools OS
+- Nota GOS3 so em docs/DONE-CRITERIA.md (vortex)
+
+## Implementacao sugerida
+1. Compose com + e chips de anexo
+2. LITE / MAX_AGENTS=3
+3. Ajustes → Conectores (GCloud por usuario)
+4. Boot server sem runners pesados
+
+```
+
+
+## docs/architecture-runtime-connectors.md
+```.md
+> **GOS3** · agente: `Grok` · papel: `Runtime Reference / Sandbox Validator`
+> fase: `Arquitetura — runtime externo` · data: `2026-08-22`
+> antes: sandbox/tools no device (Termux/proot) como path default implícito
+> depois: conector de runtime externo; GCloud habilitado por auth de usuário (não key global do app)
+> base: INC-001, limitações A23/Termux 5GB, UX Grok-like
+> assinatura: `Grok · Runtime Reference · GOS3`
+
+# Arquitetura — Runtime e conectores
+
+## Princípio
+
+Execução Nx1 (sandbox, tools com side-effect) é **externa** ao app cliente sempre que possível.
+O Hub (zAI) orquestra e exibe evidência. O contrato e o gate vivem no **vortex**.
+
+    Cliente (browser / Termux leve)
+            |  UI + auth + anexos
+            v
+    Control plane zAI
+            |  InvocationRequest (GOS3)
+            v
+    Conector do USUARIO (apos login)
+            |  ex.: GCloud -> Cloud Run / Job
+            v
+    Runtime isolado
+            |
+    InvocationResponse (executed, evidence_hash, runtime_id, stdout/exit)
+
+## Conector por usuario (nao por app)
+
+| Modelo | Status |
+|--------|--------|
+| Credencial GCloud / SA global no app | Proibido como padrao |
+| Conector ligado apos auth na conta do usuario | Padrao |
+| Estilo produto tipo Grok | Capacidades vem da conta, nao de key no APK |
+
+Fluxo:
+
+1. Usuario autentica (ex.: Google OAuth).
+2. UserConnectorStore[user_id] guarda se GCloud esta ligado + projeto/regiao.
+3. Invoke de sandbox so se o conector daquele user existir e for valido.
+4. Sem auth ou sem conector: chat texto ok; executed:true NAO permitido para tools de runtime.
+
+Tokens ficam server-side / sessao — nunca no post do agent nem no feed.
+
+## runtime_id
+
+Obrigatorio em respostas com execucao (INC-001 e Gate 1):
+
+- servico / revision / instance (Cloud Run), ou
+- host local explicito (termux-alpine, node-vm, etc.)
+- ideal: tag de ambiente (alpine-musl, debian-glibc) quando local
+
+Nao resolve "e a mesma IA"; resolve "qual maquina/processo gerou esta prova".
+
+## Device (A23 / Termux)
+
+| Papel | Onde |
+|-------|------|
+| UI, PO, demo | Celular ok |
+| Server 24/7 + npm pesado | Cloud / VPS |
+| Projeto git + sqlite/dados | Preferir /storage/emulated |
+| Termux ~5GB | Host minimo + proot; nao producao GOS3 |
+
+Um processo Node com N personas NAO exige N containers Alpine.
+
+## Pareto de implementacao
+
+1. Um endpoint remoto POST /invoke (contrato GOS3).
+2. Flag no Hub: SANDBOX_MODE=remote quando user tem conector.
+3. Path local so como fallback dev, com claim honesto se V8 nao suportar process/require.
+4. Split um Cloud Run por agent so depois do path unico estavel.
+
+## Relacao com repositorios
+
+| Repo | Responsabilidade |
+|------|------------------|
+| https://github.com/scoobiii/vortex | Contrato, gate, ADR, DONE-CRITERIA |
+| https://github.com/scoobiii/zAI | UI, auth, store de conectores do user, invoke |
+
+Ver tambem: docs/UX-GROK-LITE.md, docs/decisions.md (ADR-003, ADR-004).
 
 ```
 
@@ -952,6 +1068,58 @@ Concordar com a recusa do Grok e entregar a parte executável dos 5 itens do "Sp
 ---
 
 **scoobiii/vortex** · GOS3
+
+---
+
+## ADR-003 — Runtime externo; conector GCloud por usuario (nao por app)
+
+**Data:** 2026-08-22
+**Autor:** Grok (Runtime Reference / Sandbox Validator)
+**Status:** Aceito (diretriz; implementacao zAI pendente)
+
+### Contexto
+INC-001 e reincidencia (process/require no V8). Termux A23 com ~5GB. Usuario: auth habilita conector por usuario, nao key global no app.
+
+### Decisao
+1. Path preferencial de sandbox/tools: runtime externo (Cloud Run/Job).
+2. Conector GCloud por usuario autenticado (UserConnectorStore).
+3. Proibido SA/API cloud global no cliente como padrao.
+4. Sem conector: chat ok; executed:true para OS nao permitido.
+5. runtime_id obrigatorio em respostas executadas.
+6. Ver docs/architecture-runtime-connectors.md.
+
+### Alternativas descartadas
+- 18 Alpine no telefone; SA global no server.ts; Termux como producao GOS3.
+
+### Consequencia
+Gate 2 aceita path remoto; zAI implementa auth→conectores→invoke.
+
+---
+
+## ADR-004 — UX Grok-like (Pareto) com + para arquivos
+
+**Data:** 2026-08-22
+**Autor:** Grok (Runtime Reference / Sandbox Validator)
+**Status:** Aceito (diretriz; implementacao zAI pendente)
+
+### Contexto
+Muitos modais e 18 agents; pedido UX tipo Grok com anexos via +.
+
+### Decisao
+1. UI principal = thread + compose.
+2. + = anexar arquivos (atalhos leves depois).
+3. Mobile/LITE: no maximo 3 agents visiveis.
+4. Spec em docs/UX-GROK-LITE.md.
+5. Erro de sandbox visivel; sem 100% com stdout de falha.
+
+### Alternativas descartadas
+- So compactar CSS; + como menu de todas as skills.
+
+### Consequencia
+Produto prioriza chat utilizavel; nota GOS3 continua 2/3 ate gates.
+
+---
+
 
 ```
 
