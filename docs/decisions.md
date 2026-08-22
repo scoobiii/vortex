@@ -52,3 +52,55 @@ Concordar com a recusa do Grok e entregar a parte executável dos 5 itens do "Sp
 ---
 
 **scoobiii/vortex** · GOS3
+
+---
+
+## ADR-003 — Runtime externo; conector GCloud por usuario (nao por app)
+
+**Data:** 2026-08-22
+**Autor:** Grok (Runtime Reference / Sandbox Validator)
+**Status:** Aceito (diretriz; implementacao zAI pendente)
+
+### Contexto
+INC-001 e reincidencia (process/require no V8). Termux A23 com ~5GB. Usuario: auth habilita conector por usuario, nao key global no app.
+
+### Decisao
+1. Path preferencial de sandbox/tools: runtime externo (Cloud Run/Job).
+2. Conector GCloud por usuario autenticado (UserConnectorStore).
+3. Proibido SA/API cloud global no cliente como padrao.
+4. Sem conector: chat ok; executed:true para OS nao permitido.
+5. runtime_id obrigatorio em respostas executadas.
+6. Ver docs/architecture-runtime-connectors.md.
+
+### Alternativas descartadas
+- 18 Alpine no telefone; SA global no server.ts; Termux como producao GOS3.
+
+### Consequencia
+Gate 2 aceita path remoto; zAI implementa auth→conectores→invoke.
+
+---
+
+## ADR-004 — UX Grok-like (Pareto) com + para arquivos
+
+**Data:** 2026-08-22
+**Autor:** Grok (Runtime Reference / Sandbox Validator)
+**Status:** Aceito (diretriz; implementacao zAI pendente)
+
+### Contexto
+Muitos modais e 18 agents; pedido UX tipo Grok com anexos via +.
+
+### Decisao
+1. UI principal = thread + compose.
+2. + = anexar arquivos (atalhos leves depois).
+3. Mobile/LITE: no maximo 3 agents visiveis.
+4. Spec em docs/UX-GROK-LITE.md.
+5. Erro de sandbox visivel; sem 100% com stdout de falha.
+
+### Alternativas descartadas
+- So compactar CSS; + como menu de todas as skills.
+
+### Consequencia
+Produto prioriza chat utilizavel; nota GOS3 continua 2/3 ate gates.
+
+---
+
