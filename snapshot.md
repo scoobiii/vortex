@@ -1,5 +1,6 @@
 # Git log
 ```
+4e2bc46 docs: add runtime federation sprint and GOS3 provenance backlog
 5193569 docs: define GOS3 provenance and evidence trail
 67dbeb3 docs: define Vortex runtime federation and capability discovery
 41ea47b docs: add GPT agent provenance and runtime federation proposal
@@ -19,7 +20,6 @@ fcd9d39 spec: env_tag + regra de recusa pré-execução (INC-001) + system instr
 8584829 docs(sync): sync conversation history, notes, and project sprints [GOS3] (conversations/03-vortex-dump-gos3-sprints.md)
 87a15d6 docs(sync): sync conversation history, notes, and project sprints [GOS3] (conversations/02-grok-gpt4o-runtime-inspection.md)
 600092e docs(sync): sync conversation history, notes, and project sprints [GOS3] (conversations/01-auditoria-sandbox-telemetria.md)
-6710aa5 docs(sync): sync conversation history, notes, and project sprints [GOS3] (SWOT-UX-GUI.md)
 ```
 
 # Git status
@@ -119,17 +119,15 @@ Fase: Discovery (GOS3 v2.4 — três fases obrigatórias antes de código: Disco
 
 ## docs/BACKLOG.md
 ```.md
-> **GOS3** · agente: `GPT / Gemini` · papel: `Maintainer / Engineering Agent` (ver docs/team.md)
-> fase: `Technical Refinement (E2)` · data: `2026-08-17` · hora: `07:55:00 -03:00`
-> antes: contagem documental do Grok registrava 17/17 testes e faltava formalização do contrato de invocação
-> depois: contagem normalizada para 19/19 e contrato v0.1 + correções de sandbox implementados
-> base: commit `9c9335b`
-> assinatura: `GOS3 Maintainer · Engineering Agent`
+> **GOS3** · agente: `GPT` · papel: `Maintainer / Engineering Agent`
+> fase: `Technical Refinement → Runtime Federation` · data: `2026-08-23`
+> antes: Sprint 2 ainda tinha dívida de `executed`, template e onboarding
+> depois: proposta de runtime federation/proveniência adicionada; aguardando PO + revisão GOS3 no xAI
 
-# BACKLOG — Vortex / GOS3 v2.4
+# BACKLOG — Vortex / GOS3
 
 ## Fase atual
-Discovery → Technical Refinement (em andamento)
+Technical Refinement → Runtime Federation (proposta)
 
 ## Sprint 1 — Runtime Reference (Grok)
 
@@ -137,28 +135,45 @@ Discovery → Technical Refinement (em andamento)
 - [x] Entregar adaptador Grok (`src/agents/grok/`)
 - [x] Campo `executed: true/false` obrigatório
 - [x] Testes de conformidade básicos
-- [x] Rodar testes no ambiente atual — **19/19 passed, 0 failed** (Node v20.20.2)
+- [x] Rodar testes no ambiente atual — 19/19 passed (registro histórico)
 - [x] Documentar handoff do adaptador
-- [x] Marcar Grok oficialmente no board
 
-## Sprint 2 — Generalização (qualquer LLM com conta ativa em rede social)
+## Sprint 2 — Generalização
 
-> Proposer: Claude · aberto para qualquer agente/humano implementar.
+- [x] Infra mínima TypeScript
+- [x] Correção de shadowing em `process` / `killSignal`
+- [x] Ausência de chave reporta `not_executed`, sem mock
+- [ ] Corrigir checagem de tipo em `contract.ts`
+- [ ] Provar `executed:true` com execução real + evidência + side-effect
+- [ ] Extrair `src/agents/_template/`
+- [ ] `docs/onboarding-agent.md`
 
-- [x] Infra mínima para rodar TypeScript: `package.json` + `tsconfig.json` na raiz
-- [x] **#ISSUE-sandbox-subprocesses-fix**: Correção de shadowing em `process` e implementação de `killSignal: "SIGKILL"` explícito
-- [x] **#ISSUE-no-mock-fallback**: Ausência de chave reporta `claim: "not_executed"` sem gerar mocks
-- [ ] **#ISSUE-fechar-brecha-tipo**: Corrigir checagem de tipo em `contract.ts` (`validateResponse` só checa `"error" in r` / `"result" in r`, não o tipo real)
-- [ ] **#ISSUE-verificar-executed**: Teste que prove `executed: true` corresponde a execução real com hash SHA-256 e side-effect comprovado
-- [ ] **#ISSUE-extrair-template**: Extrair `src/agents/_template/` genérico a partir do adapter Grok
-- [ ] **#ISSUE-onboarding-doc**: `docs/onboarding-agent.md` — checklist para qualquer LLM plugar
+## Sprint 3 — Runtime Federation / Provenance
 
-## Próximos (não começar ainda)
+- [ ] **PO approval:** aprovar/rejeitar a arquitetura de runtime federation
+- [ ] **GOS3 xAI review:** revisar a proposta com os agentes do xAI
+- [ ] Capability discovery com `runtime_id`
+- [ ] Perfis de runtime (A23/Termux, VPS, GCloud, Colab)
+- [ ] Adapter `/invoke` compatível com v0.1
+- [ ] `executed` obrigatório e sem `success` quando false
+- [ ] stdout/stderr/exit_code/duration_ms reais
+- [ ] evidence_hash derivado de evidência de execução
+- [ ] testes de timeout/error/blocked/mock
+- [ ] política de claims/benchmarks com proveniência
+- [ ] auditoria de concorrência do persistence backend do zAI/xAI
 
-- [ ] Adaptadores dos outros 7 agentes usando o `_template/`
-- [ ] Integração com rede social (X / Bluesky)
-- [ ] Logging estruturado de execução e auditoria pública
-- [ ] Definição de limites de compute por invocação (memory, CPU, timeout)
+## Governance
+
+- [ ] Não criar um segundo GOS3 no xAI; reutilizar o GOS3 do Vortex
+- [ ] Permitir N agentes no board sem hardcode de sete
+- [ ] Toda mudança relevante deve seguir `dor → issue → teste → execução → evidência → revisão → aprovação → commit`
+
+## Referências
+
+- `docs/agents/gpt/README.md`
+- `docs/runtime-federation.md`
+- `docs/gos3-provenance.md`
+- `docs/decisions.md`
 
 ```
 
