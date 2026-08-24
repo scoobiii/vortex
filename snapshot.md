@@ -1,5 +1,6 @@
 # Git log
 ```
+1b8f12a docs(gpt): add promise versus delivery matrix
 c4647ff docs(gpt): add skills and capability map
 fbcb383 docs(gpt): add tool truth matrix
 cc71306 docs(gpt): add endpoint truth inventory
@@ -19,7 +20,6 @@ afa016d docs+adapter: consolida trabalho de sessões anteriores (Claude adapter,
 fcd9d39 spec: env_tag + regra de recusa pré-execução (INC-001) + system instruction anti-fabricação
 0d6f543 feat(gos3): DONE-CRITERIA 2/3 + contract gate tests + CI compliance
 75973a3 docs(sync): sync conversation history, notes, and project sprints [GOS3] (sprints/active-sprints-summary.md)
-13ee8dc docs(sync): sync conversation history, notes, and project sprints [GOS3] (notes/vector-notes-summary.md)
 ```
 
 # Git status
@@ -860,6 +860,32 @@ No skill is considered operational merely because it is documented. It becomes a
 ## Critical gap
 
 `executed: true` must be tied to observed side effects/results, not merely an input flag. Evidence must describe the actual result that was observed.
+
+```
+
+
+## docs/agents/gpt/TRUTH-MATRIX.md
+```.md
+# GPT Agent — Promise vs Delivery
+
+This is the conservative delivery baseline. Percentages are not claimed as measured project coverage until `PROJECT-METRICS.md` and automated evidence exist.
+
+| Area | README/product promise | Current delivery | Gap |
+|---|---|---|---|
+| Invocation contract | verifiable agent execution | v0.1 implementation | result-bound proof |
+| Sandbox | isolated execution | JS/Python/Bash paths exist | hardening + tests |
+| Evidence | hash/telemetry | basic evidence fields exist | bind evidence to observed result |
+| Tool truth | distinguish real/mock | documented matrix | automated capability truth |
+| GitHub actions | agent can operate GitHub | conditional by credential | policy + disposable integration tests |
+| Runtime federation | A23/VPS/GCloud/Colab architecture | proposal/partial infrastructure | live multi-runtime proof |
+| Capability discovery | scheduler chooses compatible runtime | proposed/partial | endpoint + handshake + tests |
+| Agent identity | trace agent execution | basic agent identity | strong identity/operator/credential chain |
+| Governance | GOS3 provenance | documented | enforce gates automatically |
+| UX | explain product quickly | existing GUI | onboarding/separation still needed |
+
+## Rule
+
+Do not turn this table into a percentage claim without reproducible LOC/test/capability measurements.
 
 ```
 
