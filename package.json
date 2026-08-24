@@ -13,7 +13,8 @@
     "test:grok": "ts-node src/agents/grok/tests/contract.test.ts",
     "grok:ping": "ts-node src/agents/grok/adapter/index.ts --fixture=ping",
     "grok:echo": "ts-node src/agents/grok/adapter/index.ts --fixture=echo",
-    "grok:dry": "ts-node src/agents/grok/adapter/index.ts --fixture=dry"
+    "grok:dry": "ts-node src/agents/grok/adapter/index.ts --fixture=dry",
+    "test:gpt": "ts-node src/agents/gpt/tests/adapter.test.ts"
   },
   "devDependencies": {
     "typescript": "^5.5.4",
