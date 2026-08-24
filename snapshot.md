@@ -1,5 +1,6 @@
 # Git log
 ```
+2894472 docs(gpt): add agent changelog
 8b49152 docs(gpt): add execution backlog
 1b8f12a docs(gpt): add promise versus delivery matrix
 c4647ff docs(gpt): add skills and capability map
@@ -19,7 +20,6 @@ aed0db6 docs(gos3): UX-GROK-LITE + ADR-003/004 runtime e UX
 3ecc410 docs: registra INC-001 (GAIStudioDev — alegação sem evidence_hash)
 afa016d docs+adapter: consolida trabalho de sessões anteriores (Claude adapter, decisions, auditor corrigido)
 fcd9d39 spec: env_tag + regra de recusa pré-execução (INC-001) + system instruction anti-fabricação
-0d6f543 feat(gos3): DONE-CRITERIA 2/3 + contract gate tests + CI compliance
 ```
 
 # Git status
@@ -611,6 +611,23 @@ O xAI só pode declarar **Vortex-compatible** quando os testes acima estiverem v
 - Implementação-alvo: `scoobiii/xAI`
 - Protocolo: `specs/invocation-contract.md`
 - Governança: `docs/decisions.md`
+
+```
+
+
+## docs/agents/gpt/CHANGELOG.md
+```.md
+# GPT Agent — Changelog
+
+## 2026-08-24
+
+- Added endpoint truth inventory.
+- Added tool truth matrix.
+- Added skills/capability map.
+- Added conservative promise-versus-delivery matrix.
+- Added P0/P1/P2 execution backlog and proposed ownership.
+
+All entries above are documentation changes made through the GitHub connector. They do not claim that the underlying runtime capabilities were executed during this commit.
 
 ```
 
