@@ -39,7 +39,6 @@ interface OpenAIResponse {
 
 export interface GptAdapterDeps {
   fetchImpl?: typeof fetch;
-  apiKey?: string;
   baseUrl?: string;
   model?: string;
   runtimeId?: string;
@@ -66,8 +65,11 @@ function getOutputText(body: OpenAIResponse): string {
 }
 
 /**
- * Executes GPT server-side. The API key is read from process.env only by default
- * and is never included in request/response envelopes, logs or evidence.
+ * Executes GPT server-side.
+ *
+ * SECURITY INVARIANT: the credential is read only from the runtime host
+ * environment. It is never accepted as request data, dependency input,
+ * response data, evidence material, or frontend-facing state.
  */
 export async function invoke(
   raw: unknown,
@@ -79,7 +81,7 @@ export async function invoke(
     ? request.invocation_id
     : "unknown";
 
-  const apiKey = deps.apiKey ?? process.env.OPENAI_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY?.trim();
   const model = deps.model ?? request?.model ?? process.env.OPENAI_MODEL ?? "gpt-5.6";
   const runtimeId = deps.runtimeId ?? process.env.VORTEX_RUNTIME_ID;
 
@@ -90,7 +92,7 @@ export async function invoke(
       executed: false,
       claim: "not_executed",
       status: "not_executed",
-      error: "OPENAI_API_KEY não configurada no runtime host",
+      error: "OPENAI_API_KEY não configurada no runtime host; chamada externa bloqueada por política de segurança.",
       duration_ms: Date.now() - started,
       ...(runtimeId ? { runtime_id: runtimeId } : {}),
     };
@@ -124,6 +126,10 @@ export async function invoke(
     const body = await response.json() as OpenAIResponse;
     const durationMs = Date.now() - started;
     const output = response.ok ? getOutputText(body) : undefined;
+    const errorMessage = response.ok ? null : body.error?.message ?? `OpenAI HTTP ${response.status}`;
+
+    // Evidence deliberately excludes the credential. It contains only
+    // observable execution/result fields and therefore cannot reproduce the secret.
     const evidence = {
       invocation_id: invocationId,
       agent: "gpt",
@@ -132,7 +138,7 @@ export async function invoke(
       model: body.model ?? model,
       response_id: body.id ?? null,
       output: output ?? null,
-      error: response.ok ? null : body.error?.message ?? `OpenAI HTTP ${response.status}`,
+      error: errorMessage,
       duration_ms: durationMs,
       runtime_id: runtimeId ?? null,
     };
@@ -144,7 +150,7 @@ export async function invoke(
       status: response.ok ? "success" : "error",
       model: body.model ?? model,
       ...(output !== undefined ? { output } : {}),
-      ...(!response.ok ? { error: body.error?.message ?? `OpenAI HTTP ${response.status}` } : {}),
+      ...(errorMessage ? { error: errorMessage } : {}),
       duration_ms: durationMs,
       evidence_hash: sha256(evidence),
       ...(runtimeId ? { runtime_id: runtimeId } : {}),
