@@ -18,7 +18,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate repository truth
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Gate 1 - Contract (comportamento)
+        run: python3 tests/contract_test.py
+        # processo -> stdout/stderr/exit_code/duration_ms -> evidence_hash -> comparação
+        # executed:true só é aceito se a evidência fechar.
+
+      - name: Gate 2 - Validate repository truth (documentação)
         shell: bash
         run: |
           set -euo pipefail
