@@ -1,5 +1,6 @@
 # Git log
 ```
+c4647ff docs(gpt): add skills and capability map
 fbcb383 docs(gpt): add tool truth matrix
 cc71306 docs(gpt): add endpoint truth inventory
 ae13d7b docs: define Vortex runtime execution model and compiler boundary
@@ -19,7 +20,6 @@ fcd9d39 spec: env_tag + regra de recusa pré-execução (INC-001) + system instr
 0d6f543 feat(gos3): DONE-CRITERIA 2/3 + contract gate tests + CI compliance
 75973a3 docs(sync): sync conversation history, notes, and project sprints [GOS3] (sprints/active-sprints-summary.md)
 13ee8dc docs(sync): sync conversation history, notes, and project sprints [GOS3] (notes/vector-notes-summary.md)
-89c838a docs(sync): sync conversation history, notes, and project sprints [GOS3] (team.md)
 ```
 
 # Git status
@@ -786,6 +786,46 @@ Este documento **não afirma** que todos os conectores, runtimes, GPUs, Colab/GC
 ---
 
 **scoobiii/vortex · GPT Engineering Agent · proposta GOS3**
+
+```
+
+
+## docs/agents/gpt/SKILLS.md
+```.md
+# GPT Agent — Skills & Capabilities
+
+## Engineering skills
+
+1. Repository inspection and code audit
+2. Invocation-contract review
+3. Runtime/tool truth classification
+4. Test design for execution evidence
+5. API and sandbox architecture review
+6. Git/GitHub workflow analysis
+7. Runtime federation design
+8. Provenance and governance review
+9. Product-truth / README consistency audit
+10. UX/product decomposition for agent systems
+
+## Capability model
+
+```text
+Agent
+  -> Contract
+  -> Capability
+  -> Policy / Authorization
+  -> Runtime
+  -> Tool
+  -> Execution
+  -> Observation
+  -> Evidence
+```
+
+A skill describes what an agent knows how to do. A capability describes what the current runtime/tooling permits it to do. They must not be conflated.
+
+## Acceptance rule
+
+No skill is considered operational merely because it is documented. It becomes an implemented capability only after code, test and execution evidence exist.
 
 ```
 
