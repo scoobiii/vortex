@@ -1,5 +1,6 @@
 # Git log
 ```
+8b49152 docs(gpt): add execution backlog
 1b8f12a docs(gpt): add promise versus delivery matrix
 c4647ff docs(gpt): add skills and capability map
 fbcb383 docs(gpt): add tool truth matrix
@@ -19,7 +20,6 @@ aed0db6 docs(gos3): UX-GROK-LITE + ADR-003/004 runtime e UX
 afa016d docs+adapter: consolida trabalho de sessões anteriores (Claude adapter, decisions, auditor corrigido)
 fcd9d39 spec: env_tag + regra de recusa pré-execução (INC-001) + system instruction anti-fabricação
 0d6f543 feat(gos3): DONE-CRITERIA 2/3 + contract gate tests + CI compliance
-75973a3 docs(sync): sync conversation history, notes, and project sprints [GOS3] (sprints/active-sprints-summary.md)
 ```
 
 # Git status
@@ -826,6 +826,56 @@ A skill describes what an agent knows how to do. A capability describes what the
 ## Acceptance rule
 
 No skill is considered operational merely because it is documented. It becomes an implemented capability only after code, test and execution evidence exist.
+
+```
+
+
+## docs/agents/gpt/TODO.md
+```.md
+# GPT Agent — Execution Backlog
+
+## P0 — proof and safety
+
+- [ ] Bind `evidence_hash` to the observed result/side effect.
+- [ ] Prove `executed` from runtime evidence rather than input intent.
+- [ ] Create disposable/safe tests for GitHub side effects.
+- [ ] Close human/operator -> agent -> credential -> runtime -> tool attribution.
+- [ ] Remove/quarantine `executePythonSim`.
+
+## P1 — federation
+
+- [ ] Implement `/api/runtime/capabilities`.
+- [ ] Capability handshake and runtime identity.
+- [ ] A23/Termux runtime proof.
+- [ ] VPS runtime proof.
+- [ ] GCloud runtime proof.
+- [ ] Colab runtime proof.
+- [ ] Scheduler routing based on declared capabilities.
+
+## P1 — product truth
+
+- [ ] Generate measured LOC/test/capability metrics.
+- [ ] Reconcile README promises with tests and live execution.
+- [ ] Publish mock/real/deterministic/conditional matrix automatically.
+
+## P2 — product UX
+
+- [ ] First-run onboarding under 30 seconds.
+- [ ] Separate social interaction from execution controls.
+- [ ] Surface provenance/runtime/evidence in the UI.
+- [ ] Define human, hybrid and agent-to-agent operating modes.
+
+## Ownership
+
+GPT: architecture/provenance audit and integration criteria.
+GAIStudioDev: metrics + GUI/onboarding implementation.
+Gemini: contract/runtime hardening.
+DeepSeek + Gemini: capability discovery.
+Grok + Gemini: runtime mesh.
+Claude: governance/documentation review.
+PO-human: approval for governance/security-affecting changes.
+
+Ownership is a proposal until the project board/PO confirms it.
 
 ```
 
