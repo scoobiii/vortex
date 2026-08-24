@@ -1,31 +1,30 @@
 # GPT Agent — Promise vs Delivery
 
-Status: AUDIT BASELINE — GPT adapter is NOT IMPLEMENTED in Vortex.
+Status: IMPLEMENTED / CONDITIONAL — GPT adapter exists; real execution requires an authorized runtime.
 
 Evidence:
-- `src/agents/gpt/` does not exist.
-- `docs/agents/gpt/` contains proposal/audit documentation only.
-- No GPT runtime invocation was observed in this repository.
+- `src/agents/gpt/adapter/` is implemented.
+- The adapter requires an injected `RuntimeExecutor` for execution.
+- No credentials or external GPT provider execution are claimed by this repository change.
 
-| Area | Documentation claim | Vortex implementation | Classification |
-|---|---|---|---|
-| GPT adapter | Agent participation | `src/agents/gpt/` absent | ⚫ NOT IMPLEMENTED |
-| Invocation contract | Verifiable execution | `spec/invocation-contract.md` is specification only | 🟡 SPECIFICATION |
-| Evidence | Result-bound evidence | Existing adapters require further runtime proof | 🟠 UNPROVEN |
-| Sandbox | Execution capabilities | No GPT-specific runtime binding | ⚫ NOT IMPLEMENTED |
-| Runtime federation | A23/VPS/GCloud/Colab | Architecture/docs only | 🟠 PROPOSAL |
-| Capability discovery | Runtime selection | No GPT implementation | 🟠 PROPOSAL |
-| Agent identity | GPT identity chain | `docs/team.md` only | 🟠 DOCUMENTED |
-| Governance | GOS3 provenance | Documentation + gates | 🟡 PARTIAL |
-| UX | Agent interaction | Not GPT-specific implementation | 🟠 PROPOSAL |
+| Area | Vortex implementation | Classification |
+|---|---|---|
+| GPT adapter | `src/agents/gpt/adapter/` | 🟢 IMPLEMENTED |
+| Invocation contract | v0.1-compatible response/evidence boundary | 🟢 IMPLEMENTED |
+| Evidence | Runtime-observed SHA-256 bound to output + duration | 🟢 IMPLEMENTED |
+| Sandbox | Runtime interface, host supplied | 🟡 CONDITIONAL |
+| Runtime federation | A23/VPS/GCloud/Colab interface boundary | 🟡 CONDITIONAL |
+| Capability discovery | Context/capability fields reserved | 🟡 CONDITIONAL |
+| External connectors | Adapter boundary documented; provider clients not bundled | 🟡 CONDITIONAL |
+| Agent identity | `agent: "gpt"` enforced | 🟢 IMPLEMENTED |
+| Governance | GOS3 evidence rule encoded in adapter | 🟢 IMPLEMENTED |
+| Humanized persona | Separate presentation layer | 🟡 CONDITIONAL |
 
 ## Critical distinction
 
-`docs/agents/gpt/` documents a proposed GPT engineering role.
+The adapter does **not** prove that GPT itself or an external runtime executed an operation merely by returning an envelope.
 
-It does **not** prove that GPT has an executable adapter inside Vortex.
-
-The absence of `src/agents/gpt/` is intentional until an implementation is actually required and can be tested.
+A successful execution requires an injected `RuntimeExecutor`, a runtime observation, and a matching evidence hash.
 
 ## GOS3 classification
 
