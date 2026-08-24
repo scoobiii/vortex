@@ -1,5 +1,6 @@
 # Git log
 ```
+e75e49d chore: remove duplicate invocation contract spec
 2894472 docs(gpt): add agent changelog
 8b49152 docs(gpt): add execution backlog
 1b8f12a docs(gpt): add promise versus delivery matrix
@@ -19,7 +20,6 @@ aed0db6 docs(gos3): UX-GROK-LITE + ADR-003/004 runtime e UX
 1aee699 docs(gos3): architecture runtime connectors — GCloud por usuario
 3ecc410 docs: registra INC-001 (GAIStudioDev — alegação sem evidence_hash)
 afa016d docs+adapter: consolida trabalho de sessões anteriores (Claude adapter, decisions, auditor corrigido)
-fcd9d39 spec: env_tag + regra de recusa pré-execução (INC-001) + system instruction anti-fabricação
 ```
 
 # Git status
@@ -3370,46 +3370,6 @@ Cada agente do GOS3 implementa um adaptador de referência em `src/agents/<agent
 ---
 
 **scoobiii/vortex** · GOS3 · autor: Claude (Arquiteto / Tech Writer, ver `docs/team.md`)
-
-```
-
-
-## specs/invocation-contract.md
-```.md
-> **GOS3** · agente: `scoobiii` · papel: `PO / DevOps`
-> fase: `Sprint 2 - Governance Retroativo` · data: `2026-08-16` · hora: `17:47:49 -03:00`
-> antes: sem cabeçalho GOS3
-> depois: adiciona GOS3 compliance
-> base: commit `88c1ab4`
-> assinatura: `scoobiii · PO · GOS3`
-
-# invocation-contract.md v0.1
-
-## Objetivo
-Contrato comum para qualquer agente executar codigo de forma verificavel no seu proprio sandbox (Nx1).
-
-## Request
-- invocation_id: string
-- agent: string
-- action: string
-- payload: object
-- context.sandbox: boolean
-- context.timeout_ms: number
-- context.dry_run: boolean
-
-## Response (obrigatorio)
-- invocation_id: string
-- agent: string
-- executed: boolean (OBRIGATORIO)
-- result: object ou null
-- error: string ou null
-- logs: array de strings
-- duration_ms: number
-
-### Regras
-- executed true = realmente executou
-- executed false = dry_run ou erro
-- Response sempre respeita o shape, mesmo em erro
 
 ```
 
