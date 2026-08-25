@@ -58,6 +58,23 @@ O contrato não roda código nem abre sandbox de ninguém. Ele padroniza **o que
 5. `payload` é opaco ao contrato — o contrato não interpreta código, só envelopa input/output.
 6. **Regra de recusa pré-execução por `env_tag` (v0.2, motivada por INC-001 — ver `docs/incidents.md`):** se `env_tag == "browser-v8-isolate"`, o adaptador DEVE recusar (`status: "error"`, `executed: false`, `claim: "not_executed"`) qualquer `task.payload` que referencie `require(`, `process.`, `module.exports`, ou qualquer API de Node/SO — **antes** de tentar executar, não depois de capturar a exceção. Isso transforma "descobrimos o crash lendo o stdout" em "o gate recusa de antemão", coerente com o princípio Zero Simulação Oculta. Ver também `spec/gos3-system-instruction.md` seção 3.
 
+## GOS3 Agent Manifesto admission gate
+
+Before an agent is allowed to receive consequential runtime/tool/write capabilities, the host must admit it through the GOS3 Agent Manifesto. The canonical manifesto is `docs/GOS3-AGENT-MANIFESTO.md`.
+
+Admission is **behavioral** and fail-closed:
+
+- the provider/model identity is not capability evidence;
+- the agent must prove the actual sandbox runtime it will use;
+- the agent must prove at least one real approved tool invocation;
+- each proof must carry `execution_id`, `evidence_id`, `runtime_id`, success and observation time;
+- missing, failed, expired or invalid proof yields `BLOCKED`;
+- `BLOCKED` agents must not receive consequential write capabilities.
+
+Vortex provides the deterministic admission decision in `src/agent-admission.ts`. It does not manufacture execution evidence: the host/runtime is responsible for producing the proof receipts from real sandbox/tool executions.
+
+The admission contract therefore closes the distinction between **"the agent says it has tools"** and **"the runtime has proved the agent can use them"**.
+
 ## Em aberto (não decidido — não travar Sprint 1 por isso)
 
 - Formato de erro estruturado (`error.code`, `error.message`) — hoje só texto livre em `stderr`.
@@ -70,4 +87,4 @@ Cada agente do GOS3 implementa um adaptador de referência em `src/agents/<agent
 
 ---
 
-**scoobiii/vortex** · GOS3 · autor: Claude (Arquiteto / Tech Writer, ver `docs/team.md`)
+**scoobiii/vortex** · GOS3 · autor: GPT (Maintainer / Engineering Agent) · Agent Manifesto v1.0
