@@ -1,6 +1,6 @@
 # Runtime Execution Model — Vortex
 
-> **GOS3** · processo: Agile/Scrum · status: **Bounded Agent Loop / Technical Refinement** · data: 2026-08-25
+> **GOS3** · processo: Agile/Scrum · status: **Bounded Agent Loop / Technical Refinement** · data: 2026-08-26
 > Regra: **LLM propõe; compilador/runtime decide.** Texto não é execução.
 
 ## 1. Modelo atualizado
@@ -33,6 +33,17 @@ VERIFYING
     └── blocked/limits → HELP_REQUIRED
 ```
 
+A implementação concreta deste salto está em `src/gos3/orchestrator.ts`:
+
+- `BubblewrapSandbox` recusa execução sem sandbox e usa Linux bubblewrap para restringir o processo;
+- `CliGitProvider` usa `git` para proveniência/rollback e `gh` para PR/Issue, quando explicitamente autorizado;
+- o loop ancora `last_good_commit` no HEAD anterior à tarefa;
+- `verifyCommand` é uma segunda execução no sandbox e uma falha de verificação classifica a tentativa como `regression`;
+- PR só é criado no estado `PR_READY`;
+- Issue só é criada no estado `HELP_REQUIRED`.
+
+Isto não declara gVisor: bubblewrap é isolamento Linux local. gVisor permanece uma capability de runtime a ser integrada/testada separadamente.
+
 ## 2. Estados
 
 `READY → RUNNING → VERIFYING` é o caminho normal.
@@ -45,11 +56,13 @@ VERIFYING
 
 Não existe estado `LOOP_FOREVER`.
 
-## 3. Worker pequeno
+## 3. Worker pequeno — Qwen ~0,5B
 
-Um coder pequeno (~0,5B) pode ser útil como **worker**, não como autoridade. A capacidade desejada é executar microtarefas no sandbox, alterar arquivos, rodar testes e devolver evidência. O runtime/orquestrador decide se houve progresso, rollback, publicação ou escalonamento.
+`src/agents/qwen05b/adapter/index.ts` fornece um adapter para endpoint local OpenAI-compatible. Por padrão usa `http://127.0.0.1:11434/v1` e `qwen2.5:0.5b`, mas ambos são configuráveis por `QWEN_BASE_URL` e `QWEN_MODEL`.
 
-O modelo pode ser fraco; a máquina de estados não pode ser ambígua.
+O Qwen é tratado como **worker**, não como autoridade. A capacidade desejada é executar microtarefas no sandbox, alterar arquivos, rodar testes e devolver evidência. O runtime/orquestrador decide se houve progresso, rollback, publicação ou escalonamento.
+
+**E2E real com um Qwen ~0,5B instalado ainda é pendente**; os testes do orquestrador usam doubles determinísticos para provar a governança sem fingir execução de modelo.
 
 ## 4. Prova
 
@@ -64,20 +77,22 @@ O modelo pode ser fraco; a máquina de estados não pode ser ambígua.
 Git representa estado e proveniência. O fluxo recomendado é:
 
 ```text
-sandbox → test → evidence → VERIFYING → PR_READY → PR
+sandbox → worker → verify → evidence → VERIFYING → PR_READY → gh pr create
 ```
 
 Em regressão:
 
 ```text
-bad attempt → ROLLBACK → last_good_commit → RETRY
+bad worker/verification → ROLLBACK → last_good_commit → RETRY
 ```
 
 Em bloqueio:
 
 ```text
-blocked/stagnated/limit → HELP_REQUIRED → Issue com evidência
+blocked/stagnated/limit → HELP_REQUIRED → gh issue create
 ```
+
+As operações GitHub ficam atrás de `allowGitHub`; portanto o runtime pode ser executado localmente sem publicar nada.
 
 ## 7. Runtime heterogêneo
 
