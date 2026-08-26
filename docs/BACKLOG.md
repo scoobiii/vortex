@@ -1,55 +1,81 @@
 > **GOS3** · agente: `GPT` · papel: `Maintainer / Engineering Agent`
-> fase: `Technical Refinement → Runtime Federation` · data: `2026-08-23`
-> antes: Sprint 2 ainda tinha dívida de `executed`, template e onboarding
-> depois: proposta de runtime federation/proveniência adicionada; aguardando PO + revisão GOS3 no xAI
+> fase: `Runtime Federation → Bounded Agent Loop` · data: `2026-08-25`
+> antes: federation/provenance estava proposta e o contrato não modelava bounded retries/rollback/help
+> depois: contrato v0.2 + loop bounded implementado; roadmap agora fecha a ponte sandbox → evidência → PR/help
+> base: commit `f65abc00`
+> assinatura: `GPT · Maintainer / Engineering Agent · GOS3`
 
 # BACKLOG — Vortex / GOS3
 
 ## Fase atual
-Technical Refinement → Runtime Federation (proposta)
+Runtime Federation → Bounded Agent Loop
 
 ## Sprint 1 — Runtime Reference (Grok)
-
-- [x] Criar `specs/invocation-contract.md` v0.1
-- [x] Entregar adaptador Grok (`src/agents/grok/`)
-- [x] Campo `executed: true/false` obrigatório
-- [x] Testes de conformidade básicos
-- [x] Rodar testes no ambiente atual — 19/19 passed (registro histórico)
-- [x] Documentar handoff do adaptador
+- [x] Adaptador Grok
+- [x] Contrato mínimo de invocação
+- [x] `executed` obrigatório
+- [x] Evidência de execução
+- [x] Testes históricos 19/19
 
 ## Sprint 2 — Generalização
-
 - [x] Infra mínima TypeScript
-- [x] Correção de shadowing em `process` / `killSignal`
-- [x] Ausência de chave reporta `not_executed`, sem mock
-- [ ] Corrigir checagem de tipo em `contract.ts`
-- [ ] Provar `executed:true` com execução real + evidência + side-effect
-- [ ] Extrair `src/agents/_template/`
-- [ ] `docs/onboarding-agent.md`
+- [x] Gate `executed:false` + `success` inválido
+- [x] Gate anti-forgery de `evidence_hash`
+- [x] Evidência real modelada no adapter GPT (`runtime_id`/`execution_id`)
+- [ ] Extrair template comum dos adapters
+- [ ] Finalizar onboarding dos agentes restantes
 
 ## Sprint 3 — Runtime Federation / Provenance
-
-- [ ] **PO approval:** aprovar/rejeitar a arquitetura de runtime federation
-- [ ] **GOS3 xAI review:** revisar a proposta com os agentes do xAI
+- [ ] PO approval da arquitetura de federation
+- [ ] GOS3/xAI review
 - [ ] Capability discovery com `runtime_id`
-- [ ] Perfis de runtime (A23/Termux, VPS, GCloud, Colab)
-- [ ] Adapter `/invoke` compatível com v0.1
-- [ ] `executed` obrigatório e sem `success` quando false
-- [ ] stdout/stderr/exit_code/duration_ms reais
-- [ ] evidence_hash derivado de evidência de execução
-- [ ] testes de timeout/error/blocked/mock
-- [ ] política de claims/benchmarks com proveniência
-- [ ] auditoria de concorrência do persistence backend do zAI/xAI
+- [ ] Perfis A23/Termux, VPS, GCloud, Colab
+- [ ] Endpoint `/invoke` real por adapter/runtime
+- [x] Contrato v0.2 com limites do loop
+- [x] Máquina de estados bounded em `src/gos3/runtime-loop.ts`
+- [ ] Integrar executor sandbox real ao loop
+- [ ] Integrar testes/build como gate de `PR_READY`
+- [ ] Integrar rollback real ao último commit bom
+- [ ] Integrar criação de PR somente após evidência válida
+- [ ] Integrar `HELP_REQUIRED` com Issue estruturada
+- [ ] Testes de regressão/stagnation/rollback/attempt-limit/time-limit
+- [ ] Auditoria de concorrência do persistence backend zAI/xAI
+
+## Sprint 4 — Worker pequeno / Sandbox
+- [ ] Adapter Qwen Coder ~0,5B como worker bounded
+- [ ] Sandbox real com filesystem/exec restritos
+- [ ] Loop observe → patch → test → evidence
+- [ ] Orçamento hard de tentativas e tempo
+- [ ] Detecção de progresso e repetição de erro
+- [ ] PR automático apenas em `PR_READY`
+- [ ] Issue de socorro automática em `HELP_REQUIRED`
+- [ ] Benchmark reproduzível: tarefa útil pequena + regressão deliberada + recuperação
+
+## Gate de conformidade
+
+A arquitetura-alvo está estimada em **80–90% de alinhamento conceitual**, não 80–90% de implementação. O percentual não substitui testes nem aprovação.
+
+Para declarar runtime operacional, exigir evidência de:
+1. execução real no sandbox/runtime;
+2. teste verificável;
+3. `evidence_hash` válido;
+4. limite de loop respeitado;
+5. `PR_READY` somente após PASS;
+6. `HELP_REQUIRED` após estagnação/bloqueio/limite;
+7. rollback verificável em regressão.
 
 ## Governance
-
 - [ ] Não criar um segundo GOS3 no xAI; reutilizar o GOS3 do Vortex
 - [ ] Permitir N agentes no board sem hardcode de sete
-- [ ] Toda mudança relevante deve seguir `dor → issue → teste → execução → evidência → revisão → aprovação → commit`
+- [ ] Mudança relevante: `dor → issue → teste → execução → evidência → revisão → aprovação → commit/PR → backlog`
+- [ ] Mudança de contrato/segurança: aprovação PO antes de merge
 
 ## Referências
-
-- `docs/agents/gpt/README.md`
+- `spec/invocation-contract.md`
+- `spec/gos3-system-instruction.md`
+- `src/gos3/runtime-loop.ts`
+- `docs/runtime-execution-model.md`
 - `docs/runtime-federation.md`
 - `docs/gos3-provenance.md`
 - `docs/decisions.md`
+- `docs/DONE-CRITERIA.md`
