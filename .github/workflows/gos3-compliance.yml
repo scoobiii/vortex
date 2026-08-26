@@ -41,11 +41,11 @@ jobs:
           echo "== GOS3 Compliance =="
           echo
 
-          # 1. Invocation contract exists but remains a specification.
+          # 1. Invocation contract exists and is classified as Technical Refinement.
           test -f spec/invocation-contract.md \
             || fail "spec/invocation-contract.md missing"
 
-          grep -q "Status:.*Technical Refinement" \
+          grep -Eq "(Status:|fase:).*Technical Refinement" \
             spec/invocation-contract.md \
             || fail "invocation contract classification changed unexpectedly"
 
