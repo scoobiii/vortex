@@ -56,9 +56,11 @@ Isto não declara gVisor: bubblewrap é isolamento Linux local. gVisor permanece
 
 Não existe estado `LOOP_FOREVER`.
 
-## 3. Worker pequeno — Qwen ~0,5B
+## 3. Worker pequeno — Qwen2.5 Coder ~0,5B
 
-`src/agents/qwen05b/adapter/index.ts` fornece um adapter para endpoint local OpenAI-compatible. Por padrão usa `http://127.0.0.1:11434/v1` e `qwen2.5:0.5b`, mas ambos são configuráveis por `QWEN_BASE_URL` e `QWEN_MODEL`.
+`src/agents/qwen05b/adapter/index.ts` fornece um adapter para endpoint local OpenAI-compatible. Por padrão usa `http://127.0.0.1:11434/v1` e `qwen2.5-coder:0.5b`, mas ambos são configuráveis por `QWEN_BASE_URL` e `QWEN_MODEL`.
+
+O catálogo do Ollama lista `qwen2.5-coder:0.5b` como modelo de 0,5B/398 MB e documenta o uso local via Ollama. citeturn1search0turn1search3
 
 O Qwen é tratado como **worker**, não como autoridade. A capacidade desejada é executar microtarefas no sandbox, alterar arquivos, rodar testes e devolver evidência. O runtime/orquestrador decide se houve progresso, rollback, publicação ou escalonamento.
 
