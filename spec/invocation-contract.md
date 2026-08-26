@@ -1,7 +1,7 @@
 # Contrato de invocação — v0.2 (GOS3 bounded execution)
 
 > **GOS3** · agente: `GPT` · papel: `Maintainer / Engineering Agent`
-> fase: `Runtime Federation` · data: `2026-08-25`
+> fase: `Technical Refinement` · data: `2026-08-25`
 > antes: v0.1 já exigia execução real + evidence_hash, mas não modelava o ciclo bounded de tentativa/rollback/escalonamento.
 > depois: v0.2 adiciona identidade do runtime, limites do loop, estado terminal e evidência para retry/rollback/PR/help.
 > base: commit `bd5a118`
