@@ -1,12 +1,7 @@
 // **GOS3** · agente: `Qwen-0.5B` · papel: bounded local worker
 import crypto from "node:crypto";
 
-export interface QwenConfig {
-  baseUrl?: string;
-  model?: string;
-  timeoutMs?: number;
-}
-
+export interface QwenConfig { baseUrl?: string; model?: string; timeoutMs?: number; }
 export interface QwenEvidence {
   invocation_id: string;
   agent: "Qwen-0.5B";
@@ -22,13 +17,12 @@ export interface QwenEvidence {
 
 export async function invoke(prompt: string, config: QwenConfig = {}): Promise<QwenEvidence> {
   const baseUrl = config.baseUrl ?? process.env.QWEN_BASE_URL ?? "http://127.0.0.1:11434/v1";
-  const model = config.model ?? process.env.QWEN_MODEL ?? "qwen2.5:0.5b";
+  const model = config.model ?? process.env.QWEN_MODEL ?? "qwen2.5-coder:0.5b";
   const timeoutMs = config.timeoutMs ?? 30_000;
   const started = Date.now();
   const invocation_id = `inv-${crypto.randomUUID()}`;
   const runtime_id = `qwen-local-${process.pid}`;
   const execution_id = `exec-${crypto.randomUUID()}`;
-
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -50,7 +44,5 @@ export async function invoke(prompt: string, config: QwenConfig = {}): Promise<Q
     const stderr = error?.name === "AbortError" ? `timeout after ${timeoutMs}ms` : String(error?.message ?? error);
     const evidence_hash = crypto.createHash("sha256").update(JSON.stringify({ model, prompt, stderr, execution_id })).digest("hex");
     return { invocation_id, agent: "Qwen-0.5B", executed: false, runtime_id, execution_id, duration_ms, stdout: "", stderr, exit_code: 1, evidence_hash };
-  } finally {
-    clearTimeout(timer);
-  }
+  } finally { clearTimeout(timer); }
 }
