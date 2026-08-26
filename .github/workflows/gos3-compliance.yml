@@ -1,15 +1,104 @@
-name: gos3-compliance
+name: GOS3 Compliance
+
 on:
   push:
-    branches: [main]
+    branches: ["main"]
   pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
 jobs:
-  contract-gate:
+  gos3-compliance:
+    name: GOS3 compliance
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Gate 1
+
+      - name: Gate 1 - Contract (comportamento)
         run: python3 tests/contract_test.py
+        # processo -> stdout/stderr/exit_code/duration_ms -> evidence_hash -> comparação
+        # executed:true só é aceito se a evidência fechar.
+
+      - name: Gate 2 - Validate repository truth (documentação)
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          fail() {
+            echo "::error::$1"
+            exit 1
+          }
+
+          echo "== GOS3 Compliance =="
+          echo
+
+          # 1. Invocation contract exists but remains a specification.
+          test -f spec/invocation-contract.md \
+            || fail "spec/invocation-contract.md missing"
+
+          grep -q "Status:.*Technical Refinement" \
+            spec/invocation-contract.md \
+            || fail "invocation contract classification changed unexpectedly"
+
+          echo "OK: invocation contract present as specification"
+
+          # 2. GPT must NOT silently become an implementation.
+          if [ -d "src/agents/gpt" ]; then
+            fail "src/agents/gpt exists: GPT implementation requires explicit approval and tests"
+          fi
+
+          echo "OK: src/agents/gpt absent"
+
+          # 3. GPT documentation must explicitly say NOT IMPLEMENTED.
+          test -f docs/agents/gpt/TRUTH-MATRIX.md \
+            || fail "GPT truth matrix missing"
+
+          grep -q "GPT adapter is NOT IMPLEMENTED in Vortex" \
+            docs/agents/gpt/TRUTH-MATRIX.md \
+            || fail "GPT truth matrix does not explicitly classify GPT as NOT IMPLEMENTED"
+
+          echo "OK: GPT truth matrix is conservative"
+
+          # 4. Product truth must remain conservative.
+          test -f docs/PRODUCT-TRUTH.md \
+            || fail "docs/PRODUCT-TRUTH.md missing"
+
+          grep -q "49/49 coverage.*NOT CLAIMED" \
+            docs/PRODUCT-TRUTH.md \
+            || fail "49/49 coverage is not explicitly marked NOT CLAIMED"
+
+          grep -q "GPT runtime is operational in Vortex.*NOT PROVEN" \
+            docs/PRODUCT-TRUTH.md \
+            || fail "GPT runtime truth classification is not conservative"
+
+          grep -q "IMPLEMENTED / EXECUTION UNPROVEN" \
+            docs/PRODUCT-TRUTH.md \
+            || fail "MetaAI execution-unproven classification missing"
+
+          echo "OK: PRODUCT-TRUTH conservative"
+
+          # 5. Required agent directories that actually exist.
+          for agent in claude grok manus metaai; do
+            test -d "src/agents/$agent" \
+              || fail "Expected agent directory missing: $agent"
+          done
+
+          echo "OK: existing agent directories present"
+
+          # 6. Prevent obvious semantic inflation in PRODUCT-TRUTH.
+          if grep -nE '49/49.*IMPLEMENTED|GPT runtime.*IMPLEMENTED|metaai.*REAL EXECUTION' \
+              docs/PRODUCT-TRUTH.md; then
+            fail "Detected semantic inflation in PRODUCT-TRUTH.md"
+          fi
+
+          echo
+          echo "GOS3 COMPLIANCE: PASS"

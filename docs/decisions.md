@@ -1,86 +1,62 @@
 # Decisões — vortex (ADR-style)
 
-Registro formal de decisões. Toda mudança de contrato ou arquitetura entra aqui com contexto, decisão, alternativas e estado de aprovação.
+Registro formal de decisões. Mudanças de contrato/arquitetura entram aqui com contexto, decisão, alternativas e aprovação.
 
-## ADR-001 — Corrigir links quebrados do README + abrir Technical Refinement
-
-**Data:** 2026-08-14  
-**Autor:** Claude  
+## ADR-001 — Contrato de invocação + Technical Refinement
 **Status:** Aceito
 
-### Contexto
-Revisão externa identificou links quebrados e ausência de interface concreta.
-
-### Decisão
-Corrigir a documentação e adiantar o contrato de invocação v0.1 para fechar o gap mais crítico.
+Fechar o gap entre conversa de agente e execução verificável através de um contrato comum Nx1/NxN.
 
 ---
 
-## ADR-002 — Sprint Prova 3/3: evidência em vez de claims
-
-**Data:** 2026-08-14  
-**Autor:** Claude  
+## ADR-002 — Evidência em vez de claims
 **Status:** Aceito
 
-### Decisão
-`executed:true` requer evidência; testes e gates devem provar execução. Ratings e claims não substituem prova.
+`executed:true` requer evidência real. Claims e ratings não substituem execução verificável.
 
 ---
 
-## ADR-003 — Runtime externo; conector GCloud por usuário
+## ADR-003 — Runtime externo e `runtime_id`
+**Status:** Aceito (diretriz)
 
-**Data:** 2026-08-22  
-**Autor:** Grok  
-**Status:** Aceito (diretriz; implementação zAI pendente)
-
-### Decisão
-Preferir runtime externo, conector GCloud autenticado por usuário, não chave cloud global no cliente; `runtime_id` é obrigatório em respostas executadas.
+Preferir runtime externo/conector autenticado por usuário quando necessário. `runtime_id` é obrigatório em execução real.
 
 ---
 
-## ADR-004 — UX Grok-like com + para arquivos
+## ADR-004 — UX Grok-like
+**Status:** Aceito (diretriz)
 
-**Data:** 2026-08-22  
-**Autor:** Grok  
-**Status:** Aceito (diretriz; implementação zAI pendente)
-
-### Decisão
-Thread + compose como UX principal; anexos no `+`; mobile/LITE limitado a poucos agentes visíveis; falhas de sandbox devem ser visíveis.
+Thread/compose como UX principal; falhas de sandbox devem ser visíveis.
 
 ---
 
-## ADR-005 — Runtime Federation + Provenance do xAI
+## ADR-005 — Runtime Federation + Provenance
+**Status:** Proposta — aprovação PO/GOS3 pendente
 
-**Data:** 2026-08-23  
+Separar Agent de Runtime, permitir N agentes, capability discovery, `runtime_id` e trilha `dor → issue → teste → execução → evidência → revisão → aprovação → commit/PR → backlog`.
+
+---
+
+## ADR-006 — Bounded Agent Loop
+**Data:** 2026-08-25  
 **Autor:** GPT  
-**Status:** **Proposta — aguardando PO + revisão GOS3 no xAI**  
-**Issue:** #11
+**Status:** **Proposta para PO/GOS3 review**
 
 ### Contexto
-O zAI legado evoluiu para xAI como fork forçado e o ambiente pode hospedar 28+ agentes. Runtimes heterogêneos incluem A23/Termux, VPS, GCloud e Colab. O proot Alpine pode ser instável; portanto, o agente não deve ficar acoplado a um único runtime.
-
-Também existe risco de transformar claims documentais (`100%`, `GOS3 Certified`, benchmarks, WAL) em fatos sem proveniência reproduzível.
+A arquitetura Vortex/GOS3 já possui contrato, evidência e runtime federation, mas ainda faltava uma política explícita para agentes que iteram sobre código dentro de sandbox. Um worker pequeno pode ser útil se o sistema controlar o ciclo; autonomia sem limites cria loops, regressões e claims difíceis de auditar.
 
 ### Decisão proposta
-1. **Reaproveitar o GOS3 do Vortex; não criar um segundo GOS3 no xAI.**
-2. Permitir N agentes no board; os 28 agentes do xAI podem atuar como proposers/reviewers.
-3. Separar Agent de Runtime através do invocation-contract.
-4. Adotar capability discovery e `runtime_id`.
-5. Usar write-once/run-anywhere no nível do artefato/contrato; compilações nativas continuam dependentes do perfil.
-6. Aplicar a regra **mexeu, deixa rastro**: dor → Issue → proposta → teste → execução → telemetria → evidência → revisão → aprovação → commit/PR → backlog.
-7. Proibir `status:success` quando `executed:false` e proibir mocks silenciosos.
-
-### Alternativas descartadas
-- Criar um novo GOS3 específico para xAI: duplicaria governança e quebraria a proveniência entre projetos.
-- Fazer o A23/proot ser o runtime universal: frágil e acopla arquitetura à máquina.
-- Promover claims do README a evidência: descartado; benchmark deve ser reproduzível.
-
-### Aprovação
-**PO:** pendente.  
-**GOS3/xAI:** pendente.
+1. Adotar estados `READY`, `RUNNING`, `VERIFYING`, `RETRY`, `ROLLBACK`, `PR_READY`, `STAGNATED`, `HELP_REQUIRED`.
+2. `max_attempts` e `max_duration_ms` são hard limits aplicados pelo runtime/orquestrador.
+3. PASS só chega a `PR_READY` com execução real + teste/verificação + evidência válida.
+4. Regressão exige `ROLLBACK` para `last_good_commit` antes de retry.
+5. Erro repetido/ausência de progresso termina em `STAGNATED`.
+6. Bloqueio, estagnação ou limite termina em `HELP_REQUIRED`, com Issue estruturada contendo erro, commits e evidências.
+7. Worker pequeno (ex.: Qwen Coder ~0,5B) é executor especializado, não autoridade de governança.
+8. O percentual 80–90% é apenas avaliação arquitetural; não é critério de aceitação.
 
 ### Consequência
-A proposta foi documentada e aberta como Issue #11. A implementação só deve ser marcada como aceita após as aprovações requeridas.
+O contrato v0.2 e `src/gos3/runtime-loop.ts` materializam a máquina de estados. A integração com sandbox real, Git rollback, PR e Issue continua pendente de testes e aprovação.
 
 ---
 

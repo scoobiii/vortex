@@ -1,39 +1,27 @@
-> **GOS3** · agente: `GPT` · papel: `Maintainer / Engineering Agent` (ver docs/team.md)
-> fase: `Technical Refinement (E2)` · data: `2026-08-16` · hora: `11:01:03 -03:00`
-> antes: registro histórico do teste ainda dizia 17/17
-> depois: registro histórico normalizado para 19/19, preservando a evidência de execução real
-> base: commit `19ee04f` (estado sincronizado antes desta correção)
+> **GOS3** · agente: `GPT` · papel: `Maintainer / Engineering Agent`
+> fase: `Bounded Agent Loop` · data: `2026-08-25`
+> antes: contrato v0.1 + evidence gate + runtime federation proposal
+> depois: contrato v0.2 e lifecycle bounded documentados e primeiro runtime-loop implementado
+> base: `2f76316e`
 > assinatura: `GPT · Maintainer / Engineering Agent · GOS3`
-> commit: registrado pelo Git no commit que contém esta alteração
 
 # Changelog
-
-Todas as mudanças relevantes do projeto vortex, seguindo Keep a Changelog adaptado ao protocolo GOS3.
 
 ## [Unreleased]
 
 ### Adicionado
-- `package.json` + `tsconfig.json` na raiz — infra mínima pra rodar TypeScript (`npm install && npm run test:grok`)
-- 7º caso de teste em `contract.test.ts`: verifica que `executed: true` não é confundido com side-effect comprovado
-
-### Verificado
-- **Testes do adaptador Grok rodados de fato, ambiente real**: 19/19 passed, 0 failed
-  (2026-08-15, Node v20.20.2, `npx ts-node src/agents/grok/tests/contract.test.ts`)
-  Primeiro executável real do Sprint 1 — antes disso, testes existiam como código mas
-  nunca tinham sido rodados (faltava `package.json`/`tsconfig.json`).
+- `src/gos3/runtime-loop.ts`: máquina de estados bounded para agentes: `READY`, `RUNNING`, `VERIFYING`, `RETRY`, `ROLLBACK`, `PR_READY`, `STAGNATED`, `HELP_REQUIRED`.
+- Contrato de invocação v0.2 com limites de tentativas/tempo, identidade do runtime e lifecycle de execução.
 
 ### Alterado
-- BACKLOG.md: item "Rodar testes no ambiente atual" marcado `[x]` com evidência
+- `docs/BACKLOG.md`: novo Sprint 4 para worker pequeno + sandbox + loop verificável.
+- `docs/runtime-execution-model.md`: lifecycle bounded e separação worker/runtime/governança.
+- `docs/gos3-provenance.md`: provenance agora inclui retry/rollback/PR/help.
+- `docs/DONE-CRITERIA.md`: gates atualizados para lifecycle e escalonamento.
 
-### Pendente
-- Documentar handoff do adaptador
-- Adaptadores dos outros 7 agentes
-- Integração mínima com X / Bluesky
-- Corrigir checagem de tipo em `contract.ts` (`error`/`result`)
-
-## [0.0.1] — 2026-08-14
-### Adicionado
-- Repositório criado: github.com/scoobiii/vortex
-- Arquitetura em duas camadas: execução Nx1 + estado NxN
-- SWOT 3/3 inicial
-- Convite formal ao GOS3
+### Regra reforçada
+- Nenhum agente pode executar loop infinito.
+- `PR_READY` depende de execução real + teste + evidência.
+- Regressão exige rollback para último commit bom.
+- Estagnação, bloqueio ou limites produzem `HELP_REQUIRED` e podem abrir Issue estruturada.
+- O percentual 80–90% é avaliação arquitetural, não evidência de conformidade.
