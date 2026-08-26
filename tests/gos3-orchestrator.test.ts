@@ -18,6 +18,7 @@ class FakeGit implements GitProvider {
 
 const ok: SandboxResult = { status: "success", stdout: "qwen-ok", stderr: "", exit_code: 0, duration_ms: 2, runtime_id: "rt-test", execution_id: "exec-test", evidence_hash: "hash-ok" };
 const fail: SandboxResult = { status: "error", stdout: "", stderr: "worker failed", exit_code: 1, duration_ms: 2, runtime_id: "rt-test", execution_id: "exec-test-2", evidence_hash: "hash-fail" };
+const verifyFail: SandboxResult = { status: "error", stdout: "", stderr: "tests failed", exit_code: 1, duration_ms: 2, runtime_id: "rt-test", execution_id: "exec-test-verify", evidence_hash: "hash-verify-fail" };
 
 async function main() {
   {
@@ -35,6 +36,15 @@ async function main() {
     assert.equal(result.snapshot.help_request?.reason, "attempt_limit");
     assert.equal(git.pr, 0);
     assert.equal(git.issue, 1);
+  }
+
+  {
+    const git = new FakeGit();
+    const result = await runBoundedTask(new FakeSandbox([ok, verifyFail, ok]), git, { command: "qwen", verifyCommand: "npm", verifyArgs: ["test"] }, { limits: { max_attempts: 3, max_duration_ms: 1000 }, allowGitHub: true });
+    assert.equal(result.snapshot.state, "PR_READY");
+    assert.equal(git.rollbacks.length, 1);
+    assert.equal(git.rollbacks[0], "abc123");
+    assert.equal(git.pr, 1);
   }
 
   console.log("gos3 orchestrator tests: PASS");
