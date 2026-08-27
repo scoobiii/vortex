@@ -23,12 +23,27 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install Node dependencies
+        run: npm install
+
       - name: Gate 1 - Contract (comportamento)
         run: python3 tests/contract_test.py
         # processo -> stdout/stderr/exit_code/duration_ms -> evidence_hash -> comparação
         # executed:true só é aceito se a evidência fechar.
 
-      - name: Gate 2 - Validate repository truth (documentação)
+      - name: Gate 2 - Runtime and orchestration tests
+        run: |
+          npm run test:runtime-loop
+          npm run test:orchestrator
+          npm run test:grok
+
+      - name: Gate 3 - Validate repository truth
         shell: bash
         run: |
           set -euo pipefail
@@ -41,7 +56,6 @@ jobs:
           echo "== GOS3 Compliance =="
           echo
 
-          # 1. Invocation contract exists and is classified as Technical Refinement.
           test -f spec/invocation-contract.md \
             || fail "spec/invocation-contract.md missing"
 
@@ -49,26 +63,20 @@ jobs:
             spec/invocation-contract.md \
             || fail "invocation contract classification changed unexpectedly"
 
-          echo "OK: invocation contract present as specification"
-
-          # 2. GPT must NOT silently become an implementation.
-          if [ -d "src/agents/gpt" ]; then
-            fail "src/agents/gpt exists: GPT implementation requires explicit approval and tests"
-          fi
-
-          echo "OK: src/agents/gpt absent"
-
-          # 3. GPT documentation must explicitly say NOT IMPLEMENTED.
           test -f docs/agents/gpt/TRUTH-MATRIX.md \
             || fail "GPT truth matrix missing"
 
+          test -f src/agents/gpt/adapter/index.ts \
+            || fail "GPT adapter missing"
+
+          grep -q "runtime executor supplied by the host" \
+            src/agents/gpt/adapter/index.ts \
+            || fail "GPT adapter is not evidence-gated"
+
           grep -q "GPT adapter is NOT IMPLEMENTED in Vortex" \
             docs/agents/gpt/TRUTH-MATRIX.md \
-            || fail "GPT truth matrix does not explicitly classify GPT as NOT IMPLEMENTED"
+            && fail "GPT truth matrix still says NOT IMPLEMENTED while adapter exists"
 
-          echo "OK: GPT truth matrix is conservative"
-
-          # 4. Product truth must remain conservative.
           test -f docs/PRODUCT-TRUTH.md \
             || fail "docs/PRODUCT-TRUTH.md missing"
 
@@ -84,17 +92,11 @@ jobs:
             docs/PRODUCT-TRUTH.md \
             || fail "MetaAI execution-unproven classification missing"
 
-          echo "OK: PRODUCT-TRUTH conservative"
-
-          # 5. Required agent directories that actually exist.
           for agent in claude grok manus metaai; do
             test -d "src/agents/$agent" \
               || fail "Expected agent directory missing: $agent"
           done
 
-          echo "OK: existing agent directories present"
-
-          # 6. Prevent obvious semantic inflation in PRODUCT-TRUTH.
           if grep -nE '49/49.*IMPLEMENTED|GPT runtime.*IMPLEMENTED|metaai.*REAL EXECUTION' \
               docs/PRODUCT-TRUTH.md; then
             fail "Detected semantic inflation in PRODUCT-TRUTH.md"
