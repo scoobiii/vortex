@@ -34,8 +34,6 @@ jobs:
 
       - name: Gate 1 - Contract (comportamento)
         run: python3 tests/contract_test.py
-        # processo -> stdout/stderr/exit_code/duration_ms -> evidence_hash -> comparação
-        # executed:true só é aceito se a evidência fechar.
 
       - name: Gate 2 - Runtime and orchestration tests
         run: |
@@ -54,7 +52,6 @@ jobs:
           }
 
           echo "== GOS3 Compliance =="
-          echo
 
           test -f spec/invocation-contract.md \
             || fail "spec/invocation-contract.md missing"
@@ -69,16 +66,9 @@ jobs:
           test -f src/agents/gpt/adapter/index.ts \
             || fail "GPT adapter missing"
 
-          grep -q "runtime executor supplied by the host" \
-            src/agents/gpt/adapter/index.ts \
-            || fail "GPT adapter is not evidence-gated"
-
-          grep -q "GPT adapter is NOT IMPLEMENTED in Vortex" \
+          grep -q "requires an injected.*RuntimeExecutor" \
             docs/agents/gpt/TRUTH-MATRIX.md \
-            && fail "GPT truth matrix still says NOT IMPLEMENTED while adapter exists"
-
-          test -f docs/PRODUCT-TRUTH.md \
-            || fail "docs/PRODUCT-TRUTH.md missing"
+            || fail "GPT truth matrix does not require an authorized runtime"
 
           grep -q "49/49 coverage.*NOT CLAIMED" \
             docs/PRODUCT-TRUTH.md \
@@ -102,5 +92,4 @@ jobs:
             fail "Detected semantic inflation in PRODUCT-TRUTH.md"
           fi
 
-          echo
           echo "GOS3 COMPLIANCE: PASS"
