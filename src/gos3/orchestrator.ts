@@ -3,7 +3,7 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import crypto from "node:crypto";
-import { initialLoop, nextState, type AttemptEvidence, type LoopLimits, type LoopSnapshot } from "./runtime-loop.js";
+import { initialLoop, nextState, type AttemptEvidence, type LoopLimits, type LoopSnapshot } from "./runtime-loop";
 
 const execFileAsync = promisify(execFile);
 
