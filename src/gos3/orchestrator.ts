@@ -12,7 +12,8 @@ export interface Sandbox { run(command: string, args: string[], timeoutMs: numbe
 
 /** Linux sandbox adapter. Refuses to execute unsandboxed commands. */
 export class BubblewrapSandbox implements Sandbox {
-  constructor(private readonly cwd: string) {}
+  private readonly cwd: string;
+  constructor(cwd: string) { this.cwd = cwd; }
   async run(command: string, args: string[], timeoutMs: number): Promise<SandboxResult> {
     const started = Date.now();
     const runtime_id = `linux-bwrap-${process.pid}-${started}`;
@@ -36,7 +37,8 @@ export class BubblewrapSandbox implements Sandbox {
 
 export interface GitProvider { head(): Promise<string>; changedFiles(): Promise<string[]>; rollback(sha: string): Promise<void>; createPR(title: string, body: string): Promise<string>; createHelpIssue(title: string, body: string): Promise<string>; }
 export class CliGitProvider implements GitProvider {
-  constructor(private readonly cwd: string) {}
+  private readonly cwd: string;
+  constructor(cwd: string) { this.cwd = cwd; }
   private async run(command: string, args: string[]): Promise<string> { const { stdout } = await execFileAsync(command, args, { cwd: this.cwd, maxBuffer: 1024 * 1024 }); return stdout.trim(); }
   head() { return this.run("git", ["rev-parse", "HEAD"]); }
   async changedFiles() { const out = await this.run("git", ["status", "--short"]); return out ? out.split("\n").map(x => x.slice(3).trim()).filter(Boolean) : []; }
