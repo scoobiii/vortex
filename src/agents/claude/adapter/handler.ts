@@ -12,10 +12,6 @@
 
 import { ActionHandler, InvocationContext } from "./types";
 
-/**
- * Linhas obrigatórias do cabeçalho GOS3 (docs/PLAYBOOK.md item 2).
- * Cada uma precisa aparecer, nesta ordem, nas primeiras linhas do arquivo.
- */
 const REQUIRED_HEADER_PREFIXES = [
   "> **GOS3**",
   "> fase:",
@@ -25,7 +21,7 @@ const REQUIRED_HEADER_PREFIXES = [
   "> assinatura:",
 ];
 
-function checkGos3Header(text: string): { valid: boolean; missing: string[]; outOfOrder: boolean } {
+export function checkGos3Header(text: string): { valid: boolean; missing: string[]; outOfOrder: boolean } {
   const lines = text.split("\n").map((l) => l.trim());
   const missing: string[] = [];
   let lastIndex = -1;
@@ -46,9 +42,6 @@ function checkGos3Header(text: string): { valid: boolean; missing: string[]; out
 }
 
 const handlers: Record<string, ActionHandler> = {
-  /**
-   * Echo — paridade de contrato com o Runtime Reference (Grok)
-   */
   echo: async (payload, ctx) => {
     const logs: string[] = [];
     logs.push(`[echo] received payload keys: ${Object.keys(payload).join(", ") || "(empty)"}`);
@@ -57,32 +50,18 @@ const handlers: Record<string, ActionHandler> = {
       return { result: { echoed: payload, mode: "dry_run" }, logs };
     }
     logs.push("[echo] executed=true");
-    return {
-      result: { echoed: payload, timestamp: new Date().toISOString() },
-      logs,
-    };
+    return { result: { echoed: payload, timestamp: new Date().toISOString() }, logs };
   },
 
-  /**
-   * ping — health check do runtime
-   */
   ping: async (_payload, ctx) => {
     const logs = ["[ping] runtime alive"];
     if (ctx.sandbox) logs.push("[ping] sandbox mode confirmed");
     return {
-      result: {
-        status: "ok",
-        agent: "claude",
-        role: "Proposer / Arquiteto / Tech Writer",
-        sandbox: !!ctx.sandbox,
-      },
+      result: { status: "ok", agent: "claude", role: "Proposer / Arquiteto / Tech Writer", sandbox: !!ctx.sandbox },
       logs,
     };
   },
 
-  /**
-   * validate_contract — auto-teste do próprio contrato (paridade com Grok)
-   */
   validate_contract: async (payload, _ctx) => {
     const logs: string[] = [];
     const required = ["invocation_id", "agent", "action", "payload"];
@@ -96,11 +75,6 @@ const handlers: Record<string, ActionHandler> = {
     return { result: { valid: true }, logs };
   },
 
-  /**
-   * check_gos3_header — ação própria do papel Tech Writer.
-   * payload.text: string — conteúdo de um arquivo a validar contra
-   * docs/PLAYBOOK.md item 2 (cabeçalho GOS3 obrigatório).
-   */
   check_gos3_header: async (payload, _ctx) => {
     const logs: string[] = [];
     const text = payload.text;
@@ -110,19 +84,10 @@ const handlers: Record<string, ActionHandler> = {
     }
     const check = checkGos3Header(text);
     logs.push(`[check_gos3_header] linhas obrigatórias: ${REQUIRED_HEADER_PREFIXES.length}`);
-    if (check.missing.length) {
-      logs.push(`[check_gos3_header] faltando: ${check.missing.join(", ")}`);
-    }
-    if (check.outOfOrder) {
-      logs.push("[check_gos3_header] linhas presentes mas fora de ordem");
-    }
-    if (check.valid) {
-      logs.push("[check_gos3_header] cabeçalho GOS3 válido (PLAYBOOK.md item 2)");
-    }
-    return {
-      result: { valid: check.valid, missing: check.missing, outOfOrder: check.outOfOrder },
-      logs,
-    };
+    if (check.missing.length) logs.push(`[check_gos3_header] faltando: ${check.missing.join(", ")}`);
+    if (check.outOfOrder) logs.push("[check_gos3_header] linhas presentes mas fora de ordem");
+    if (check.valid) logs.push("[check_gos3_header] cabeçalho GOS3 válido (PLAYBOOK.md item 2)");
+    return { result: { valid: check.valid, missing: check.missing, outOfOrder: check.outOfOrder }, logs };
   },
 };
 
