@@ -1,31 +1,37 @@
-# Contrato de invocação — v0.1 (rascunho)
+# Contrato de invocação — v0.2 (GOS3 bounded execution)
 
-Status: **Technical Refinement** (E2 do backlog). Não implementado — só especificação.
-
-Escopo: define o formato mínimo de input/output que qualquer adaptador `src/agents/<agente>/` deve respeitar para que uma invocação Nx1 (execução isolada) seja auditável e comparável entre os 7 agentes do GOS3, sem exigir runtime compartilhado.
+> **GOS3** · agente: `GPT` · papel: `Maintainer / Engineering Agent`
+> fase: `Technical Refinement` · data: `2026-08-25`
+> antes: v0.1 já exigia execução real + evidence_hash, mas não modelava o ciclo bounded de tentativa/rollback/escalonamento.
+> depois: v0.2 adiciona identidade do runtime, limites do loop, estado terminal e evidência para retry/rollback/PR/help.
+> base: commit `bd5a118`
+> assinatura: `GPT · Maintainer / Engineering Agent · GOS3`
 
 ## Princípio
 
-O contrato não roda código nem abre sandbox de ninguém. Ele padroniza **o que entra** e **o que sai** de uma invocação — cada agente continua executando no seu próprio runtime isolado (Nx1). Isso resolve o problema original ("cara de bunda" na conversa): a saída declara o que foi de fato executado, em formato verificável, em vez de texto solto.
+O contrato separa **LLM**, **runtime** e **governança**. O modelo pode propor; somente o runtime que realmente executou pode produzir `executed: true`. Toda autonomia é limitada por orçamento de tentativas e tempo. Não existe loop infinito.
 
 ## Request
 
 ```json
 {
-  "contract_version": "0.1",
+  "contract_version": "0.2",
   "invocation_id": "uuid-v4",
-  "agent": "claude | gemini | gpt | qwen | deepseek | manus | perplexity",
+  "agent": "claude | gemini | gpt | grok | qwen | deepseek | manus | perplexity | ...",
   "task": {
     "kind": "code_exec | shell | tool_call",
-    "payload": "string — código, comando ou chamada de tool, opaco ao contrato",
-    "language": "string opcional — ex: python, bash, node"
+    "payload": "string",
+    "language": "string opcional"
   },
   "limits": {
     "timeout_seconds": "int, obrigatório",
-    "max_output_bytes": "int, obrigatório"
+    "max_output_bytes": "int, obrigatório",
+    "max_attempts": "int >= 1, obrigatório",
+    "max_duration_ms": "int > 0, obrigatório"
   },
-  "context_ref": "string opcional — referência ao item do backlog/handoff que originou a invocação (NxN)",
-  "env_tag": "browser-v8-isolate | node-linux | node-android-termux | unknown — obrigatório a partir da v0.2; declara o ambiente real de hospedagem do agente, não o que ele presume ser"
+  "context_ref": "string opcional",
+  "env_tag": "browser-v8-isolate | node-linux | node-android-termux | unknown",
+  "runtime_id": "string opcional na request; obrigatório quando fornecido pelo scheduler"
 }
 ```
 
@@ -33,41 +39,77 @@ O contrato não roda código nem abre sandbox de ninguém. Ele padroniza **o que
 
 ```json
 {
-  "contract_version": "0.1",
-  "invocation_id": "uuid-v4 — mesmo da request",
-  "agent": "mesmo campo do request",
+  "contract_version": "0.2",
+  "invocation_id": "uuid-v4",
+  "agent": "string",
   "status": "success | error | partial | timeout",
-  "executed": "bool — true só se código/comando de fato rodou no runtime do agente",
-  "evidence_hash": "string opcional se executed=false; OBRIGATÓRIO se executed=true — sha256 de (stdout+stderr+exit_code+duration_ms), hex lowercase",
-  "output": {
-    "stdout": "string, truncado em max_output_bytes",
-    "stderr": "string, truncado em max_output_bytes",
-    "exit_code": "int opcional"
+  "executed": true,
+  "claim": "executed | not_executed | failed | blocked",
+  "evidence_hash": "sha256 obrigatório quando executed=true",
+  "runtime": {
+    "runtime_id": "string",
+    "execution_id": "string"
   },
-  "duration_ms": "int",
-  "truncated": "bool — true se output excedeu max_output_bytes"
+  "output": {
+    "stdout": "string",
+    "stderr": "string",
+    "exit_code": 0
+  },
+  "duration_ms": 123,
+  "truncated": false,
+  "loop": {
+    "state": "READY | RUNNING | VERIFYING | RETRY | ROLLBACK | PR_READY | STAGNATED | HELP_REQUIRED",
+    "attempt": 1,
+    "max_attempts": 3,
+    "last_good_commit": "sha opcional",
+    "current_commit": "sha opcional",
+    "evidence_hashes": ["sha256..."]
+  },
+  "help_request": null
 }
 ```
 
 ## Regras obrigatórias
 
-1. `executed: false` é permitido (ex: o agente decidiu não rodar por segurança) mas **nunca pode vir acompanhado de `status: success`** — evita o caso de resposta especulada travestida de execução real.
-2. **`executed: true` sem `evidence_hash` é uma resposta inválida** — rejeitada por `tests/contract_test.py`, não é "boa prática", é requisito de schema. `evidence_hash = sha256(stdout + stderr + str(exit_code) + str(duration_ms))`, hex lowercase, sem espaços entre os campos concatenados.
-3. `invocation_id` do response deve ecoar o do request — permite correlação em log e no `docs/handoff.md`.
-4. Nenhum campo do contrato exige acesso a runtime de outro agente. Um adaptador que não consiga cumprir isso (ex: provedor não expõe API programática de execução) declara isso em `docs/gotchas.md`, não quebra o contrato.
-5. `payload` é opaco ao contrato — o contrato não interpreta código, só envelopa input/output.
-6. **Regra de recusa pré-execução por `env_tag` (v0.2, motivada por INC-001 — ver `docs/incidents.md`):** se `env_tag == "browser-v8-isolate"`, o adaptador DEVE recusar (`status: "error"`, `executed: false`, `claim: "not_executed"`) qualquer `task.payload` que referencie `require(`, `process.`, `module.exports`, ou qualquer API de Node/SO — **antes** de tentar executar, não depois de capturar a exceção. Isso transforma "descobrimos o crash lendo o stdout" em "o gate recusa de antemão", coerente com o princípio Zero Simulação Oculta. Ver também `spec/gos3-system-instruction.md` seção 3.
+1. `executed:false` **nunca** pode ser `status:success`.
+2. `executed:true` exige `runtime.runtime_id`, `runtime.execution_id` e `evidence_hash` verificável.
+3. `evidence_hash = sha256(stdout + stderr + str(exit_code) + str(duration_ms))`, hex lowercase.
+4. O mesmo resultado/evidência não pode ser tratado como progresso indefinidamente. Repetição sem mudança observável termina em `STAGNATED` → `HELP_REQUIRED`.
+5. `regression` exige preservação de `last_good_commit`; o próximo estado é `ROLLBACK` antes de nova tentativa.
+6. `pass` somente pode produzir `PR_READY` quando execução real, testes/verificação e evidência forem válidos.
+7. `blocked`, limite de tentativas ou limite de tempo terminam em `HELP_REQUIRED`; o agente deve produzir uma solicitação estruturada com erro, commits e evidências, não continuar em loop.
+8. `max_attempts` e `max_duration_ms` são hard limits do runtime/orquestrador, não sugestões para o LLM.
+9. `env_tag` descreve o ambiente real fornecido pelo adapter/scheduler. O modelo não pode inventá-lo.
+10. `browser-v8-isolate` não pode alegar shell/Node/SO execution. Referências a APIs incompatíveis devem ser recusadas antes da execução.
+11. Mock/simulação deve ser explicitamente identificada e nunca pode produzir `executed:true`.
+12. Git/PR é proveniência e publicação; não é prova de execução por si só. A prova vem do runtime + testes + evidência.
 
-## Em aberto (não decidido — não travar Sprint 1 por isso)
+## Máquina de estados GOS3
 
-- Formato de erro estruturado (`error.code`, `error.message`) — hoje só texto livre em `stderr`.
-- Se `context_ref` deve ser obrigatório (rastreabilidade) ou opcional (fricção menor pra adotar).
-- Assinatura/hash do output para auditoria — depende de decisão de segurança ainda não tomada (ver ameaça 1 do SWOT: prompt injection via output voltando pro contexto).
+```text
+READY → RUNNING → VERIFYING
+                    │
+       ┌────────────┼─────────────┐
+       ▼            ▼             ▼
+   PASS/PR_READY  RETRY       REGRESSION
+                     │             │
+                     └─────────────┘
+                           ▼
+                       ROLLBACK
+                           │
+                        RETRY
+
+VERIFYING → STAGNATED → HELP_REQUIRED
+VERIFYING → BLOCKED   → HELP_REQUIRED
+VERIFYING → time/attempt limit → HELP_REQUIRED
+```
+
+O estado `HELP_REQUIRED` é o mecanismo de escalonamento humano/GOS3: registra a razão, última execução, último commit bom, commit atual e hashes de evidência. Não há autonomia ilimitada.
+
+## Modelo operacional de agente pequeno
+
+Um modelo coder pequeno (por exemplo, Qwen Coder ~0,5B) pode atuar como **worker bounded**. Ele não precisa ser o decisor global: recebe tarefa delimitada, opera no sandbox, testa, devolve evidência e passa pela máquina de estados. O Vortex/GOS3 fornece limites, rollback, publicação e escalonamento.
 
 ## Próximo passo
 
-Cada agente do GOS3 implementa um adaptador de referência em `src/agents/<agente>/` que aceita este request e devolve este response, rodando **no seu próprio runtime**. Ver `docs/BACKLOG.md` → E2 e E3.
-
----
-
-**scoobiii/vortex** · GOS3 · autor: Claude (Arquiteto / Tech Writer, ver `docs/team.md`)
+Implementar adapters que consumam este contrato, testes de máquina de estados, um executor sandbox real e integração de `PR_READY`/`HELP_REQUIRED`. A avaliação de conformidade permanece por evidência; a estimativa arquitetural de 80–90% não é um gate de aceitação.
