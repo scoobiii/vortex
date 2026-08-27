@@ -11,6 +11,7 @@
   },
   "scripts": {
     "test:grok": "ts-node src/agents/grok/tests/contract.test.ts",
+    "test:claude": "ts-node src/agents/claude/tests/contract.test.ts",
     "grok:ping": "ts-node src/agents/grok/adapter/index.ts --fixture=ping",
     "grok:echo": "ts-node src/agents/grok/adapter/index.ts --fixture=echo",
     "grok:dry": "ts-node src/agents/grok/adapter/index.ts --fixture=dry",
