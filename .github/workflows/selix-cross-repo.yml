@@ -1,0 +1,63 @@
+name: selix-cross-repo
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  selix-over-vortex:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Vortex
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Checkout SELIX model
+        uses: actions/checkout@v4
+        with:
+          repository: scoobiii/selix
+          ref: main
+          path: selix-source
+
+      - name: Install SELIX dependencies
+        run: pip install -r selix-source/requirements.txt
+
+      - name: Derive SELIX model inputs
+        id: selix
+        shell: bash
+        run: |
+          read -r SELIX_IDEAL IPCA <<EOF
+          $(PYTHONPATH="$GITHUB_WORKSPACE/selix-source" python - <<'PY'
+          from src.selix.config import get_selic_ideal
+          from src.selix.core import BASELINE_ATUAL
+          print(get_selic_ideal(), BASELINE_ATUAL.inflacao_esperada)
+          PY
+          )
+          EOF
+          echo "selix_ideal=$SELIX_IDEAL" >> "$GITHUB_OUTPUT"
+          echo "ipca=$IPCA" >> "$GITHUB_OUTPUT"
+          echo "SELIX model ideal=$SELIX_IDEAL ipca=$IPCA"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Vortex dependencies
+        run: npm install
+
+      - name: Run SELIX through Vortex
+        env:
+          SELIX_INVOCATION_JSON: >-
+            {"invocation_id":"cross-selix-vortex","agent":"selix","action":"selix.selic1d","payload":{"selic_atual":14.25,"selic_ideal":${{ steps.selix.outputs.selix_ideal }},"ipca":${{ steps.selix.outputs.ipca }},"source":"scoobiii/selix@main"},"context":{"sandbox":true}}
+        run: |
+          npm run selix:selic1d | tee cross-result.json
+          node -e 'const fs=require("fs"); const r=JSON.parse(fs.readFileSync("cross-result.json","utf8")); if(r.gate!=="PASS"||r.executed!==true||r.evidence?.exit_code!==0) process.exit(1); console.log("CROSS-REPO GATE: PASS"); console.log(`SELIX source: scoobiii/selix@main`); console.log(`Vortex proof: ${r.evidence.output_hash}`);'
+
+      - name: Run Vortex deterministic contract gate
+        run: npm run test:selix
