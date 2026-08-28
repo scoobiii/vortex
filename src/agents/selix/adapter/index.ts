@@ -1,6 +1,9 @@
 /**
  * GOS3 · agente: selix · ação: selix.selic1d
  * Runtime adapter com proof: hash + tempo + log + exit_code.
+ *
+ * CLI input is dynamic: economic values MUST come from the invocation payload.
+ * No economic defaults are embedded in the runtime adapter.
  */
 
 import { selic1d } from "./handler";
@@ -56,7 +59,7 @@ export async function invoke(raw: unknown): Promise<SelixResponse> {
     const duration = Date.now() - start;
     logs.push(`[adapter] error=${message}`);
     logs.push(`[adapter] exit_code=1`);
-    logs.push(`[adapter] duration_ms=${duration}`);
+    logs.push(`[adapter] duration_ms=${duration}`;
 
     return {
       invocation_id: (raw as any)?.invocation_id ?? "unknown",
@@ -74,12 +77,19 @@ export async function invoke(raw: unknown): Promise<SelixResponse> {
 }
 
 if (require.main === module) {
-  const req: SelixRequest = {
-    invocation_id: "selix-selic1d-cli",
-    agent: "selix",
-    action: "selix.selic1d",
-    payload: { selic_atual: 14.25, selic_ideal: 9.25, ipca: 4.50 },
-    context: { sandbox: true },
-  };
+  const raw = process.env.SELIX_INVOCATION_JSON;
+  if (!raw) {
+    console.error("SELIX_INVOCATION_JSON is required; refusing hardcoded economic input");
+    process.exit(2);
+  }
+
+  let req: SelixRequest;
+  try {
+    req = JSON.parse(raw) as SelixRequest;
+  } catch (err) {
+    console.error(`SELIX_INVOCATION_JSON must be valid JSON: ${String(err)}`);
+    process.exit(2);
+  }
+
   invoke(req).then((res) => console.log(JSON.stringify(res, null, 2)));
 }
