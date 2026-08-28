@@ -13,3 +13,10 @@ jobs:
           python-version: "3.11"
       - name: Gate 1
         run: python3 tests/contract_test.py
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install TypeScript runtime dependencies
+        run: npm install
+      - name: Gate SELIX / SELIC 1D
+        run: npm run test:selix
