@@ -1,5 +1,5 @@
 > **GOS3** · agente: `GPT` · papel: `Maintainer / Engineering Agent` · status: **proposta — aguardando aprovação do PO e revisão dos agentes GOS3 no xAI**
-> fase: `Technical Refinement → Runtime Federation` · data: `2026-08-23`
+> fase: `Technical Refinement → Runtime Federation` · data: `2026-08-28`
 > regra: **mexeu, deixa rastro** — toda mudança relevante deve apontar dor → issue → proposta → teste → execução → evidência → revisão → aprovação → commit.
 
 # vortex
@@ -75,6 +75,63 @@ O agente não precisa conhecer detalhes de cada máquina. O Vortex deve descobri
 
 **Importante:** credencial/conector de usuário não equivale automaticamente a acesso irrestrito a GPU. Cada runtime deve expor capacidades e permissões reais.
 
+## SELIX / SELIC 1D — teste determinístico
+
+O Vortex pode representar a métrica econômica como uma invocação `selix.selic1d`, preservando a mesma regra de evidência usada pelos demais agentes. O exemplo completo está em `examples/selix/`.
+
+### Fixture
+
+```text
+examples/selix/selic1d.request.json
+```
+
+Entrada do exemplo:
+
+```json
+{
+  "contract_version": "0.1",
+  "invocation_id": "selix-selic1d-example-001",
+  "agent": "selix",
+  "action": "selix.selic1d",
+  "payload": {
+    "selic_atual": 14.25,
+    "selic_1d": 9.25,
+    "ipca_proxy": 4.5
+  },
+  "context": {
+    "sandbox": true,
+    "dry_run": false
+  }
+}
+```
+
+### Resultado esperado
+
+```text
+SELIC atual       = 14.25%
+SELIC 1D (ideal)  =  9.25%
+diferencial       =  5.00 p.p.
+IPCA proxy        =  4.50%
+juro real atual   =  9.75%
+juro real 1D      =  4.75%
+redução real      =  5.00 p.p.
+```
+
+### Gate de execução
+
+Para declarar `claim: executed`, o run precisa produzir evidência real:
+
+```text
+GATE: PASS
+claim: executed
+exit_code: 0
+duration_ms: <tempo real>
+input_hash: <hash>
+output_hash: <hash>
+```
+
+**Importante:** a fixture documenta o contrato e os valores esperados; ela não deve ser apresentada como execução real do runtime quando o adaptador `src/agents/selix/` não tiver sido executado. Claims como `400–450 empresas B3` ou `R$ 50–100 bi de desbloqueio` são dados declarados na peça e não são reestimados pelo cálculo determinístico.
+
 ## GOS3 — Gang of Seven
 
 O board original mantém Gemini, Claude, GPT, Qwen, DeepSeek, Manus e Perplexity. O modelo de execução não deve ser hardcoded: agentes adicionais do xAI podem participar como revisores/proposers, sem alterar o contrato. Ver `docs/team.md` e `docs/agents/gpt/`.
@@ -93,3 +150,4 @@ Ver:
 - `docs/gos3-provenance.md`
 - `docs/BACKLOG.md`
 - `docs/decisions.md`
+- `examples/selix/README.md`
