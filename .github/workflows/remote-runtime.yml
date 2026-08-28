@@ -1,0 +1,72 @@
+name: remote-runtime
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  remote-qwen:
+    name: Remote Qwen/Ollama + GOS3 regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Grok contract regression
+        run: npm run test:grok
+
+      - name: Install Ollama
+        run: curl -fsSL https://ollama.com/install.sh | sh
+
+      - name: Start Ollama
+        run: |
+          nohup ollama serve > /tmp/ollama.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:11434/api/tags >/dev/null && break
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:11434/api/tags >/dev/null
+
+      - name: Pull Qwen 0.5B
+        run: ollama pull qwen2.5-coder:0.5b
+
+      - name: Prove model is served remotely
+        run: |
+          curl -fsS http://127.0.0.1:11434/v1/chat/completions \
+            -H 'content-type: application/json' \
+            -d '{"model":"qwen2.5-coder:0.5b","messages":[{"role":"user","content":"Reply only QWEN_GOS3_READY"}],"stream":false,"temperature":0,"max_tokens":16}' \
+            | tee /tmp/qwen.json
+          grep -q 'QWEN_GOS3_READY' /tmp/qwen.json
+
+      - name: Prove Vortex connector reaches Qwen
+        run: |
+          npx ts-node -e '
+            const { ollamaConnector } = require("./src/connectors/ollama");
+            (async () => {
+              const r = await ollamaConnector.invoke({
+                input: { model: "qwen2.5-coder:0.5b", messages: [{ role: "user", content: "Reply only VORTEX_QWEN_READY" }], temperature: 0, maxTokens: 16 },
+                context: { timeoutMs: 60000 }
+              });
+              console.log(JSON.stringify({ ok: r.ok, providerUsed: r.providerUsed, modelUsed: r.modelUsed, output: r.output }));
+              if (!r.ok || r.providerUsed !== "ollama" || r.modelUsed !== "qwen2.5-coder:0.5b" || !String(r.output || "").includes("VORTEX_QWEN_READY")) process.exit(1);
+            })().catch(e => { console.error(e); process.exit(1); });
+          '
+
+      - name: Dump Ollama log on failure
+        if: failure()
+        run: cat /tmp/ollama.log || true
