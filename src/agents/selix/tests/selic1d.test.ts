@@ -38,7 +38,7 @@ async function run() {
   assert(a.logs.some((x) => x.includes("output_hash=")), "log contém output_hash");
 
   const b = await invoke({ ...req, invocation_id: "selix-test-002" });
-  assert(a.result && b.result && JSON.stringify(a.result) === JSON.stringify(b.result), "mesmos inputs → mesmo resultado");
+  assert(!!a.result && !!b.result && JSON.stringify(a.result) === JSON.stringify(b.result), "mesmos inputs → mesmo resultado");
   assert(a.evidence?.input_hash === b.evidence?.input_hash, "mesmos inputs → mesmo input_hash");
   assert(a.evidence?.output_hash === b.evidence?.output_hash, "mesmo resultado → mesmo output_hash");
 
