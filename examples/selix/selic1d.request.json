@@ -1,0 +1,15 @@
+{
+  "contract_version": "0.1",
+  "invocation_id": "selix-selic1d-example-001",
+  "agent": "selix",
+  "action": "selix.selic1d",
+  "payload": {
+    "selic_atual": 14.25,
+    "selic_1d": 9.25,
+    "ipca_proxy": 4.5
+  },
+  "context": {
+    "sandbox": true,
+    "dry_run": false
+  }
+}
