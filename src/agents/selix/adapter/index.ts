@@ -74,12 +74,24 @@ export async function invoke(raw: unknown): Promise<SelixResponse> {
 }
 
 if (require.main === module) {
-  const req: SelixRequest = {
-    invocation_id: "selix-selic1d-cli",
-    agent: "selix",
-    action: "selix.selic1d",
-    payload: { selic_atual: 14.25, selic_ideal: 9.25, ipca: 4.50 },
-    context: { sandbox: true },
-  };
-  invoke(req).then((res) => console.log(JSON.stringify(res, null, 2)));
+  const raw = process.env.SELIX_INVOCATION_JSON;
+  if (!raw) {
+    console.error("SELIX_INVOCATION_JSON is required; refusing hardcoded economic input");
+    process.exit(2);
+  }
+
+  let req: SelixRequest;
+  try {
+    req = JSON.parse(raw) as SelixRequest;
+  } catch (err) {
+    console.error(`SELIX_INVOCATION_JSON is not valid JSON: ${err instanceof Error ? err.message : String(err)}`);
+    process.exit(2);
+  }
+
+  invoke(req).then((res) => {
+    console.log(JSON.stringify(res, null, 2));
+    if (res.gate !== "PASS" || res.executed !== true || res.evidence?.exit_code !== 0) {
+      process.exitCode = 1;
+    }
+  });
 }
