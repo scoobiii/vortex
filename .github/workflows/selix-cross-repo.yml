@@ -9,6 +9,7 @@ jobs:
   selix-over-vortex:
     runs-on: ubuntu-latest
     steps:
+      # GOS3: cross-repo proof consumes the public SELIX snapshot, never an economic fixture.
       - name: Checkout Vortex without checkout action cleanup
         shell: bash
         run: |
@@ -100,7 +101,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
 
       - name: Install Vortex dependencies
         run: npm install
