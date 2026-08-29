@@ -58,23 +58,34 @@ jobs:
           if not snap.get("selic_atual_fonte") or not snap.get("selic_atual_serie"):
               raise SystemExit("Official SELIX snapshot provenance is incomplete")
           print("SELIX official snapshot: validated")
-          print(f"SELIX snapshot source: {""}https://raw.githubusercontent.com/scoobiii/selix/main/public/selix-official.json")
+          print("SELIX snapshot source: https://raw.githubusercontent.com/scoobiii/selix/main/public/selix-official.json")
           print(f"SELIX snapshot version: {snap.get('versao', 'unknown')}")
           PY
           INVOCATION_JSON="$(python - <<'PY'
           import json
           from pathlib import Path
+          import sys
+
           snap = json.loads(Path("selix-official.json").read_text(encoding="utf-8"))
+          ipca = snap.get("ipca", snap.get("ipca_proxy"))
+          if ipca is None:
+              sys.path.insert(0, "selix-source")
+              from src.selix.core import BASELINE_ATUAL
+              ipca = float(BASELINE_ATUAL.inflacao_esperada)
+              ipca_source = "scoobiii/selix@main:BASELINE_ATUAL"
+          else:
+              ipca = float(ipca)
+              ipca_source = "selix-official.json"
+
           payload = {
               "selic_atual": float(snap["selic_atual"]),
               "selic_ideal": float(snap["selic_ideal"]),
-              "ipca": float(snap.get("ipca", snap.get("ipca_proxy", 0))),
+              "ipca": ipca,
               "source": "https://raw.githubusercontent.com/scoobiii/selix/main/public/selix-official.json",
               "selic_source": snap["selic_atual_fonte"],
               "selic_date": snap.get("selic_atual_data_bcb"),
+              "ipca_source": ipca_source,
           }
-          if payload["ipca"] == 0:
-              raise SystemExit("Official SELIX snapshot missing ipca/ipca_proxy")
           print(json.dumps({
               "invocation_id": "cross-selix-vortex",
               "agent": "selix",
