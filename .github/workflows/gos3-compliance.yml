@@ -13,3 +13,11 @@ jobs:
           python-version: "3.11"
       - name: Gate 1
         run: python3 tests/contract_test.py
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - name: Install Node dependencies
+        run: npm install
+      - name: Gate 2 — multi-agent E2E
+        run: npm run test:gos3:multiagent
