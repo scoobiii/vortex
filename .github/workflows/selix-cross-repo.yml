@@ -18,11 +18,11 @@ jobs:
           python-version: "3.11"
 
       - name: Checkout SELIX model
-        uses: actions/checkout@v4
-        with:
-          repository: scoobiii/selix
-          ref: main
-          path: selix-source
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf selix-source
+          git clone --depth 1 --branch main https://github.com/scoobiii/selix.git selix-source
 
       - name: Install SELIX dependencies
         run: pip install -r selix-source/requirements.txt
