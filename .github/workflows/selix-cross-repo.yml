@@ -31,17 +31,23 @@ jobs:
         id: selix
         shell: bash
         run: |
-          read -r SELIX_IDEAL IPCA <<EOF
+          read -r SELIX_IDEAL IPCA SELIC_ATUAL <<EOF
           $(PYTHONPATH="$GITHUB_WORKSPACE/selix-source" python - <<'PY'
-          from src.selix.config import get_selic_ideal
+          from src.selix.config import get_selic_atual_from_bcb, get_selic_ideal
           from src.selix.core import BASELINE_ATUAL
-          print(get_selic_ideal(), BASELINE_ATUAL.inflacao_esperada)
+          import sys
+          current = get_selic_atual_from_bcb()
+          if not current.get("success"):
+              print(f"BCB lookup failed: {current}", file=sys.stderr)
+              raise SystemExit(1)
+          print(get_selic_ideal(), BASELINE_ATUAL.inflacao_esperada, current["rate"])
           PY
           )
           EOF
           echo "selix_ideal=$SELIX_IDEAL" >> "$GITHUB_OUTPUT"
           echo "ipca=$IPCA" >> "$GITHUB_OUTPUT"
-          echo "SELIX model ideal=$SELIX_IDEAL ipca=$IPCA"
+          echo "selic_atual=$SELIC_ATUAL" >> "$GITHUB_OUTPUT"
+          echo "SELIX model ideal=$SELIX_IDEAL ipca=$IPCA selic_atual=$SELIC_ATUAL"
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -54,9 +60,9 @@ jobs:
       - name: Run SELIX through Vortex
         env:
           SELIX_INVOCATION_JSON: >-
-            {"invocation_id":"cross-selix-vortex","agent":"selix","action":"selix.selic1d","payload":{"selic_atual":14.25,"selic_ideal":${{ steps.selix.outputs.selix_ideal }},"ipca":${{ steps.selix.outputs.ipca }},"source":"scoobiii/selix@main"},"context":{"sandbox":true}}
+            {"invocation_id":"cross-selix-vortex","agent":"selix","action":"selix.selic1d","payload":{"selic_atual":${{ steps.selix.outputs.selic_atual }},"selic_ideal":${{ steps.selix.outputs.selix_ideal }},"ipca":${{ steps.selix.outputs.ipca }},"source":"scoobiii/selix@main"},"context":{"sandbox":true}}
         run: |
-          npm run selix:selic1d | tee cross-result.json
+          npm run selix:selic1d --silent | tee cross-result.json
           node -e 'const fs=require("fs"); const r=JSON.parse(fs.readFileSync("cross-result.json","utf8")); if(r.gate!=="PASS"||r.executed!==true||r.evidence?.exit_code!==0) process.exit(1); console.log("CROSS-REPO GATE: PASS"); console.log(`SELIX source: scoobiii/selix@main`); console.log(`Vortex proof: ${r.evidence.output_hash}`);'
 
       - name: Run Vortex deterministic contract gate
