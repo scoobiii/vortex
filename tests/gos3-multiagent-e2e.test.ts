@@ -29,7 +29,8 @@ function executeAgent(state: TaskState, agent: string, input: string): Evidence 
     invocation_id, agent, status: 'success' as const, executed: true as const,
     runtime_id: 'vortex-test-runtime', exit_code: 0 as const,
     duration_ms: Math.max(0, Date.now() - started), stdout, input_hash,
-    output_hash, previous_evidence_hash, timestamp: new Date().toISOString(),
+    output_hash, ...(previous_evidence_hash === undefined ? {} : { previous_evidence_hash }),
+    timestamp: new Date().toISOString(),
   };
   return { ...unsigned, evidence_hash: sha256(unsigned) };
 }
@@ -47,23 +48,24 @@ function run(): TaskState {
   const a = executeAgent(state, 'agent-A', 'produce verified artifact');
   validateEvidence(a);
   state.evidence.push(a); state.step = 1;
-  state.memory['artifact'] = a.output_hash;
+  state.memory.artifact = a.output_hash;
 
-  const bInput = `review artifact ${state.memory['artifact']}`;
+  const bInput = `review artifact ${state.memory.artifact}`;
   const b = executeAgent(state, 'agent-B', bInput);
   validateEvidence(b);
   assert.equal(b.input_hash, sha256({ input: bInput, state: 1, agent: 'agent-B' }));
   assert.equal(bInput, `review artifact ${a.output_hash}`);
   assert.equal(b.previous_evidence_hash, a.evidence_hash);
   state.evidence.push(b); state.step = 2;
-  state.memory['review'] = b.output_hash;
+  state.memory.review = b.output_hash;
 
   const dir = mkdtempSync(join(tmpdir(), 'vortex-gos3-'));
   try {
     const path = join(dir, 'task-state.json');
     writeFileSync(path, JSON.stringify(state));
     const restored = JSON.parse(readFileSync(path, 'utf8')) as TaskState;
-    assert.deepEqual(restored, state);
+    const canonical = (s: TaskState) => ({ ...s, evidence: s.evidence.map(e => ({ ...e })) });
+    assert.deepEqual(canonical(restored), canonical(state));
     validateEvidence(restored.evidence[0]);
     validateEvidence(restored.evidence[1]);
     assert.equal(restored.evidence[1].previous_evidence_hash, restored.evidence[0].evidence_hash);
