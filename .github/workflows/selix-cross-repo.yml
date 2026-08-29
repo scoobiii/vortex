@@ -91,4 +91,6 @@ jobs:
           NODE
 
       - name: Run Vortex deterministic contract gate
-        run: npm run test:selix
+        env:
+          SELIX_INVOCATION_JSON: ${{ steps.selix.outputs.invocation_json }}
+        run: npm run test:selix --silent
