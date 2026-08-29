@@ -1,0 +1,134 @@
+name: selix-cross-repo
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  selix-over-vortex:
+    runs-on: ubuntu-latest
+    steps:
+      # GOS3: cross-repo proof consumes the public SELIX snapshot, never an economic fixture.
+      - name: Checkout Vortex without checkout action cleanup
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init .
+          git remote add origin https://github.com/scoobiii/vortex.git
+          git fetch --depth 1 origin "$GITHUB_SHA"
+          git checkout --detach FETCH_HEAD
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Fetch SELIX source for runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf selix-source
+          git clone --depth 1 --branch main https://github.com/scoobiii/selix.git selix-source
+
+      - name: Install SELIX dependencies
+        run: pip install -r selix-source/requirements.txt
+
+      - name: Fetch and validate official SELIX snapshot
+        id: selix
+        shell: bash
+        run: |
+          set -euo pipefail
+          SNAP_URL="https://raw.githubusercontent.com/scoobiii/selix/main/public/selix-official.json"
+          curl --fail --silent --show-error --location --retry 3 "$SNAP_URL" -o selix-official.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          snap = json.loads(Path("selix-official.json").read_text(encoding="utf-8"))
+          required = ("selic_atual", "selic_ideal", "diferencial")
+          missing = [k for k in required if k not in snap]
+          if missing:
+              raise SystemExit(f"Official SELIX snapshot missing fields: {missing}")
+          for key in required:
+              if not isinstance(snap[key], (int, float)) or isinstance(snap[key], bool):
+                  raise SystemExit(f"Official SELIX snapshot field is not numeric: {key}")
+          derived = round(float(snap["selic_atual"]) - float(snap["selic_ideal"]), 2)
+          if derived != round(float(snap["diferencial"]), 2):
+              raise SystemExit("Official SELIX snapshot differential is inconsistent")
+          if not snap.get("selic_atual_fonte") or not snap.get("selic_atual_serie"):
+              raise SystemExit("Official SELIX snapshot provenance is incomplete")
+          print("SELIX official snapshot: validated")
+          print("SELIX snapshot source: https://raw.githubusercontent.com/scoobiii/selix/main/public/selix-official.json")
+          print(f"SELIX snapshot version: {snap.get('versao', 'unknown')}")
+          PY
+          INVOCATION_JSON="$(python - <<'PY'
+          import json
+          from pathlib import Path
+          import sys
+
+          snap = json.loads(Path("selix-official.json").read_text(encoding="utf-8"))
+          ipca = snap.get("ipca", snap.get("ipca_proxy"))
+          if ipca is None:
+              sys.path.insert(0, "selix-source")
+              from src.selix.core import BASELINE_ATUAL
+              ipca = float(BASELINE_ATUAL.inflacao_esperada)
+              ipca_source = "scoobiii/selix@main:BASELINE_ATUAL"
+          else:
+              ipca = float(ipca)
+              ipca_source = "selix-official.json"
+
+          payload = {
+              "selic_atual": float(snap["selic_atual"]),
+              "selic_ideal": float(snap["selic_ideal"]),
+              "ipca": ipca,
+              "source": "https://raw.githubusercontent.com/scoobiii/selix/main/public/selix-official.json",
+              "selic_source": snap["selic_atual_fonte"],
+              "selic_date": snap.get("selic_atual_data_bcb"),
+              "ipca_source": ipca_source,
+          }
+          print(json.dumps({
+              "invocation_id": "cross-selix-vortex",
+              "agent": "selix",
+              "action": "selix.selic1d",
+              "payload": payload,
+              "context": {"sandbox": True},
+          }, separators=(",", ":")))
+          PY
+          )"
+          echo "invocation_json=$INVOCATION_JSON" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Install Vortex dependencies
+        run: npm install
+
+      - name: Run SELIX through Vortex
+        env:
+          SELIX_INVOCATION_JSON: ${{ steps.selix.outputs.invocation_json }}
+        run: |
+          set -euo pipefail
+          npx ts-node src/agents/selix/adapter/index.ts > cross-result.json
+          node - <<'NODE'
+          const fs = require('fs');
+          const r = JSON.parse(fs.readFileSync('cross-result.json', 'utf8'));
+          const expected = JSON.parse(process.env.SELIX_INVOCATION_JSON);
+          if (r.invocation_id !== expected.invocation_id) throw new Error('invocation_id mismatch');
+          if (r.gate !== 'PASS' || r.executed !== true || r.claim !== 'executed') throw new Error('GOS3 execution gate failed');
+          if (r.evidence?.exit_code !== 0 || !r.evidence?.input_hash || !r.evidence?.output_hash) throw new Error('execution proof incomplete');
+          if (r.result?.selic_ideal !== expected.payload.selic_ideal) throw new Error('SELIX ideal mismatch');
+          if (r.result?.ipca_proxy !== expected.payload.ipca) throw new Error('SELIX IPCA mismatch');
+          if (r.result?.selic_atual !== expected.payload.selic_atual) throw new Error('market input mismatch');
+          console.log('CROSS-REPO GATE: PASS');
+          console.log(`SELIX source: ${expected.payload.source}`);
+          console.log(`SELIX input hash: ${r.evidence.input_hash}`);
+          console.log(`Vortex output hash: ${r.evidence.output_hash}`);
+          NODE
+
+      - name: Run Vortex deterministic contract gate
+        env:
+          SELIX_INVOCATION_JSON: ${{ steps.selix.outputs.invocation_json }}
+        run: npm run test:selix --silent

@@ -12,6 +12,29 @@
 
 Runtime/protocolo para LLMs executarem código de forma verificável, mantendo a camada de execução separada da camada de estado. O Vortex não é um sandbox único: é o contrato que permite a um agente solicitar execução em um runtime compatível e receber evidência estruturada.
 
+## SELIX sobre Vortex — validação rápida
+
+Para validar o SELIX através do Vortex, use o branch/PR que implementa o adapter `selix.selic1d` e execute:
+
+```bash
+npm install
+npm run test:selix
+```
+
+O teste deve terminar com `0` e informar `GATE: PASS`, `claim: executed`, `executed: true`, `exit_code: 0`, hashes SHA-256 de entrada/saída e os resultados determinísticos. O CI `gos3-compliance` executa o mesmo gate para o PR.
+
+### O que um usuário/agente deve conferir
+
+```text
+Vortex → invocation → selix.selic1d → execução → proof → GOS3 gate
+```
+
+Aceite somente se `executed=true` + `gate=PASS` + `claim=executed` + `exit_code=0` + `input_hash`/`output_hash` válidos. `dry_run`, `simulated`, `mocked` ou `not_executed` não são sucesso.
+
+O teste determinístico usa SELIC 14,25%, SELIX 1D 9,25% e IPCA proxy 4,50%; os mesmos inputs devem produzir o mesmo resultado e os mesmos hashes.
+
+Para o guia correspondente no SELIX, veja `docs/VORTEX_VALIDATION.md`.
+
 ## A nova fronteira: agentes constroem o próprio xAI
 
 O Vortex passa a documentar uma arquitetura de **runtime federation** para o `zAI → xAI`: o app social pode hospedar múltiplos agentes, enquanto cada execução ocorre em um Nx1 adequado às capacidades do host.

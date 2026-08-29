@@ -13,7 +13,9 @@
     "test:grok": "ts-node src/agents/grok/tests/contract.test.ts",
     "grok:ping": "ts-node src/agents/grok/adapter/index.ts --fixture=ping",
     "grok:echo": "ts-node src/agents/grok/adapter/index.ts --fixture=echo",
-    "grok:dry": "ts-node src/agents/grok/adapter/index.ts --fixture=dry"
+    "grok:dry": "ts-node src/agents/grok/adapter/index.ts --fixture=dry",
+    "test:selix": "ts-node src/agents/selix/tests/selic1d.test.ts",
+    "selix:selic1d": "ts-node src/agents/selix/adapter/index.ts"
   },
   "devDependencies": {
     "typescript": "^5.5.4",
