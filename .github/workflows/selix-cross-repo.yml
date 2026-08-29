@@ -9,15 +9,21 @@ jobs:
   selix-over-vortex:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Vortex
-        uses: actions/checkout@v4
+      - name: Checkout Vortex without checkout action cleanup
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init .
+          git remote add origin https://github.com/scoobiii/vortex.git
+          git fetch --depth 1 origin "$GITHUB_SHA"
+          git checkout --detach FETCH_HEAD
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Checkout SELIX model
+      - name: Fetch SELIX source for runtime
         shell: bash
         run: |
           set -euo pipefail
@@ -27,27 +33,48 @@ jobs:
       - name: Install SELIX dependencies
         run: pip install -r selix-source/requirements.txt
 
-      - name: Build official SELIX invocation input
+      - name: Fetch and validate official SELIX snapshot
         id: selix
         shell: bash
         run: |
-          INVOCATION_JSON="$(PYTHONPATH="$GITHUB_WORKSPACE/selix-source" python - <<'PY'
+          set -euo pipefail
+          SNAP_URL="https://raw.githubusercontent.com/scoobiii/selix/main/public/selix-official.json"
+          curl --fail --silent --show-error --location --retry 3 "$SNAP_URL" -o selix-official.json
+          python - <<'PY'
           import json
-          from src.selix.config import get_selic_atual_from_bcb, get_selic_ideal
-          from src.selix.core import BASELINE_ATUAL
+          from pathlib import Path
 
-          current = get_selic_atual_from_bcb()
-          if not current.get("success"):
-              raise SystemExit(f"BCB lookup failed: {current}")
-
+          snap = json.loads(Path("selix-official.json").read_text(encoding="utf-8"))
+          required = ("selic_atual", "selic_ideal", "diferencial")
+          missing = [k for k in required if k not in snap]
+          if missing:
+              raise SystemExit(f"Official SELIX snapshot missing fields: {missing}")
+          for key in required:
+              if not isinstance(snap[key], (int, float)) or isinstance(snap[key], bool):
+                  raise SystemExit(f"Official SELIX snapshot field is not numeric: {key}")
+          derived = round(float(snap["selic_atual"]) - float(snap["selic_ideal"]), 2)
+          if derived != round(float(snap["diferencial"]), 2):
+              raise SystemExit("Official SELIX snapshot differential is inconsistent")
+          if not snap.get("selic_atual_fonte") or not snap.get("selic_atual_serie"):
+              raise SystemExit("Official SELIX snapshot provenance is incomplete")
+          print("SELIX official snapshot: validated")
+          print(f"SELIX snapshot source: {""}https://raw.githubusercontent.com/scoobiii/selix/main/public/selix-official.json")
+          print(f"SELIX snapshot version: {snap.get('versao', 'unknown')}")
+          PY
+          INVOCATION_JSON="$(python - <<'PY'
+          import json
+          from pathlib import Path
+          snap = json.loads(Path("selix-official.json").read_text(encoding="utf-8"))
           payload = {
-              "selic_atual": float(current["rate"]),
-              "selic_ideal": float(get_selic_ideal()),
-              "ipca": float(BASELINE_ATUAL.inflacao_esperada),
-              "source": "scoobiii/selix@main",
-              "selic_source": current["source"],
-              "selic_date": current.get("data_bcb"),
+              "selic_atual": float(snap["selic_atual"]),
+              "selic_ideal": float(snap["selic_ideal"]),
+              "ipca": float(snap.get("ipca", snap.get("ipca_proxy", 0))),
+              "source": "https://raw.githubusercontent.com/scoobiii/selix/main/public/selix-official.json",
+              "selic_source": snap["selic_atual_fonte"],
+              "selic_date": snap.get("selic_atual_data_bcb"),
           }
+          if payload["ipca"] == 0:
+              raise SystemExit("Official SELIX snapshot missing ipca/ipca_proxy")
           print(json.dumps({
               "invocation_id": "cross-selix-vortex",
               "agent": "selix",
@@ -58,7 +85,6 @@ jobs:
           PY
           )"
           echo "invocation_json=$INVOCATION_JSON" >> "$GITHUB_OUTPUT"
-          echo "SELIX official invocation generated from SELIX model + BCB provider"
 
       - name: Setup Node
         uses: actions/setup-node@v4
