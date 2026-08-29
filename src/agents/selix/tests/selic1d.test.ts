@@ -15,6 +15,10 @@ function assert(condition: boolean, message: string) {
   else { console.error(`  ✗ ${message}`); failed++; }
 }
 
+function round2(value: number): number {
+  return Math.round((value + Number.EPSILON) * 100) / 100;
+}
+
 function loadOfficialRequest() {
   const raw = process.env.SELIX_INVOCATION_JSON;
   if (!raw) throw new Error("SELIX_INVOCATION_JSON is required; refusing economic fixture");
@@ -37,10 +41,10 @@ async function run() {
 
   const req = loadOfficialRequest();
   const expected = {
-    diferencial_pp: req.payload.selic_atual - req.payload.selic_ideal,
-    juro_real_atual: req.payload.selic_atual - req.payload.ipca,
-    juro_real_1d: req.payload.selic_ideal - req.payload.ipca,
-    reducao_juro_real_pp: req.payload.selic_atual - req.payload.selic_ideal,
+    diferencial_pp: round2(req.payload.selic_atual - req.payload.selic_ideal),
+    juro_real_atual: round2(req.payload.selic_atual - req.payload.ipca),
+    juro_real_1d: round2(req.payload.selic_ideal - req.payload.ipca),
+    reducao_juro_real_pp: round2(req.payload.selic_atual - req.payload.selic_ideal),
   };
 
   const a = await invoke(req);
