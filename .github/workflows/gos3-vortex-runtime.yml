@@ -1,0 +1,26 @@
+name: Vortex GOS3 Runtime
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Node dependencies
+        run: npm install --no-audit --no-fund
+      - name: Prepare environment and dependencies
+        run: bash scripts/gos3_preflight.sh
+      - name: Compile runtime
+        run: python3 -m py_compile src/vortex_gos3.py src/vortex_agents.py
+      - name: Run complete environment-first suite
+        run: npm run test:all

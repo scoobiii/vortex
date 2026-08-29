@@ -1,11 +1,22 @@
 #!/usr/bin/env python3
+import base64
+import datetime as dt
 import json
 import tempfile
 import unittest
 from pathlib import Path
 
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
 from src.vortex_agents import AgentRegistry, ImperativeDispatcher
-from src.vortex_gos3 import GitHubConnector, Memory, Orchestrator
+from src.vortex_gos3 import (
+    AttestationVerifier,
+    GitHubConnector,
+    Memory,
+    Orchestrator,
+    TrustRegistry,
+)
 
 
 class VortexGOS3Tests(unittest.TestCase):
@@ -77,6 +88,73 @@ class VortexGOS3Tests(unittest.TestCase):
             "UNPROVEN_EXECUTION_CLAIM",
             {finding["code"] for finding in findings},
         )
+
+    def _signed_attestation(self, tmp, agent="manus", runtime="termux-a23-001"):
+        private = Ed25519PrivateKey.generate()
+        key_id = "manus-test-key"
+        public = private.public_key().public_bytes(
+            serialization.Encoding.OpenSSH,
+            serialization.PublicFormat.OpenSSH,
+        ).decode()
+        registry_path = Path(tmp) / "trust.json"
+        registry_path.write_text(json.dumps({
+            "schema": "vortex-gos3/trust-registry/0.1",
+            "keys": [{
+                "key_id": key_id,
+                "agent_id": agent,
+                "runtime_id": runtime,
+                "algorithm": "Ed25519",
+                "public_key": public,
+                "status": "active",
+            }],
+        }))
+        attestation = {
+            "schema": "vortex-gos3/attestation/0.1",
+            "agent_id": agent,
+            "runtime_id": runtime,
+            "key_id": key_id,
+            "evidence_hash": "sha256:test-evidence",
+            "issued_at": dt.datetime.now(dt.timezone.utc).isoformat().replace("+00:00", "Z"),
+            "nonce": "nonce-1",
+        }
+        signed = AttestationVerifier._canonical_envelope(attestation)
+        attestation["evidence_signature"] = "base64:" + base64.b64encode(private.sign(signed)).decode()
+        attestation_path = Path(tmp) / "attestation.json"
+        attestation_path.write_text(json.dumps(attestation))
+        return attestation_path, registry_path, attestation
+
+    def test_trusted_attestation_verifies(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, registry_path, attestation = self._signed_attestation(tmp)
+            result = AttestationVerifier(TrustRegistry(registry_path)).verify(attestation, expected_agent="manus")
+            self.assertEqual(result["signature_status"], "verified")
+
+    def test_unknown_key_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, registry_path, attestation = self._signed_attestation(tmp)
+            attestation["key_id"] = "unknown"
+            with self.assertRaises(ValueError):
+                AttestationVerifier(TrustRegistry(registry_path)).verify(attestation, expected_agent="manus")
+
+    def test_invalid_signature_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, registry_path, attestation = self._signed_attestation(tmp)
+            attestation["evidence_signature"] = "base64:" + base64.b64encode(b"invalid").decode()
+            with self.assertRaises(ValueError):
+                AttestationVerifier(TrustRegistry(registry_path)).verify(attestation, expected_agent="manus")
+
+    def test_attestation_requirement_fails_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, registry_path, attestation = self._signed_attestation(tmp)
+            attestation["evidence_signature"] = "base64:" + base64.b64encode(b"invalid").decode()
+            attestation_path = Path(tmp) / "attestation.json"
+            attestation_path.write_text(json.dumps(attestation))
+            result = Orchestrator(
+                Path.cwd(), Path(tmp) / "memory.jsonl", attestation_path=attestation_path,
+                trust_registry_path=registry_path,
+            ).run("audit", "manus")
+            self.assertEqual(result["gate"], "FAIL")
+            self.assertIn("ATTESTATION_VERIFIED", {p["name"] for p in result["proofs"]})
 
     def test_connector_write_response_never_claims_signature(self):
         connector = GitHubConnector("owner/repo", token="test-token", allow_write=True)
