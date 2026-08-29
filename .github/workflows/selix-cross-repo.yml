@@ -27,27 +27,38 @@ jobs:
       - name: Install SELIX dependencies
         run: pip install -r selix-source/requirements.txt
 
-      - name: Derive SELIX model inputs
+      - name: Build official SELIX invocation input
         id: selix
         shell: bash
         run: |
-          read -r SELIX_IDEAL IPCA SELIC_ATUAL <<EOF
-          $(PYTHONPATH="$GITHUB_WORKSPACE/selix-source" python - <<'PY'
+          INVOCATION_JSON="$(PYTHONPATH="$GITHUB_WORKSPACE/selix-source" python - <<'PY'
+          import json
           from src.selix.config import get_selic_atual_from_bcb, get_selic_ideal
           from src.selix.core import BASELINE_ATUAL
-          import sys
+
           current = get_selic_atual_from_bcb()
           if not current.get("success"):
-              print(f"BCB lookup failed: {current}", file=sys.stderr)
-              raise SystemExit(1)
-          print(get_selic_ideal(), BASELINE_ATUAL.inflacao_esperada, current["rate"])
+              raise SystemExit(f"BCB lookup failed: {current}")
+
+          payload = {
+              "selic_atual": float(current["rate"]),
+              "selic_ideal": float(get_selic_ideal()),
+              "ipca": float(BASELINE_ATUAL.inflacao_esperada),
+              "source": "scoobiii/selix@main",
+              "selic_source": current["source"],
+              "selic_date": current.get("data_bcb"),
+          }
+          print(json.dumps({
+              "invocation_id": "cross-selix-vortex",
+              "agent": "selix",
+              "action": "selix.selic1d",
+              "payload": payload,
+              "context": {"sandbox": True},
+          }, separators=(",", ":")))
           PY
-          )
-          EOF
-          echo "selix_ideal=$SELIX_IDEAL" >> "$GITHUB_OUTPUT"
-          echo "ipca=$IPCA" >> "$GITHUB_OUTPUT"
-          echo "selic_atual=$SELIC_ATUAL" >> "$GITHUB_OUTPUT"
-          echo "SELIX model ideal=$SELIX_IDEAL ipca=$IPCA selic_atual=$SELIC_ATUAL"
+          )"
+          echo "invocation_json=$INVOCATION_JSON" >> "$GITHUB_OUTPUT"
+          echo "SELIX official invocation generated from SELIX model + BCB provider"
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -59,11 +70,25 @@ jobs:
 
       - name: Run SELIX through Vortex
         env:
-          SELIX_INVOCATION_JSON: >-
-            {"invocation_id":"cross-selix-vortex","agent":"selix","action":"selix.selic1d","payload":{"selic_atual":${{ steps.selix.outputs.selic_atual }},"selic_ideal":${{ steps.selix.outputs.selix_ideal }},"ipca":${{ steps.selix.outputs.ipca }},"source":"scoobiii/selix@main"},"context":{"sandbox":true}}
+          SELIX_INVOCATION_JSON: ${{ steps.selix.outputs.invocation_json }}
         run: |
-          npm run selix:selic1d --silent | tee cross-result.json
-          node -e 'const fs=require("fs"); const r=JSON.parse(fs.readFileSync("cross-result.json","utf8")); if(r.gate!=="PASS"||r.executed!==true||r.evidence?.exit_code!==0) process.exit(1); console.log("CROSS-REPO GATE: PASS"); console.log(`SELIX source: scoobiii/selix@main`); console.log(`Vortex proof: ${r.evidence.output_hash}`);'
+          set -euo pipefail
+          npx ts-node src/agents/selix/adapter/index.ts > cross-result.json
+          node - <<'NODE'
+          const fs = require('fs');
+          const r = JSON.parse(fs.readFileSync('cross-result.json', 'utf8'));
+          const expected = JSON.parse(process.env.SELIX_INVOCATION_JSON);
+          if (r.invocation_id !== expected.invocation_id) throw new Error('invocation_id mismatch');
+          if (r.gate !== 'PASS' || r.executed !== true || r.claim !== 'executed') throw new Error('GOS3 execution gate failed');
+          if (r.evidence?.exit_code !== 0 || !r.evidence?.input_hash || !r.evidence?.output_hash) throw new Error('execution proof incomplete');
+          if (r.result?.selic_ideal !== expected.payload.selic_ideal) throw new Error('SELIX ideal mismatch');
+          if (r.result?.ipca_proxy !== expected.payload.ipca) throw new Error('SELIX IPCA mismatch');
+          if (r.result?.selic_atual !== expected.payload.selic_atual) throw new Error('market input mismatch');
+          console.log('CROSS-REPO GATE: PASS');
+          console.log(`SELIX source: ${expected.payload.source}`);
+          console.log(`SELIX input hash: ${r.evidence.input_hash}`);
+          console.log(`Vortex output hash: ${r.evidence.output_hash}`);
+          NODE
 
       - name: Run Vortex deterministic contract gate
         run: npm run test:selix
