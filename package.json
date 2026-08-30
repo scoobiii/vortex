@@ -1,28 +1,33 @@
 {
-  "name": "vortex",
+  "name": "vortex-github-gos3-mcp",
   "version": "0.0.1",
   "private": true,
-  "description": "Vortex / GOS3 v2.4 — runtime padrão de invocação verificável para LLMs",
+  "description": "Adaptador MCP único para GitHub, Vortex e GoS3/S3",
   "gos3": {
     "fase": "Discovery → Technical Refinement",
     "proposer": "Claude",
     "papel": "NxN · Proposer",
     "registro": "docs/proposals/claude/README.md"
   },
+  "type": "module",
   "scripts": {
-    "preflight": "bash scripts/gos3_preflight.sh --install",
+    "build": "tsc",
+    "start": "node dist/mcp-server.js",
+    "build:mcp": "tsc -p tsconfig.mcp.json",
+    "start:mcp": "npm run build:mcp && node dist-mcp/mcp-server.js",
     "test:grok": "ts-node src/agents/grok/tests/contract.test.ts",
     "grok:ping": "ts-node src/agents/grok/adapter/index.ts --fixture=ping",
     "grok:echo": "ts-node src/agents/grok/adapter/index.ts --fixture=echo",
-    "grok:dry": "ts-node src/agents/grok/adapter/index.ts --fixture=dry",
-    "test:gos3:vortex": "python3 -m unittest discover -s tests -p 'test_vortex_gos3.py' -v",
-    "test:all": "npm run preflight && npm run test:gos3:vortex && python3 tests/contract_test.py && npm run test:grok && npm run grok:ping && npm run grok:echo && npm run grok:dry",
-    "test": "npm run test:all",
-    "vortex:gos3": "python3 src/vortex_gos3.py . --task 'audit repository'"
+    "grok:dry": "ts-node src/agents/grok/adapter/index.ts --fixture=dry"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.859.0",
+    "@modelcontextprotocol/sdk": "^1.17.5",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "typescript": "^5.5.4",
     "ts-node": "^10.9.2",
-    "@types/node": "^20.14.10"
+    "@types/node": "^22.15.0"
   }
 }
