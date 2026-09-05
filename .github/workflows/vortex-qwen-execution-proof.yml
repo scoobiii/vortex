@@ -34,12 +34,21 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 1
+          ref: ${{ github.sha }}
 
-      - name: Verify toolchain
+      - name: Enforce trusted main revision
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          test "$GITHUB_REF" = "refs/heads/main"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+          test "$(git status --porcelain)" = ""
+          echo "Trusted proof revision: $EXPECTED_SHA"
+
+      - name: Verify proof security tests
         run: |
           node --version
-          python3 --version
-          sha256sum --version | head -n 1
+          npm run test:qwen-proof-security
 
       - name: Download pinned llama.cpp binary
         run: |
@@ -73,9 +82,7 @@ jobs:
             > proof/llama-server.log 2>&1 &
           echo $! > proof/llama-server.pid
           for i in $(seq 1 60); do
-            if curl --fail --silent http://127.0.0.1:8080/health > /dev/null; then
-              break
-            fi
+            if curl --fail --silent http://127.0.0.1:8080/health > /dev/null; then break; fi
             sleep 1
           done
           curl --fail --silent http://127.0.0.1:8080/health
@@ -104,6 +111,4 @@ jobs:
       - name: Cleanup local model server
         if: always()
         run: |
-          if [ -f proof/llama-server.pid ]; then
-            kill "$(cat proof/llama-server.pid)" 2>/dev/null || true
-          fi
+          if [ -f proof/llama-server.pid ]; then kill "$(cat proof/llama-server.pid)" 2>/dev/null || true; fi
