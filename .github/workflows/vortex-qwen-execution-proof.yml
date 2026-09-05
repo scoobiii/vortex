@@ -68,6 +68,7 @@ jobs:
             --port 8080 \
             -c 2048 \
             -n 96 \
+            -t 1 \
             -ngl 0 \
             > proof/llama-server.log 2>&1 &
           echo $! > proof/llama-server.pid
