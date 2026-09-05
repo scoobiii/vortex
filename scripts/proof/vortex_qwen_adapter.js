@@ -54,9 +54,12 @@ async function invoke(request, { baseUrl = "http://127.0.0.1:8080/v1" } = {}) {
     const parsed = JSON.parse(text);
     const usage = parsed.usage || {};
     const completionTokens = Number(usage.completion_tokens || 0);
+    const output = parsed.choices?.[0]?.message?.content ?? "";
+    const outputHash = sha256(output);
     const evidence = {
       request_hash: requestHash,
       stdout_hash: stdoutHash,
+      output_hash: outputHash,
       executed: true,
       exit_code: 0,
       invocation_id: request.invocation_id,
@@ -73,8 +76,9 @@ async function invoke(request, { baseUrl = "http://127.0.0.1:8080/v1" } = {}) {
       tok_per_s: completionTokens > 0 ? completionTokens / (durationMs / 1000) : 0,
       request_hash: requestHash,
       stdout_hash: stdoutHash,
+      output_hash: outputHash,
       evidence_hash: sha256(canonical(evidence)),
-      output: parsed.choices?.[0]?.message?.content ?? "",
+      output,
     };
   } catch (error) {
     const durationMs = Number(process.hrtime.bigint() - started) / 1e6;
