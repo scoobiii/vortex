@@ -1,5 +1,14 @@
 #!/usr/bin/env node
 /**
+ * Data:            2026-09-05
+ * Diretório:       scripts/proof/vortex_qwen_adapter.js
+  * Responsabilidade: Adaptador de prova de execução para endpoint Qwen OpenAI-compatível com evidence_hash.
+ * Versão:          1.0.0
+ * Assinatura:      vortex <sobrinhosj@gmail.com>
+ */
+
+
+/**
  * GOS3 · Vortex execution-proof adapter
  * Purpose: prove the local OpenAI-compatible Qwen path without secrets.
  * This is a proof adapter, not a production agent connector.

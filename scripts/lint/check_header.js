@@ -2,20 +2,17 @@
 /**
  * Data:            2026-09-05
  * Diretório:       scripts/lint/check_header.js
- * Responsabilidade: Validar presença, formato e coerência do cabeçalho de
- *                   governança (Data, Diretório, Responsabilidade, Versão,
- *                   Assinatura) nos arquivos de código do repositório.
- *                   Falha fechado: qualquer arquivo alvo sem o cabeçalho
- *                   completo e coerente com seu path real reprova o gate.
+  * Responsabilidade: Valida cabeçalho GOS3 e barra arquivos fora do padrão no lint.
  * Versão:          1.0.0
- * Assinatura:      vortex <sobrinhosj@gmail.com>
+ * Assinatura:      scoobiii <sobrinhosj@gmail.com>
  */
+
 
 const fs = require("node:fs");
 const path = require("node:path");
 
 const REQUIRED_FIELDS = ["Data", "Diretório", "Responsabilidade", "Versão", "Assinatura"];
-const FIELD_REGEX = /^\s*(?:\/\/|\*|\/\*)?\s*([A-Za-zÀ-ÿ]+):\s*(.+)/;
+const FIELD_REGEX = /^\s*(?:\/\/|\/\*|\*|#)?\s*([A-Za-zÀ-ÿ]+):\s*(.+)/;
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}/;
 
 // Extensões de arquivo que este lint audita. Ajuste conforme o repo crescer.

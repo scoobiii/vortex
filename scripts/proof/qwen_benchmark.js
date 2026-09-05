@@ -1,5 +1,14 @@
 #!/usr/bin/env node
 /**
+ * Data:            2026-09-05
+ * Diretório:       scripts/proof/qwen_benchmark.js
+  * Responsabilidade: Executa prova comparativa direct vs Vortex no modelo Qwen local.
+ * Versão:          1.0.0
+ * Assinatura:      vortex <sobrinhosj@gmail.com>
+ */
+
+
+/**
  * GOS3 · Direct vs Vortex local execution proof.
  * Same request, same local model, same server, same process.
  */

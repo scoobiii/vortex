@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# Data:            2026-08-20
+# Diretório:       tests/contract_test.py
+# Responsabilidade: Valida respostas contra invocation-contract v0.1, exigindo evidence_hash quando executed=true.
+# Versão:          1.0.0
+# Assinatura:      scoobiii <sobrinhosj@gmail.com>
+
 """
 contract_test.py — valida respostas contra spec/invocation-contract.md v0.1.
 

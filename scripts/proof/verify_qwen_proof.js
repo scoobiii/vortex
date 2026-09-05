@@ -1,5 +1,14 @@
 #!/usr/bin/env node
 /**
+ * Data:            2026-09-05
+ * Diretório:       scripts/proof/verify_qwen_proof.js
+  * Responsabilidade: Verifica prova de execução Qwen, falhando fechado sem evidência válida.
+ * Versão:          1.0.0
+ * Assinatura:      vortex <sobrinhosj@gmail.com>
+ */
+
+
+/**
  * GOS3 · proof verifier. Fails closed on missing or invalid execution evidence.
  */
 
