@@ -1,0 +1,25 @@
+# Data:            2026-09-05
+# Diretório:       .github/workflows/header-governance.yml
+# Responsabilidade: Rodar scripts/lint/check_header.js no repositório inteiro
+#                   em todo push/PR, como rede de segurança para commits que
+#                   não passaram pelo pre-commit hook local (ex: commit direto
+#                   pela UI do GitHub, hook desativado localmente).
+# Versão:          1.0.0
+# Assinatura:      vortex <sobrinhosj@gmail.com>
+
+name: Header Governance
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check-headers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Run header governance gate
+        run: node scripts/lint/check_header.js
