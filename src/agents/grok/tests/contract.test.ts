@@ -1,4 +1,13 @@
 /**
+ * Data:            2026-08-15
+ * Diretório:       src/agents/grok/tests/contract.test.ts
+  * Responsabilidade: Testa conformidade do adapter Grok com o invocation-contract v0.1.
+ * Versão:          1.0.0
+ * Assinatura:      scoobiii <sobrinhosj@gmail.com>
+ */
+
+
+/**
  * GOS3 · agente: scoobiii · papel: Dev / Grok Adapter
  * fase: Sprint 2 - Governance Retroativo · data: 2026-08-16
  * base: 88c1ab4 · assinatura: scoobiii · PO · GOS3

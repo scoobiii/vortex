@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# Data:            2026-08-16
+# Diretório:       scripts/scrape_repo.py
+# Responsabilidade: Gera snapshot/dump de código do repositório com metadados git opcionais.
+# Versão:          1.0.0
+# Assinatura:      scoobiii <sobrinhosj@gmail.com>
+
 # **GOS3** · agente: scoobiii · papel: PO / DevOps
 # fase: Sprint 2 - Governance Retroativo · data: 2026-08-16
 # assinatura: scoobiii · PO · GOS3

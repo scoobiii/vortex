@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# Data:            2026-08-20
+# Diretório:       gos3-audit.py
+# Responsabilidade: Audita repositório contra o framework GOS3/Vortex sem confiar em nota declarada.
+# Versão:          1.0.0
+# Assinatura:      scoobiii <sobrinhosj@gmail.com>
+
 # -*- coding: utf-8 -*-
 """
 GOS3 Auditor Genérico

@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+#
+# Data:            2026-09-05
+# Diretório:       .githooks/pre-commit
+# Responsabilidade: Bloquear commit de arquivos de código (.js/.mjs/.cjs/.ts/.py)
+#                   staged sem o cabeçalho de governança completo, chamando
+#                   scripts/lint/check_header.js apenas nos arquivos adicionados
+#                   ou modificados neste commit.
+# Versão:          1.0.0
+# Assinatura:      vortex <sobrinhosj@gmail.com>
+
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+LINT_SCRIPT="$REPO_ROOT/scripts/lint/check_header.js"
+
+if [ ! -f "$LINT_SCRIPT" ]; then
+  echo "aviso: $LINT_SCRIPT não encontrado — pulando checagem de cabeçalho"
+  exit 0
+fi
+
+# Apenas arquivos staged (Added/Copied/Modified) com extensão relevante
+mapfile -t STAGED_FILES < <(
+  git diff --cached --name-only --diff-filter=ACM \
+    | grep -E '\.(js|mjs|cjs|ts|py)$' || true
+)
+
+if [ ${#STAGED_FILES[@]} -eq 0 ]; then
+  exit 0
+fi
+
+echo "Checando cabeçalho de governança em ${#STAGED_FILES[@]} arquivo(s)..."
+node "$LINT_SCRIPT" "${STAGED_FILES[@]}"
