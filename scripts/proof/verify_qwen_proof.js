@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * GOS3 · proof verifier. Fails closed on missing execution evidence.
+ * GOS3 · proof verifier. Fails closed on missing or invalid execution evidence.
  */
 
 const fs = require("node:fs");
@@ -9,6 +9,18 @@ const crypto = require("node:crypto");
 const file = process.argv[2] || "proof/results.json";
 const proof = JSON.parse(fs.readFileSync(file, "utf8"));
 const failures = [];
+
+function sha256(value) {
+  return crypto.createHash("sha256").update(value).digest("hex");
+}
+
+function canonical(value) {
+  if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`;
+  if (value && typeof value === "object") {
+    return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${canonical(value[key])}`).join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
 
 if (proof.schema !== "vortex.execution-proof.v1") failures.push("wrong schema");
 if (!proof.comparison?.same_request) failures.push("direct/Vortex request mismatch");
@@ -23,10 +35,24 @@ if (!Number.isFinite(proof.vortex?.duration_ms) || proof.vortex.duration_ms <= 0
 if (!Number.isInteger(proof.direct?.completion_tokens) || proof.direct.completion_tokens <= 0) failures.push("direct token count missing");
 if (!Number.isInteger(proof.vortex?.completion_tokens) || proof.vortex.completion_tokens <= 0) failures.push("Vortex token count missing");
 
-const expectedPromptHash = crypto.createHash("sha256").update(
+const expectedPromptHash = sha256(
   "Write a JavaScript function that returns the nth Fibonacci number. Keep it concise and include one example call."
-).digest("hex");
+);
 if (proof.prompt_sha256 !== expectedPromptHash) failures.push("prompt hash changed");
+
+if (proof.vortex?.evidence_hash) {
+  const expectedEvidenceHash = sha256(canonical({
+    request_hash: proof.vortex.request_hash,
+    stdout_hash: proof.vortex.stdout_hash,
+    output_hash: proof.vortex.output_hash,
+    executed: proof.vortex.executed,
+    exit_code: proof.vortex.exit_code,
+    invocation_id: proof.vortex.invocation_id,
+  }));
+  if (proof.vortex.evidence_hash !== expectedEvidenceHash) {
+    failures.push("Vortex evidence_hash mismatch");
+  }
+}
 
 const markdown = [
   "## Vortex / Qwen execution proof",
