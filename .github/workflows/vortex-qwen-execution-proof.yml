@@ -45,8 +45,10 @@ jobs:
           test "$(git status --porcelain)" = ""
           echo "Trusted proof revision: $EXPECTED_SHA"
 
-      - name: Verify proof security tests
+      - name: Verify adapter and proof security tests
         run: |
+          python3 -m py_compile vortex_ollama_adapter.py
+          python3 -m unittest discover -s tests -p 'test_vortex_ollama_adapter.py' -v
           node --version
           npm run test:qwen-proof-security
 
