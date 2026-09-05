@@ -45,6 +45,45 @@ Isso não é fraqueza do design, é o ponto central: **desacoplar raciocínio de
 execução**. NxN (qualquer LLM propõe) continua igual. Nx1 (quem executa) hoje
 tem exatamente um runtime soberano confirmado — o do operador.
 
+## Runtime Storage Invariant
+
+**O filesystem local do runtime é scratch space, não storage autoritativo.**
+
+Termux, Alpine/proot-distro, Cloud Shell, Cloud Run, VM, CI runner ou qualquer
+outro host são ambientes de execução. Nenhum deles pode ser tratado como a
+única fonte de verdade para evidência, receipts, attestations, histórico
+autoritativo ou artefatos que precisem sobreviver ao ciclo de vida do runtime.
+
+A regra normativa está em [`spec/runtime-storage-invariant.md`](spec/runtime-storage-invariant.md):
+
+```text
+HOST / RUNTIME
+  ↓
+VORTEX EXECUTION
+  ↓
+PROOF RECEIPT
+  ↓
+DURABLE PERSISTENCE
+  ↓
+VERIFICATION
+  ↓
+PUBLICATION
+```
+
+**Sem evidência durável, não há publicação.** Falha ou exaustão do storage
+local não pode ser convertida silenciosamente em sucesso. O filesystem local
+pode conter workspace, cache, build e staging temporários; ele não constitui,
+sozinho, prova de persistência.
+
+Em particular:
+
+```text
+compute capacity ≠ durable storage capacity
+```
+
+Um runtime pequeno continua sendo válido para computação pequena; o storage
+durável deve ser escolhido separadamente pelo deployment.
+
 ## Por quê
 
 A maioria dos modelos (Claude, Gemini, GPT, Qwen, DeepSeek, Manus, Perplexity, Grok) roda sandbox isolado só para si — nenhum abre runtime para outro modelo, e nenhum, até 2026-08-30, provou ter runtime soberano imperativo (execução arbitrária, verificável, fora do próprio provedor). Isso resolve segurança do lado deles, mas fragmenta verificação: cada modelo "confia no próprio texto" em vez de mostrar execução real.
