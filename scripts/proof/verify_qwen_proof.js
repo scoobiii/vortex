@@ -1,66 +1,9 @@
 #!/usr/bin/env node
 /** GOS3 · Qwen execution-proof verifier. Fails closed on forged evidence. */
-const fs = require("node:fs");
-const crypto = require("node:crypto");
-
-function sha256(value) { return crypto.createHash("sha256").update(value).digest("hex"); }
-function canonical(value) {
-  if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`;
-  if (value && typeof value === "object") return `{${Object.keys(value).sort().map((k) => `${JSON.stringify(k)}:${canonical(value[k])}`).join(",")}}`;
-  return JSON.stringify(value);
-}
-
-function validateProof(proof) {
-  const failures = [];
-  if (proof.schema !== "vortex.execution-proof.v1") failures.push("wrong schema");
-  if (!proof.comparison?.same_request) failures.push("request equivalence not proven");
-  if (!proof.comparison?.deterministic) failures.push("determinism not explicitly proven");
-  if (!proof.direct?.executed || proof.direct.exit_code !== 0) failures.push("direct execution not proven");
-  if (!proof.vortex?.executed || proof.vortex.exit_code !== 0) failures.push("Vortex execution not proven");
-  if (proof.request_hash !== proof.direct?.request_hash || proof.request_hash !== proof.vortex?.request_hash) failures.push("request_hash mismatch");
-  if (proof.direct?.invocation_id !== "proof-direct-001") failures.push("direct invocation_id mismatch");
-  if (proof.vortex?.invocation_id !== "proof-vortex-001") failures.push("Vortex invocation_id mismatch");
-  if (proof.direct?.repeat_output_hash !== proof.direct?.output_hash) failures.push("determinism repeat hash mismatch");
-  if (proof.direct?.output_hash !== proof.vortex?.output?.output_hash) failures.push("output mismatch");
-  if (!Number.isFinite(proof.direct?.duration_ms) || proof.direct.duration_ms <= 0) failures.push("invalid direct duration");
-  if (!Number.isFinite(proof.vortex?.duration_ms) || proof.vortex.duration_ms <= 0) failures.push("invalid Vortex duration");
-  if (!Number.isInteger(proof.direct?.completion_tokens) || proof.direct.completion_tokens <= 0) failures.push("direct token count missing");
-  if (!Number.isInteger(proof.vortex?.completion_tokens) || proof.vortex.completion_tokens <= 0) failures.push("Vortex token count missing");
-  const prompt = "Write a JavaScript function that returns the nth Fibonacci number. Keep it concise and include one example call.";
-  if (proof.prompt_sha256 !== sha256(prompt)) failures.push("prompt hash changed");
-
-  const evidence = proof.vortex?.execution_evidence;
-  if (!evidence) failures.push("missing execution evidence");
-  else {
-    const expectedEvidence = { response_id: evidence.response_id, request_hash: proof.vortex.request_hash, stdout_hash: proof.vortex.stdout_hash, output_hash: proof.vortex.output?.output_hash, invocation_id: proof.vortex.invocation_id, executed: proof.vortex.executed, exit_code: proof.vortex.exit_code, completion_tokens: proof.vortex.completion_tokens };
-    if (evidenceHash(expectedEvidence) !== evidence.evidence_hash) failures.push("execution evidence hash mismatch");
-    if (evidence.request_hash !== proof.vortex.request_hash) failures.push("evidence/request binding mismatch");
-    if (evidence.output_hash !== proof.vortex.output?.output_hash) failures.push("evidence/output binding mismatch");
-    if (evidence.invocation_id !== proof.vortex.invocation_id) failures.push("evidence/invocation binding mismatch");
-    if (evidence.executed !== true || evidence.exit_code !== 0) failures.push("invalid execution evidence state");
-  }
-  if (proof.vortex?.output?.output_hash !== sha256(proof.vortex?.output?.text || "")) failures.push("output hash mismatch");
-  return failures;
-}
-function evidenceHash(evidence) { return sha256(canonical(evidence)); }
-
-if (require.main === module) {
-  const file = process.argv[2] || "proof/results.json";
-  const proof = JSON.parse(fs.readFileSync(file, "utf8"));
-  const failures = validateProof(proof);
-  const markdown = [
-    "## Vortex / Qwen execution proof", "", `**GATE: ${failures.length ? "FAIL" : "PASS"}`,
-    "", "| Metric | Direct | Vortex |", "|---|---:|---:|",
-    `| Duration | ${proof.direct.duration_ms.toFixed(2)} ms | ${proof.vortex.duration_ms.toFixed(2)} ms |`,
-    `| Completion tokens | ${proof.direct.completion_tokens} | ${proof.vortex.completion_tokens} |`,
-    `| tok/s | ${proof.direct.tok_per_s.toFixed(2)} | ${proof.vortex.tok_per_s.toFixed(2)} |`,
-    `| request hash | \`${proof.request_hash}\` | \`${proof.request_hash}\` |`,
-    `| output hash | \`${proof.direct.output_hash}\` | \`${proof.vortex.output.output_hash}\` |`,
-    `| execution evidence | — | \`${proof.vortex.execution_evidence?.evidence_hash || "missing"}\` |`,
-    "", `**Vortex overhead:** ${proof.comparison.overhead_ms.toFixed(2)} ms (${proof.comparison.overhead_percent.toFixed(2)}%)`,
-    "", "Determinism is an explicit measured property of this pinned run; byte identity is not assumed globally.", "",
-    failures.length ? `Failures: ${failures.join("; ")}` : "No proof-gate failures.", ""
-  ].join("\n");
-  fs.writeFileSync("proof/proof.md", markdown); console.log(markdown); if (failures.length) process.exit(1);
-}
-module.exports = { validateProof, canonical, sha256, evidenceHash };
+const fs=require("node:fs");const crypto=require("node:crypto");
+function sha256(value){return crypto.createHash("sha256").update(value).digest("hex");}
+function canonical(value){if(Array.isArray(value))return`[${value.map(canonical).join(",")}]`;if(value&&typeof value==="object")return`{${Object.keys(value).sort().map(k=>`${JSON.stringify(k)}:${canonical(value[k])}`).join(",")}}`;return JSON.stringify(value);}
+function evidenceHash(value){return sha256(canonical(value));}
+function validateProof(proof){const failures=[];if(proof.schema!=="vortex.execution-proof.v1")failures.push("wrong schema");if(!proof.comparison?.same_request)failures.push("request equivalence not proven");if(!proof.comparison?.deterministic)failures.push("determinism not explicitly proven");if(!proof.direct?.executed||proof.direct.exit_code!==0)failures.push("direct execution not proven");if(!proof.vortex?.executed||proof.vortex.exit_code!==0)failures.push("Vortex execution not proven");if(!proof.request||typeof proof.request!=="object")failures.push("missing request binding");else if(proof.request_hash!==sha256(canonical(proof.request)))failures.push("request contents/hash mismatch");if(proof.request_hash!==proof.direct?.request_hash||proof.request_hash!==proof.vortex?.request_hash)failures.push("request_hash mismatch");if(proof.direct?.invocation_id!=="proof-direct-001")failures.push("direct invocation_id mismatch");if(proof.vortex?.invocation_id!=="proof-vortex-001")failures.push("Vortex invocation_id mismatch");if(proof.direct?.repeat_output_hash!==proof.direct?.output_hash)failures.push("determinism repeat hash mismatch");if(proof.direct?.output_hash!==proof.vortex?.output?.output_hash)failures.push("output mismatch");if(!Number.isFinite(proof.direct?.duration_ms)||proof.direct.duration_ms<=0)failures.push("invalid direct duration");if(!Number.isFinite(proof.vortex?.duration_ms)||proof.vortex.duration_ms<=0)failures.push("invalid Vortex duration");if(!Number.isInteger(proof.direct?.completion_tokens)||proof.direct.completion_tokens<=0)failures.push("direct token count missing");if(!Number.isInteger(proof.vortex?.completion_tokens)||proof.vortex.completion_tokens<=0)failures.push("Vortex token count missing");const prompt="Write a JavaScript function that returns the nth Fibonacci number. Keep it concise and include one example call.";if(proof.prompt_sha256!==sha256(prompt))failures.push("prompt hash changed");const evidence=proof.vortex?.execution_evidence;if(!evidence)failures.push("missing execution evidence");else{const expected={response_id:evidence.response_id,request_hash:proof.vortex.request_hash,stdout_hash:proof.vortex.stdout_hash,output_hash:proof.vortex.output?.output_hash,invocation_id:proof.vortex.invocation_id,executed:proof.vortex.executed,exit_code:proof.vortex.exit_code,completion_tokens:proof.vortex.completion_tokens};if(evidenceHash(expected)!==evidence.evidence_hash)failures.push("execution evidence hash mismatch");if(evidence.request_hash!==proof.vortex.request_hash)failures.push("evidence/request binding mismatch");if(evidence.output_hash!==proof.vortex.output?.output_hash)failures.push("evidence/output binding mismatch");if(evidence.invocation_id!==proof.vortex.invocation_id)failures.push("evidence/invocation binding mismatch");if(evidence.executed!==true||evidence.exit_code!==0)failures.push("invalid execution evidence state");}if(proof.vortex?.output?.output_hash!==sha256(proof.vortex?.output?.text||""))failures.push("output hash mismatch");return failures;}
+if(require.main===module){const file=process.argv[2]||"proof/results.json";const proof=JSON.parse(fs.readFileSync(file,"utf8"));const failures=validateProof(proof);console.log(`GATE: ${failures.length?"FAIL":"PASS"}`);if(failures.length){console.error(failures.join("; "));process.exit(1);}}
+module.exports={validateProof,canonical,sha256,evidenceHash};
