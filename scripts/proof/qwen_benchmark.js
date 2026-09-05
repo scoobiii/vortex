@@ -6,7 +6,6 @@
 
 const fs = require("node:fs");
 const os = require("node:os");
-const crypto = require("node:crypto");
 const { invoke, sha256, canonical } = require("./vortex_qwen_adapter");
 
 const BASE_URL = process.env.VORTEX_LLM_BASE_URL || "http://127.0.0.1:8080/v1";
@@ -46,6 +45,7 @@ async function direct(request) {
   if (!response.ok) throw new Error(`direct HTTP ${response.status}: ${text.slice(0, 500)}`);
   const parsed = JSON.parse(text);
   const completionTokens = Number(parsed.usage?.completion_tokens || 0);
+  const output = parsed.choices?.[0]?.message?.content ?? "";
   return {
     mode: "direct",
     executed: true,
@@ -55,12 +55,13 @@ async function direct(request) {
     tok_per_s: completionTokens > 0 ? completionTokens / (durationMs / 1000) : 0,
     request_hash: requestHash,
     stdout_hash: sha256(text),
-    output: parsed.choices?.[0]?.message?.content ?? "",
+    output_hash: sha256(output),
+    output,
   };
 }
 
 async function main() {
-  fs.mkdirSync(os.path.dirname(OUT), { recursive: true });
+  fs.mkdirSync(require("node:path").dirname(OUT), { recursive: true });
 
   const directRequest = requestFor("proof-direct-001");
   const vortexRequest = requestFor("proof-vortex-001");
@@ -77,7 +78,7 @@ async function main() {
   const vortexResult = await invoke(vortexStable, { baseUrl: BASE_URL });
   if (!vortexResult.executed) throw new Error(`Vortex execution failed: ${vortexResult.error || "unknown error"}`);
 
-  const sameOutput = directResult.stdout_hash === vortexResult.stdout_hash;
+  const sameOutput = directResult.output_hash === vortexResult.output_hash;
   const overheadMs = vortexResult.duration_ms - directResult.duration_ms;
   const overheadPct = directResult.duration_ms > 0 ? (overheadMs / directResult.duration_ms) * 100 : 0;
 
