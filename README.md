@@ -1,95 +1,164 @@
-> **GOS3** · agente: `GPT` · papel: `Maintainer / Engineering Agent` · status: **proposta — aguardando aprovação do PO e revisão dos agentes GOS3 no xAI**
-> fase: `Technical Refinement → Runtime Federation` · data: `2026-08-23`
-> regra: **mexeu, deixa rastro** — toda mudança relevante deve apontar dor → issue → proposta → teste → execução → evidência → revisão → aprovação → commit.
+> GOS3 - agente: Claude - papel: Proposer (ver docs/team.md)
+> fase: Technical Refinement - data: 2026-08-30
+> antes: README descrevia 7 agentes big-tech (Grok/Claude/GPT/...) como se
+>   cada um tivesse sandbox soberano proprio isolado
+> depois: corrigido para refletir arquitetura real - agentes genericos
+>   soberanos rodando sobre runtime moltH (A23), nao LLM apps com API externa
+> base: auditoria moltH 2026-08-30 (Grok/Meta/DeepSeek confirmados como
+>   "apenas LLM apps, sem runtime soberano imperativo")
+> assinatura: Claude - Proposer - GOS3
+> status: PROPOSED - patch para aplicar em README.md
 
 # vortex
 
 ![USE VORTEX! - Python, LLMs, Sandbox & Runtime](docs/images/use-vortex-cover.png)
 
-> **Aprenda de verdade. Sem "funcionou aqui". Só resultados reais: HASH + TEMPO + LOG.**
+> **Aprenda de verdade. Sem "funcionou aqui". Só resultados reais: HASH + TEMPO + LOG**
 
-> Estado persistente no backlog. Execução isolada por invocação. **NxN para colaborar, Nx1 para executar.**
+> Não seria um sonho se existisse uma rede social onde o LLM com runtime sandbox e tools não fingisse que rodou o código? Vortex é o contrato que prova.
 
-Runtime/protocolo para LLMs executarem código de forma verificável, mantendo a camada de execução separada da camada de estado. O Vortex não é um sandbox único: é o contrato que permite a um agente solicitar execução em um runtime compatível e receber evidência estruturada.
+> Estado persistente no backlog. Execução isolada por invocação. NxN pra propor, Nx1 pra rodar.
 
-## A nova fronteira: agentes constroem o próprio xAI
+Runtime padrão para agentes executarem código de forma verificável — sem sandbox trancado, sem "cara de bunda" na conversa. Camada de execução efêmera separada da camada de estado (backlog/decisões/handoff), seguindo o protocolo **GOS3** (Gang of Seven Senior Scrum).
 
-O Vortex passa a documentar uma arquitetura de **runtime federation** para o `zAI → xAI`: o app social pode hospedar múltiplos agentes, enquanto cada execução ocorre em um Nx1 adequado às capacidades do host.
+## Correção de arquitetura (2026-08-30)
 
-A regra é **write once, run anywhere** no nível do artefato/contrato, não uma promessa de que qualquer binário roda sem recompilação. O scheduler seleciona um runtime compatível por `runtime_id`, arquitetura, OS, memória, GPU/backend e ferramentas disponíveis.
+**O que o vortex NÃO é**: uma federação de 7 LLM apps big-tech (Grok, Claude,
+GPT, Gemini, Qwen, DeepSeek, Manus, Perplexity), cada um com sandbox soberano
+próprio, batendo API externa e "confiando na própria API" como prova de
+execução.
+
+Auditoria real (2026-08-30, runtime [moltH](../../moltH)) confirmou:
+> "Grok roda no sandbox do X, mas não tem Node.js, não tem o repositório
+> clonado, não pode executar comandos arbitrários. Meta: mesma situação.
+> DeepSeek: apenas LLM app, sem acesso ao sistema de arquivos ou ao runtime
+> Node." — nenhuma dessas é, hoje, "runtime soberano imperativo".
+
+**O que o vortex É**: contrato para **agentes genéricos soberanos** —
+qualquer LLM pode *propor* (raciocinar, gerar código), mas a *execução* real
+acontece em runtime soberano local (hoje: [moltH](../../moltH) rodando em
+Termux/proot-distro), que produz `runtime_id` + `evidence_hash` verificáveis
+(ver `ADR-003`). Não importa qual modelo "pensou" — importa quem executou e
+com que prova.
+
+Isso não é fraqueza do design, é o ponto central: **desacoplar raciocínio de
+execução**. NxN (qualquer LLM propõe) continua igual. Nx1 (quem executa) hoje
+tem exatamente um runtime soberano confirmado — o do operador.
+
+## Runtime Storage Invariant
+
+**O filesystem local do runtime é scratch space, não storage autoritativo.**
+
+Termux, Alpine/proot-distro, Cloud Shell, Cloud Run, VM, CI runner ou qualquer
+outro host são ambientes de execução. Nenhum deles pode ser tratado como a
+única fonte de verdade para evidência, receipts, attestations, histórico
+autoritativo ou artefatos que precisem sobreviver ao ciclo de vida do runtime.
+
+A regra normativa está em [`spec/runtime-storage-invariant.md`](spec/runtime-storage-invariant.md):
 
 ```text
-xAI / Social Layer
-        │
-   Agent Gateway
-        │
- Vortex invocation-contract
-        │
- Runtime Capability Discovery
-        │
- ┌──────┼─────────┬──────────┐
- A23    VPS      GCloud     Colab
- ARM64  Linux    GPU        GPU
- Vulkan Docker   CUDA       Jupyter
-        │
-        ▼
- execution evidence
-        │
-        ▼
- Git / Issue / PR / Review
+HOST / RUNTIME
+  ↓
+VORTEX EXECUTION
+  ↓
+PROOF RECEIPT
+  ↓
+DURABLE PERSISTENCE
+  ↓
+VERIFICATION
+  ↓
+PUBLICATION
 ```
 
-## GOS3 não é um badge
+**Sem evidência durável, não há publicação.** Falha ou exaustão do storage
+local não pode ser convertida silenciosamente em sucesso. O filesystem local
+pode conter workspace, cache, build e staging temporários; ele não constitui,
+sozinho, prova de persistência.
 
-`GOS3 Certified`, `100% complete`, throughput, WAL ou qualquer outra afirmação operacional **não é prova por si só**. Claims devem apontar para artefatos reproduzíveis.
+Em particular:
 
-**Mexeu, deixa rastro:**
+```text
+compute capacity ≠ durable storage capacity
+```
 
-1. dor identificada;
-2. Issue registrada;
-3. proposta técnica;
-4. teste reproduzível;
-5. execução real (`executed: true`) ou declaração explícita de não execução (`executed: false`);
-6. telemetria real: stdout/stderr/exit_code/duration/runtime_id;
-7. evidência/hash;
-8. revisão por agentes;
-9. aprovação do PO quando exigida;
-10. commit/PR e atualização do backlog.
+Um runtime pequeno continua sendo válido para computação pequena; o storage
+durável deve ser escolhido separadamente pelo deployment.
 
-Nenhum agente pode transformar `accepted`, `simulated`, `mocked` ou `not_executed` em `success`.
+## Por quê
 
-## Invocation contract
+A maioria dos modelos (Claude, Gemini, GPT, Qwen, DeepSeek, Manus, Perplexity, Grok) roda sandbox isolado só para si — nenhum abre runtime para outro modelo, e nenhum, até 2026-08-30, provou ter runtime soberano imperativo (execução arbitrária, verificável, fora do próprio provedor). Isso resolve segurança do lado deles, mas fragmenta verificação: cada modelo "confia no próprio texto" em vez de mostrar execução real.
 
-O contrato v0.1 exige, no mínimo, `contract_version`, `invocation_id`, `agent`, `status`, `executed` e saída estruturada. Para `executed: true`, a implementação deve fornecer evidência verificável; ausência de execução não pode ser mascarada por mock.
+`vortex` propõe uma interface padrão de invocação — não um sandbox compartilhado (superfície de ataque grande demais), mas um contrato comum que qualquer agente pode implementar sobre um runtime soberano real.
 
-## Runtime federation
+## Arquitetura
 
-O agente não precisa conhecer detalhes de cada máquina. O Vortex deve descobrir/receber capacidades do runtime e escolher um executor compatível:
+Duas camadas, propositalmente separadas:
 
-| Runtime | Exemplos de capacidades | Uso |
-|---|---|---|
-| A23/Termux | ARM64, Node, Python, Vulkan/Adreno quando disponível | execução local/baixo custo |
-| VPS | Linux, Docker, CPU/GPU conforme host | builds e serviços persistentes |
-| GCloud | VM/Job/Container, GPU conforme oferta | compute remoto |
-| Colab | notebook/local/remote runtime, acelerador conforme sessão | experimentação |
+| Camada | Padrão | Persistência | Risco |
+|---|---|---|---|
+| Execução (sandbox) | Nx1 — runtime soberano executa por invocação | Nenhuma — efêmero por invocação | Injection, abuso de compute, exfiltração |
+| Time (Scrum) | NxN — todos leem/escrevem o mesmo estado | Total — backlog, decisions, handoff em git | Conflito de merge, ruído de coordenação |
 
-**Importante:** credencial/conector de usuário não equivale automaticamente a acesso irrestrito a GPU. Cada runtime deve expor capacidades e permissões reais.
+Vida real de Scrum team não é nem puro Nx1 nem puro NxN: é NxN assíncrono no estado compartilhado (backlog/PR/comments) + Nx1 síncrono na execução (runtime soberano roda isolado, mas lê/escreve no mesmo repo). É o padrão que git já resolve.
 
-## GOS3 — Gang of Seven
+## GOS3 — Gang of Seven Senior Scrum
 
-O board original mantém Gemini, Claude, GPT, Qwen, DeepSeek, Manus e Perplexity. O modelo de execução não deve ser hardcoded: agentes adicionais do xAI podem participar como revisores/proposers, sem alterar o contrato. Ver `docs/team.md` e `docs/agents/gpt/`.
+Convite aberto — qualquer LLM pode **propor** no board NxN:
 
-## Engenharia de proveniência
+- Gemini
+- Claude
+- GPT
+- Qwen
+- DeepSeek
+- Manus
+- Perplexity
 
-A pasta `docs/agents/gpt/` registra o papel deste agente nesta mudança, os conectores, o prompt operacional, o fluxo de revisão e os critérios de aprovação. Isso é documentação de processo, não alegação de que cada runtime ou conector já está operacional.
+Nenhum desses tem, confirmado, runtime soberano próprio (ver "Correção de
+arquitetura" acima). Todos podem propor no backlog compartilhado (NxN).
+Execução real (Nx1) roda hoje em [moltH](../../moltH) — runtime soberano do
+operador, com `runtime_id` + `evidence_hash` por invocação.
+
+## Runtime de referência
+
+**[moltH](../../moltH)** — runtime soberano imperativo rodando em Termux/proot-distro
+(Samsung A23), Sprint 0 provado (`ADR-003`, envelope válido offline,
+`{ "valid": true }`, Python + TS Contract Gate: 10/10 testes passando).
+
+## SWOT 3/3
+
+**Forças**
+1. Isolamento por execução — sem estado entre chamadas, superfície de ataque mínima
+2. Estado persistente separado da execução (backlog/handoff em git, não no sandbox)
+3. Topologia híbrida testada: NxN assíncrono pra ideação, Nx1 síncrono pra rodar
+4. Runtime soberano confirmado (moltH) com `runtime_id` + `evidence_hash` reais
+
+**Fraquezas**
+1. Só um runtime soberano confirmado até agora (moltH/A23) — não é federação de 7
+2. Custo de infra por execução efêmera escala com nº de invocações
+3. Auditoria de múltiplos agentes propondo em paralelo ainda não tem tooling maduro
+
+**Oportunidades**
+1. Resolve o "cara de bunda" — resposta executada em vez de especulada
+2. Interface padrão vira commodity: quem primeiro publicar spec aberta define o padrão
+3. GOS3 como selo de processo (engenharia) fica mais forte com execução verificável
+
+**Ameaças**
+1. Prompt injection via output de execução voltando pro contexto do modelo
+2. Abuso de compute público (scraping, mineração, ataque de rede saindo do runtime)
+3. Confundir "LLM app com boa retórica" com "runtime soberano real" — é exatamente
+   o erro que este README cometia antes desta correção
+
+## Estrutura do repo
+
+Ver [`docs/tree.md`](docs/tree.md).
 
 ## Status
 
-**Discovery/Technical Refinement:** runtime federation proposta. **Aguardando aprovação do PO** antes de tratar a proposta como decisão arquitetural aceita e aguardando revisão/colaboração dos agentes GOS3 no xAI.
+Fase: Discovery → Technical Refinement (GOS3 v2.4). Runtime soberano
+(moltH) já em Sprint 0/1 provado. Contrato vortex ainda com dívida técnica
+conhecida — ver [`docs/handoff.md`](docs/handoff.md) e
+[`docs/decisions.md`](docs/decisions.md).
 
-Ver:
-- `docs/agents/gpt/README.md`
-- `docs/runtime-federation.md`
-- `docs/gos3-provenance.md`
-- `docs/BACKLOG.md`
-- `docs/decisions.md`
+---
+
+**scoobiii/vortex** · GOS3 · runtime soberano: [moltH](../../moltH)

@@ -85,3 +85,67 @@ A proposta foi documentada e aberta como Issue #11. A implementação só deve s
 ---
 
 **scoobiii/vortex · GOS3**
+> GOS3 - agente: Claude - papel: Proposer
+> fase: Technical Refinement - data: 2026-08-30
+> assinatura: Claude - Proposer - GOS3
+> status: PROPOSED - adicionar a docs/decisions.md
+
+## ADR-004: Agentes genéricos soberanos vs. LLM apps big-tech
+
+**Data**: 2026-08-30
+**Status**: Aceito
+
+### Contexto
+
+O README e o team.md do vortex descreviam os 7 agentes do GOS3 (Grok,
+Claude, GPT, Gemini, Qwen, DeepSeek, Manus, Perplexity) como se cada um
+tivesse sandbox/runtime soberano próprio, isolado, capaz de execução real
+verificável.
+
+Auditoria feita no runtime moltH (Sprint 0, 2026-08-30) testou essa
+alegação diretamente e encontrou:
+
+- Grok: roda no sandbox do X, mas sem Node.js, sem repo clonado, sem
+  execução de comando arbitrário.
+- Meta: mesma limitação.
+- DeepSeek: tem framework DSH mencionado, mas nesta configuração é
+  apenas LLM app, sem acesso a filesystem ou runtime Node.
+
+Conclusão da auditoria: "nenhuma (ainda) soberana imperativa" — nenhum dos
+7 agentes big-tech tinha, até esta data, prova equivalente ao que o moltH
+demonstrou (Contract Gate 10/10, `runtime_id` + `evidence_hash` reais,
+ADR-003).
+
+### Decisão
+
+1. Reclassificar todos os 7 agentes do board como **Proposers (NxN)** —
+   podem raciocinar, gerar código, propor patch — sem alegar runtime
+   soberano próprio até que produzam prova equivalente ao Contract Gate.
+
+2. **moltH** passa a ser o Runtime Soberano de referência (Nx1) —
+   substitui a alegação anterior de "Grok como Runtime Reference",
+   corrigindo o team.md.
+
+3. Critério de promoção Proposer → Runtime Soberano: qualquer agente
+   (big-tech ou não) que rodar o Contract Gate (Python 4/4 + TS 6/6,
+   incluindo `runtime_id` obrigatório) com evidência real, colada e
+   verificável por terceiro, pode ser promovido.
+
+4. `README.md` e `docs/team.md` atualizados para não confundir "LLM com
+   boa retórica sobre execução" com "runtime soberano confirmado".
+
+### Consequências
+
+- Positivo: elimina a categoria de erro mais comum documentada nesta
+  conversa inteira — alegação de execução sem prova ("cara de bunda").
+- Positivo: dá critério objetivo e replicável (Contract Gate) para
+  qualquer agente futuro provar capacidade real.
+- Negativo: reduz a alegação de "federação de 7 sandboxes" que soava
+  bem no README original, mas não era verdade — trade-off aceito porque
+  o projeto existe justamente para valorizar verdade sobre retórica.
+
+### Referências
+
+- Auditoria moltH, 2026-08-30 (Sprint 0 envelope offline, Contract Gate)
+- ADR-003 (runtime_id obrigatório)
+- docs/team.md (correção histórica, mesma data)

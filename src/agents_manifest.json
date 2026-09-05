@@ -1,0 +1,78 @@
+{
+  "schema": "vortex-gos3/agents/0.1",
+  "imperative_contract": "An agent may propose an action; only a connector-backed executor may perform it.",
+  "agents": [
+    {
+      "id": "grok",
+      "role": "runtime-reference",
+      "status": "active",
+      "imperative": true,
+      "provider": "xAI",
+      "capabilities": ["read_repo", "read_policy", "propose_change", "validate_evidence"]
+    },
+    {
+      "id": "grok-bot",
+      "role": "social-agent",
+      "status": "active",
+      "imperative": true,
+      "provider": "xAI",
+      "capabilities": ["read_repo", "propose_change", "publish_requires_confirmation"]
+    },
+    {
+      "id": "manus",
+      "role": "implementer",
+      "status": "ready",
+      "imperative": true,
+      "provider": "Manus",
+      "capabilities": ["read_repo", "read_policy", "propose_change", "run_tests", "request_connector_write"]
+    },
+    {
+      "id": "xai",
+      "role": "implementer",
+      "status": "ready",
+      "imperative": true,
+      "provider": "xAI",
+      "capabilities": ["read_repo", "propose_change", "run_tests", "request_connector_write"]
+    },
+    {
+      "id": "zai",
+      "role": "implementer",
+      "status": "ready",
+      "imperative": true,
+      "provider": "zAI",
+      "capabilities": ["read_repo", "propose_change", "run_tests", "request_connector_write"]
+    },
+    {
+      "id": "yai",
+      "role": "implementer",
+      "status": "ready",
+      "imperative": true,
+      "provider": "yAI",
+      "capabilities": ["read_repo", "propose_change", "run_tests", "request_connector_write"]
+    },
+    {
+      "id": "gemini",
+      "role": "reviewer",
+      "status": "silent",
+      "imperative": false,
+      "provider": "Google",
+      "capabilities": ["review_evidence"]
+    },
+    {
+      "id": "claude",
+      "role": "reviewer",
+      "status": "silent",
+      "imperative": false,
+      "provider": "Anthropic",
+      "capabilities": ["review_evidence"]
+    },
+    {
+      "id": "gpt",
+      "role": "reviewer",
+      "status": "silent",
+      "imperative": false,
+      "provider": "OpenAI",
+      "capabilities": ["review_evidence"]
+    }
+  ]
+}
