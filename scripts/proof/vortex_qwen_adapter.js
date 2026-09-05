@@ -19,11 +19,30 @@ function canonical(value) {
   return JSON.stringify(value);
 }
 
+function evidenceHash(evidence) {
+  return sha256(canonical(evidence));
+}
+
 async function invoke(request, { baseUrl = "http://127.0.0.1:8080/v1" } = {}) {
   const started = process.hrtime.bigint();
   const requestJson = canonical(request);
   const requestHash = sha256(requestJson);
+  const invocationId = request.invocation_id;
   const url = `${baseUrl.replace(/\/$/, "")}/chat/completions`;
+
+  const failed = (status, error, stdoutHash) => ({
+    invocation_id: invocationId,
+    agent: "qwen-local",
+    executed: false,
+    status,
+    exit_code: 1,
+    duration_ms: Number(process.hrtime.bigint() - started) / 1e6,
+    request_hash: requestHash,
+    execution_evidence: null,
+    output: null,
+    stdout_hash: stdoutHash,
+    error,
+  });
 
   try {
     const response = await fetch(url, {
@@ -31,71 +50,62 @@ async function invoke(request, { baseUrl = "http://127.0.0.1:8080/v1" } = {}) {
       headers: { "content-type": "application/json" },
       body: requestJson,
     });
-
     const text = await response.text();
     const durationMs = Number(process.hrtime.bigint() - started) / 1e6;
     const stdoutHash = sha256(text);
 
-    if (!response.ok) {
-      return {
-        invocation_id: request.invocation_id,
-        agent: "qwen-local",
-        executed: false,
-        status: "error",
-        exit_code: 1,
-        duration_ms: durationMs,
-        request_hash: requestHash,
-        stdout_hash: stdoutHash,
-        evidence_hash: sha256(canonical({ request_hash: requestHash, stdout_hash: stdoutHash, executed: false })),
-        error: `HTTP ${response.status}: ${text.slice(0, 500)}`,
-      };
+    if (!response.ok) return failed("http_error", `HTTP ${response.status}: ${text.slice(0, 500)}`, stdoutHash);
+
+    let parsed;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      return failed("invalid_json", "HTTP 200 without valid JSON completion", stdoutHash);
     }
 
-    const parsed = JSON.parse(text);
-    const usage = parsed.usage || {};
-    const completionTokens = Number(usage.completion_tokens || 0);
-    const output = parsed.choices?.[0]?.message?.content ?? "";
+    const output = parsed.choices?.[0]?.message?.content;
+    const completionTokens = Number(parsed.usage?.completion_tokens || 0);
+    const responseId = parsed.id;
+
+    // HTTP 200 is transport success only. Execution is proven only by a valid
+    // completion object with an id, non-empty output and positive token count.
+    if (typeof responseId !== "string" || !responseId || typeof output !== "string" || !output || !Number.isInteger(completionTokens) || completionTokens <= 0) {
+      return failed("execution_unproven", "HTTP 200 did not contain independently usable completion evidence", stdoutHash);
+    }
+
     const outputHash = sha256(output);
-    const evidence = {
+    const executionEvidence = {
+      response_id: responseId,
       request_hash: requestHash,
       stdout_hash: stdoutHash,
       output_hash: outputHash,
+      invocation_id: invocationId,
       executed: true,
       exit_code: 0,
-      invocation_id: request.invocation_id,
+      completion_tokens: completionTokens,
     };
 
     return {
-      invocation_id: request.invocation_id,
+      invocation_id: invocationId,
       agent: "qwen-local",
       executed: true,
       status: "success",
       exit_code: 0,
       duration_ms: durationMs,
       completion_tokens: completionTokens,
-      tok_per_s: completionTokens > 0 ? completionTokens / (durationMs / 1000) : 0,
+      tok_per_s: completionTokens / (durationMs / 1000),
       request_hash: requestHash,
       stdout_hash: stdoutHash,
-      output_hash: outputHash,
-      evidence_hash: sha256(canonical(evidence)),
-      output,
+      output: { text: output, output_hash: outputHash, stdout_hash: stdoutHash },
+      execution_evidence: {
+        ...executionEvidence,
+        evidence_hash: evidenceHash(executionEvidence),
+      },
     };
   } catch (error) {
-    const durationMs = Number(process.hrtime.bigint() - started) / 1e6;
     const message = error instanceof Error ? error.message : String(error);
-    return {
-      invocation_id: request.invocation_id,
-      agent: "qwen-local",
-      executed: false,
-      status: "error",
-      exit_code: 1,
-      duration_ms: durationMs,
-      request_hash: requestHash,
-      stdout_hash: sha256(message),
-      evidence_hash: sha256(canonical({ request_hash: requestHash, executed: false, error: message })),
-      error: message,
-    };
+    return failed("transport_error", message, sha256(message));
   }
 }
 
-module.exports = { invoke, sha256, canonical };
+module.exports = { invoke, sha256, canonical, evidenceHash };
