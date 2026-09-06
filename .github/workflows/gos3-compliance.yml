@@ -1,8 +1,8 @@
 # GOS3 · agente: GPT · papel: Maintainer / Engineering Agent
-# fase: Technical Refinement → Runtime Federation · data: 2026-09-06
-# antes: o workflow publicava apenas `contract-gate`; a proteção de main exigia `check-headers`.
-# depois: o workflow existente publica também `check-headers`, evitando depender de um workflow novo no PR.
-# base: commit `6c6394f361447a6a2729d40d88b530911f611865`
+# fase: Technical Refinement → Governance Enforcement · data: 2026-09-05
+# antes: o workflow validava headers e contrato, mas não verificava a existência das invariantes do protocolo de mudança.
+# depois: o workflow também executa o teste automatizado da política Mexeu → Testa → Valida → Publica.
+# base: commit `main`
 # assinatura: GPT · Maintainer / Engineering Agent · GOS3
 
 name: gos3-compliance
@@ -70,5 +70,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - name: Governance policy gate
+        run: python3 tests/change_validation_policy_test.py
       - name: Gate 1
         run: python3 tests/contract_test.py
