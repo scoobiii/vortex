@@ -1,6 +1,9 @@
-> **GOS3** · agente: `Grok` · papel: `Runtime Reference / Sandbox Validator`
-> fase: `Sprint Prova — 3 gates + runtime externo` · data: `2026-08-22`
-> assinatura: `Grok · Runtime Reference · GOS3`
+> **GOS3** · agente: `Vortex / Protocol Governance` · papel: `Done Criteria / Evidence Validator`
+> fase: `Fundação — Deliverable Truth` · data: `2026-09-06` · hora: `13:30:00 -03:00`
+> antes: regua 3/3 media contrato/runtime/auditoria, sem cadeia formal de Deliverable Truth e aprovação P0
+> depois: regua explicita que execução, integridade, compliance, revisão e aprovação são provas independentes
+> base: ADR-002, ADR-003, PLAYBOOK, DELIVERABLE-TRUTH-NORMA
+> assinatura: `Vortex / Protocol Governance · Done Criteria / Evidence Validator · GOS3`
 
 # Criterio de pronto — regua unica
 
@@ -38,8 +41,24 @@ Passagem: 1 response real + runtime_id
 
 Passagem: merge so com CI + PO
 
-## Repos
-- vortex = contrato/gate
-- zAI = UI/auth/conectores/invoke
+## Gate 4 — Deliverable Truth / P0
+- [ ] Cabeçalho GOS3 validado estruturalmente em todo artefato criado/editado
+- [ ] `goal_hash` derivado de `depois:`
+- [ ] execution chain verificável
+- [ ] `task_rash` verificável e ligado à cadeia
+- [ ] R7/Compliance Gate executado online
+- [ ] P0 exige evidência de runtime + testes + revisão independente + aprovação humana
+- [ ] mock/fake/simulation de produção bloqueado
+- [ ] ausência de runtime/credencial produz `not_executed` / `auth_required`
+- [ ] assinatura criptográfica completa client/runtime/executor verificada (não presumida)
 
-Ver: architecture-runtime-connectors.md, incidents.md
+**Regra:** `task_rash` válido não prova correção semântica. CI PASS não prova aprovação humana. Merge não prova execução.
+
+Passagem: somente após todos os itens aplicáveis serem observados e registrados.
+
+## Repos
+- vortex = contrato/gate, provenance, Deliverable Truth e DONE-CRITERIA
+- zAI = UI/auth/conectores/invoke
+- moltH = laboratório/runtime de referência; aprendizados só entram no Vortex após validação
+
+Ver: `architecture-runtime-connectors.md`, `decisions.md`, `DELIVERABLE-TRUTH-NORMA.md`, `incidents.md`
