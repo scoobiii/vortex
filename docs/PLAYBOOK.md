@@ -67,8 +67,54 @@ Todo arquivo criado ou editado por um agente do GOS3 deve conter o cabeçalho no
 > assinatura: `<nome do agente> · <papel> · GOS3`
 ```
 
+**Enforcement:** a regra exige validação estrutural no topo do arquivo e dos sete campos; um `grep` por `GOS3` isoladamente não constitui conformidade.
+
 ## 3. Protocolo de Prova de Execução (Zero-Trust)
 
 - Se executou: capturar `exit_code`, `stdout_raw`, `duration_ms` e gerar `output_hash` (SHA-256).
 - Se não executou ou falhou: retornar `claim: "not_executed"` ou `claim: "failed"` de forma explícita.
+- `executed:true` não pode ser derivado apenas de uma flag declarativa do agente; deve estar vinculado a recibo observável do runtime.
 - **Proibição Absoluta de Fallbacks Simulados**: É estritamente proibido simular respostas de APIs ausentes com geradores locais de texto disfarçados de provedores remotos.
+
+## 4. DELIVERABLE-TRUTH / R7
+
+A norma canônica está em `docs/DELIVERABLE-TRUTH-NORMA.md`.
+
+```text
+OBJECTIVE → goal_hash → EXECUTION CHAIN → task_rash
+→ R7 / CI → INDEPENDENT REVIEW → HUMAN APPROVAL → MAIN
+```
+
+`task_rash` prova a integridade da cadeia registrada; **não** prova correção semântica, qualidade ou valor. CI também não substitui revisão independente nem aprovação humana.
+
+### Regra vinculante
+
+Nenhum agente pode declarar `PASS`, `implemented`, `complete` ou `production-ready` quando o entregável estiver bloqueado por DELIVERABLE-TRUTH, mesmo que compilação e testes convencionais passem.
+
+## 5. Domínios protegidos P0 / Zero Mock Escape
+
+Mudanças de produção envolvendo `wallet`, `PIX`, `DREX`, `financial`, `banking`, `payment`, `settlement`, `balance`, `account`, `secret`, `credential`, `authentication`, `authorization` ou `security` entram no escopo P0 quando afetarem o fluxo/implementação real.
+
+Mocks/fixtures/simulations são permitidos no escopo de teste, mas não como implementação de produção. Ausência de integração ou credencial deve resultar em estado explícito (`not_executed` / `auth_required`), nunca em sucesso simulado.
+
+## 6. Ciclo de Incidente e Correção
+
+Descobrir um mock ou erro **não autoriza apagá-lo silenciosamente para fazer o compilador passar**.
+
+```text
+INCIDENT → BLOCK / QUARANTINE → CORRECTION
+→ INDEPENDENT REVIEW → CI → COMPLIANCE PASS
+→ HUMAN APPROVAL → MAIN
+```
+
+Regra: **MEXEU → ACHOU ERRO → CONSERTA**.
+
+## 7. Protocolo de Operações Sensíveis
+
+Operações `CREATE`, `EDIT`, `DELETE`, `MOVE`, `RENAME`, `REPLACE`, `EXECUTE`, `PUBLISH` e `MERGE` devem ser avaliadas pelo gate apropriado. Operações destrutivas exigem análise de consumidores, imports, contratos e testes afetados; dependência não resolvida é bloqueio.
+
+## 8. Governança de publicação
+
+P0 exige, no mínimo, evidência de runtime, testes, compliance, revisão independente e aprovação humana antes de `main`. Nenhuma etapa pode ser inferida de outra.
+
+Para a definição formal, consulte `docs/DELIVERABLE-TRUTH-NORMA.md`.
