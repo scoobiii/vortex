@@ -1,5 +1,9 @@
 # Git log
 ```
+cacf52b Merge pull request #39 from scoobiii/feat/institutionalize-change-validation
+4d3ec23 ci: enforce change-validation policy
+645c002 test: enforce change-validation governance policy
+a4c34e7 docs: institutionalize change-validation protocol
 3ce7f78 Merge pull request #38 from scoobiii/feat/readme-main-sync
 48003b4 ci: keep governance gate in existing workflow
 5ee0a2a ci: publish required check-headers gate
@@ -16,10 +20,6 @@ cc71306 docs(gpt): add endpoint truth inventory
 ae13d7b docs: define Vortex runtime execution model and compiler boundary
 36782fc docs: record runtime federation proposal as ADR-005
 ee2656c docs: propose runtime federation and provenance rules for GOS3
-4e2bc46 docs: add runtime federation sprint and GOS3 provenance backlog
-5193569 docs: define GOS3 provenance and evidence trail
-67dbeb3 docs: define Vortex runtime federation and capability discovery
-41ea47b docs: add GPT agent provenance and runtime federation proposal
 ```
 
 # Git status
@@ -973,6 +973,54 @@ Ver: architecture-runtime-connectors.md, incidents.md
 # PLAYBOOK — Vortex / GOS3
 
 Convenções de processo para o time NxN (qualquer agente/humano que operar neste ecossistema).
+
+## 0. Regra institucional — Mexeu → Testa → Valida → Publica
+
+Esta regra é obrigatória para qualquer mudança que possa afetar CI, branch protection, runtime, contrato, segurança ou capacidade de publicação.
+
+```text
+LEITURA
+  ↓
+IMPACTO NO CI / PROTEÇÃO
+  ↓
+PROPOSTA / DIFF MÍNIMO
+  ↓
+ESCRITA
+  ↓
+TESTE LOCAL
+  ↓
+PR + CI ONLINE
+  ↓
+VALIDAÇÃO DO CHECK OBRIGATÓRIO
+  ↓
+PUBLICAÇÃO / MERGE
+  ↓
+VERIFICAÇÃO DO ESTADO FINAL
+```
+
+### Regras de bloqueio
+
+1. **Nunca adicionar ou alterar um check obrigatório sem validar antes o workflow que o produz.**
+2. **Nunca presumir que um workflow novo será reconhecido como check obrigatório no PR.** Se a proteção exige um check, o workflow que produz esse check deve existir na base apropriada antes de depender dele.
+3. **Toda mudança em workflow deve passar pelo CI online antes do merge.**
+4. **Todo check exigido pela proteção de `main` deve terminar `success` no PR antes do merge.**
+5. **Falha de CI é bloqueio, não algo a ser contornado.** Corrige-se a causa e executa-se novamente.
+6. **Depois do merge, verificar o estado do CI no `main` quando a mudança afeta CI/proteção.**
+7. Se não for possível observar um resultado, o estado é **não verificado**, nunca `PASS`.
+
+### Critério de verdade
+
+```text
+PROMETIDO   ≠   PROPOSTO   ≠   IMPLEMENTADO   ≠   EXECUTADO   ≠   VALIDADO
+```
+
+Um arquivo alterado não prova que o comportamento está funcionando. A prova mínima para uma mudança de CI é:
+
+- diff identificado;
+- teste/checagem executado;
+- execução do GitHub Actions observada;
+- check relevante em `success`;
+- estado final do branch/PR verificado.
 
 ## 1. Governança de Mudanças em Contrato & Segurança
 
@@ -4254,6 +4302,43 @@ Registrar hash, timestamp, modo e `side_effect:not_claimed` quando não houver e
 ## Governance
 
 Aguardar aprovação humana em `docs/agents/approvals.json`.
+
+```
+
+
+## tests/change_validation_policy_test.py
+```.py
+# GOS3 · agente: GPT · papel: Maintainer / Engineering Agent
+# fase: Technical Refinement → Governance Enforcement · data: 2026-09-05
+# antes: a regra de validar mudanças de CI antes da publicação existia apenas como prática.
+# depois: o CI verifica que a política institucional e os gates essenciais continuam presentes.
+# base: commit `main`
+# assinatura: GPT · Maintainer / Engineering Agent · GOS3
+
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+PLAYBOOK = ROOT / "docs" / "PLAYBOOK.md"
+WORKFLOW = ROOT / ".github" / "workflows" / "gos3-compliance.yml"
+
+
+def require(text: str, needle: str, source: Path) -> None:
+    if needle not in text:
+        raise AssertionError(f"missing required governance invariant in {source}: {needle}")
+
+
+playbook = PLAYBOOK.read_text(encoding="utf-8")
+workflow = WORKFLOW.read_text(encoding="utf-8")
+
+require(playbook, "Mexeu → Testa → Valida → Publica", PLAYBOOK)
+require(playbook, "Toda mudança em workflow deve passar pelo CI online antes do merge.", PLAYBOOK)
+require(playbook, "Todo check exigido pela proteção de `main` deve terminar `success` no PR antes do merge.", PLAYBOOK)
+require(playbook, "estado é **não verificado**", PLAYBOOK)
+
+require(workflow, "check-headers:", WORKFLOW)
+require(workflow, "contract-gate:", WORKFLOW)
+
+print("change-validation policy: PASS")
 
 ```
 
