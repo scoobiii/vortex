@@ -1,0 +1,71 @@
+# GOS3 · agente: GPT · papel: Maintainer / Engineering Agent
+# fase: Technical Refinement → Runtime Federation · data: 2026-09-06
+# antes: branch protection exigia o check `check-headers`, mas nenhum workflow o publicava.
+# depois: publica automaticamente o job `check-headers` em PRs e valida o cabeçalho GOS3 dos arquivos alterados.
+# base: commit `6c6394f361447a6a2729d40d88b530911f611865`
+# assinatura: GPT · Maintainer / Engineering Agent · GOS3
+
+name: governance
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check-headers:
+    name: check-headers
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate GOS3 headers on changed files
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${BASE_SHA:-}" ]]; then
+            BASE_SHA="$(git rev-parse HEAD^ 2>/dev/null || true)"
+          fi
+
+          if [[ -z "${BASE_SHA:-}" ]]; then
+            echo "No base commit available; cannot verify changed files."
+            exit 1
+          fi
+
+          mapfile -t files < <(git diff --name-only "$BASE_SHA"...HEAD)
+          echo "Changed files: ${#files[@]}"
+
+          failures=0
+          for file in "${files[@]}"; do
+            [[ -f "$file" ]] || continue
+
+            case "$file" in
+              *.png|*.jpg|*.jpeg|*.gif|*.webp|*.ico|*.zip|*.gz|*.tar|*.pdf|*.woff|*.woff2)
+                echo "SKIP binary: $file"
+                continue
+                ;;
+            esac
+
+            if head -n 20 -- "$file" | grep -qE 'GOS3'; then
+              echo "PASS: $file"
+            else
+              echo "FAIL: missing GOS3 header: $file"
+              failures=$((failures + 1))
+            fi
+          done
+
+          if (( failures > 0 )); then
+            echo "check-headers: FAIL ($failures file(s))"
+            exit 1
+          fi
+
+          echo "check-headers: PASS"
