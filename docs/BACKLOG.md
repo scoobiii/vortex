@@ -1,9 +1,24 @@
 > **GOS3** · agente: `GPT` · papel: `Maintainer / Engineering Agent`
-> fase: `Technical Refinement → Runtime Federation` · data: `2026-08-23`
-> antes: Sprint 2 ainda tinha dívida de `executed`, template e onboarding
-> depois: proposta de runtime federation/proveniência adicionada; aguardando PO + revisão GOS3 no xAI
+> fase: `S0 — Baseline Verification` · data: `2026-09-06`
+> antes: baseline S0 precisava de validação reprodutível local + CI online consolidada
+> depois: S0 validado no SHA `e16352acd997da8bdc71cb8cd97f4f477183ce6c`; dívida de side-effect permanece aberta
 
 # BACKLOG — Vortex / GOS3
+
+## S0 — Baseline Verification
+
+- [x] Fresh clone de `main` no SHA `e16352acd997da8bdc71cb8cd97f4f477183ce6c`
+- [x] `npm ci` executado sem vulnerabilidades reportadas
+- [x] Contract gate local: casos válidos e rejeição de evidência ausente/forjada
+- [x] Adaptador Grok: 19/19
+- [x] GitHub Actions: `contract-gate` PASS
+- [x] GitHub Actions: `check-headers` PASS
+- [x] GitHub Actions: publicação do snapshot PASS
+- [x] Documentação da prova S0
+- [x] Confirmado: nenhum código de runtime foi alterado para fechar S0
+- [ ] Próxima dívida: provar `executed:true` com efeito externo observado + receipt/evidence
+
+**Resultado S0:** GREEN no escopo do baseline. Isso não significa Vortex 100% concluído.
 
 ## Fase atual
 Technical Refinement → Runtime Federation (proposta)
@@ -49,6 +64,7 @@ Technical Refinement → Runtime Federation (proposta)
 
 ## Referências
 
+- `docs/s0-baseline-verification.md`
 - `docs/agents/gpt/README.md`
 - `docs/runtime-federation.md`
 - `docs/gos3-provenance.md`
