@@ -1,3 +1,5 @@
+// Vortex / GOS3 v2.4 — VUA Contract Tests
+// Rule: mexeu → testa → valida → publica.
 import assert from 'node:assert/strict';
 import { BaseUniversalAdapter, createExecutionProof } from '../adapter';
 import { RegistryMcpBridge } from '../mcp';
