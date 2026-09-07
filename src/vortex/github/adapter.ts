@@ -28,18 +28,18 @@ export class HttpGitHubAdapter implements GitHubAdapter {
   }
 
   async getRepositoryState(repository: string, ref: string): Promise<GitHubRepositoryState> {
-    const repo = await this.request<RepositoryResponse>(`/repos/${encode(repository)}`);
-    const refData = await this.request<RefResponse>(`/repos/${encode(repository)}/git/ref/heads/${encode(ref)}`);
+    const repo = await this.request<RepositoryResponse>(`/repos/${repositoryPath(repository)}`);
+    const refData = await this.request<RefResponse>(`/repos/${repositoryPath(repository)}/git/ref/heads/${encode(ref)}`);
     return { repository: repo.full_name, ref, commit: refData.object.sha, url: repo.html_url };
   }
 
   async getPullRequest(repository: string, number: number): Promise<GitHubPullRequestState> {
-    const pr = await this.request<PullResponse>(`/repos/${encode(repository)}/pulls/${number}`);
+    const pr = await this.request<PullResponse>(`/repos/${repositoryPath(repository)}/pulls/${number}`);
     return { number: pr.number, state: pr.state === "open" || pr.state === "closed" ? pr.state : "unknown", head_sha: pr.head.sha, base_sha: pr.base.sha, url: pr.html_url };
   }
 
   async getChecks(repository: string, ref: string): Promise<GitHubCheck[]> {
-    const response = await this.request<CheckRunResponse>(`/repos/${encode(repository)}/commits/${encode(ref)}/check-runs`);
+    const response = await this.request<CheckRunResponse>(`/repos/${repositoryPath(repository)}/commits/${encode(ref)}/check-runs`);
     return (response.check_runs ?? []).map((check) => ({
       name: check.name,
       status: check.status === "queued" || check.status === "in_progress" || check.status === "completed" ? check.status : "unknown",
@@ -75,6 +75,12 @@ export class HttpGitHubAdapter implements GitHubAdapter {
     if (!response.ok) throw new Error(`github_http_${response.status}`);
     return response.json() as Promise<T>;
   }
+}
+
+function repositoryPath(repository: string): string {
+  const parts = repository.split("/");
+  if (parts.length !== 2 || !parts[0] || !parts[1]) throw new Error("invalid_github_repository");
+  return `${encode(parts[0])}/${encode(parts[1])}`;
 }
 
 function encode(value: string): string { return encodeURIComponent(value); }
