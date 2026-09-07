@@ -1,5 +1,7 @@
 # Git log
 ```
+7919290 Merge pull request #54 from scoobiii/scoobiii-patch-3
+60d8843 Add GOS3 header to README
 bdfecd4 Merge pull request #53 from scoobiii/scoobiii-patch-2
 c171ae0 Update README header format and content
 4f52152 Merge pull request #51 from scoobiii/docs/refine-readme-deliverables
@@ -18,8 +20,6 @@ cccec79 chore(governance): add required GOS3 header
 2dace3b chore(governance): add required GOS3 header
 8ad62d9 chore(governance): add required GOS3 header
 09f80cd ci(qwen): run real Qwen 0.5B E2E on GitHub runner
-630d5aa test(qwen): expose contract and real E2E commands
-781f42d test(qwen): add real local-model E2E evidence gate
 ```
 
 # Git status
@@ -29,13 +29,13 @@ cccec79 chore(governance): add required GOS3 header
 
 ## README.md
 ```.md
-### GOS3 · agente: GPT · papel: Maintainer / Engineering Agent
-### fase: Technical Refinement → Runtime Federation · data: 2026-09-07 · hora: 00:00
-### antes: README refinado sem header GOS3, causando falha do gate check-headers no PR #51.
-### depois: header GOS3 obrigatório adicionado sem alterar o conteúdo refinado do README.
-### base: main
-### assinatura: GPT · Maintainer / Engineering Agent · GOS3
-### commit: registered by Git
+## GOS3 Maintainer / Engineering Agent
+## fase: Technical Refinement → Runtime Federation · data: 2026-09-07 · hora: 00:00
+## antes: README refinado sem header GOS3, causando falha do gate check-headers no PR #51.
+## depois: header GOS3 obrigatório adicionado sem alterar o conteúdo refinado do README.
+## base: main
+## assinatura: GOS3 Maintainer / Engineering Agent · GOS3
+## commit: registered by Git
 
 # Vortex
 
