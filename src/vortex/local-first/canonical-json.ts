@@ -1,3 +1,5 @@
+// Vortex / GOS3 v2.4 — Local-first Runtime
+// Rule: mexeu → testa → valida → publica.
 export function canonicalize(value: unknown): string {
   return JSON.stringify(sortValue(value));
 }
