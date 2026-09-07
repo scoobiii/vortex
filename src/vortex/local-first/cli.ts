@@ -1,3 +1,5 @@
+// Vortex / GOS3 v2.4 — Local-first Runtime
+// Rule: mexeu → testa → valida → publica.
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { LocalFirstStore } from "./store";
