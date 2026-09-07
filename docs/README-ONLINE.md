@@ -1,3 +1,6 @@
+<!-- GOS3 · agente: GPT · papel: Maintainer / Engineering Agent -->
+<!-- fase: Technical Refinement → Runtime Federation · regra: Mexeu → Testa → Valida → Publica -->
+
 # README supplement — Local-first + GitHub online path
 
 The canonical README remains the project overview. This document records the implementation that closes the offline-to-online path.
