@@ -12,6 +12,7 @@
     "test:qwen05b": "ts-node -e \"import('./src/agents/qwen05b/adapter/index').then(async m => console.log(JSON.stringify(await m.invoke('reply with QWEN_OK'))))\"",
     "test:qwen05b:contract": "ts-node src/agents/qwen05b/tests/contract.test.ts",
     "test:qwen05b:e2e": "ts-node tests/qwen-e2e-local.ts",
+    "test:qwen05b:sandbox:e2e": "ts-node tests/qwen-sandbox-e2e-local.ts",
     "test:gos3:onboard": "ts-node tests/gos3-onboard.test.ts",
     "test:contract": "python3 tests/contract_test.py",
     "test:gos3": "npm run test:contract && npm run test:runtime-loop && npm run test:orchestrator && npm run test:grok && npm run test:qwen05b:contract && npm run test:gos3:onboard",
