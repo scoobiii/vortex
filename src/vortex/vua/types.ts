@@ -7,6 +7,7 @@ export interface AdapterIdentity {
   name: string;
   version: string;
   status: AdapterStatus;
+  environments?: readonly string[];
 }
 
 export interface Capability {
