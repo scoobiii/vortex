@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { canonicalize } from '../local-first/canonical-json';
 import {
   AdapterIdentity,
   Capability,
@@ -30,9 +31,7 @@ export function validateCapabilities(
   return { valid: errors.length === 0, errors, warnings: [] };
 }
 
-export abstract class BaseUniversalAdapter<TProposal = unknown>
-  implements UniversalAdapter<TProposal>
-{
+export abstract class BaseUniversalAdapter<TProposal = unknown> implements UniversalAdapter<TProposal> {
   abstract readonly identity: AdapterIdentity;
   abstract capabilities(): readonly Capability[];
   abstract validate(request: ExecutionRequest<TProposal>): ValidationResult;
@@ -40,9 +39,7 @@ export abstract class BaseUniversalAdapter<TProposal = unknown>
 
   async execute(request: ExecutionRequest<TProposal>): Promise<ExecutionResult> {
     const validation = this.validate(request);
-    if (!validation.valid) {
-      throw new Error(`VUA_VALIDATION_FAILED:${validation.errors.join('|')}`);
-    }
+    if (!validation.valid) throw new Error(`VUA_VALIDATION_FAILED:${validation.errors.join('|')}`);
     return this.executeValidated(request);
   }
 }
@@ -54,8 +51,6 @@ export function createExecutionProof(
   changeHash?: string,
 ): ExecutionProof {
   const unsigned = { protocol: 'vua/v1' as const, request, result, repositoryStateHash, changeHash };
-  const proofHash = createHash('sha256')
-    .update(JSON.stringify(unsigned))
-    .digest('hex');
+  const proofHash = createHash('sha256').update(canonicalize(unsigned)).digest('hex');
   return { ...unsigned, proofHash };
 }
