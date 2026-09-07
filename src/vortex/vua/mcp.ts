@@ -1,3 +1,5 @@
+// Vortex / GOS3 v2.4 — VUA MCP Bridge
+// Rule: mexeu → testa → valida → publica.
 import { AdapterRegistry } from './registry';
 import { ExecutionRequest, ExecutionResult } from './types';
 
