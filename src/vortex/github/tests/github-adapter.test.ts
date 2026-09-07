@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { HttpGitHubAdapter } from "../adapter";
 
 interface Request { path: string; }
+interface FakeResponse { ok: boolean; status: number; json(): Promise<unknown>; }
 
 async function main(): Promise<void> {
   const requests: Request[] = [];
@@ -18,8 +19,8 @@ async function main(): Promise<void> {
     const path = new URL(String(input)).pathname;
     requests.push({ path });
     const payload = payloads[path];
-    if (!payload) return new Response(JSON.stringify({ error: "not_found" }), { status: 404 });
-    return new Response(JSON.stringify(payload), { status: 200, headers: { "content-type": "application/json" } });
+    if (!payload) return fakeResponse(404, { error: "not_found" });
+    return fakeResponse(200, payload);
   };
 
   const adapter = new HttpGitHubAdapter({ fetchImpl });
@@ -37,6 +38,10 @@ async function main(): Promise<void> {
   assert.ok(mismatch.reasons.some((reason) => reason.startsWith("repository_commit_mismatch:")));
 
   console.log("GitHub adapter test: 7 assertions passed");
+}
+
+function fakeResponse(status: number, body: unknown): FakeResponse {
+  return { ok: status >= 200 && status < 300, status, json: async () => body };
 }
 
 void main().catch((error) => { console.error(error); process.exitCode = 1; });
