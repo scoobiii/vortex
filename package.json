@@ -2,25 +2,27 @@
   "name": "vortex",
   "version": "0.0.1",
   "private": true,
-  "description": "Vortex / GOS3 v2.4 — runtime padrão de invocação verificável para LLMs",
-  "gos3": {
-    "fase": "Discovery → Technical Refinement",
-    "proposer": "Claude",
-    "papel": "NxN · Proposer",
-    "registro": "docs/proposals/claude/README.md"
-  },
+  "type": "commonjs",
+  "description": "Vortex / GOS3 — runtime padrão de invocação verificável para LLMs",
+  "gos3": {"fase": "Runtime Federation → Bounded Agent Loop", "proposer": "GPT", "papel": "NxN · Maintainer / Engineering Agent", "registro": "docs/BACKLOG.md"},
   "scripts": {
     "test:grok": "ts-node src/agents/grok/tests/contract.test.ts",
+    "test:runtime-loop": "ts-node tests/runtime-loop.test.ts",
+    "test:orchestrator": "ts-node tests/gos3-orchestrator.test.ts",
+    "test:qwen05b": "ts-node -e \"import('./src/agents/qwen05b/adapter/index').then(async m => console.log(JSON.stringify(await m.invoke('reply with QWEN_OK'))))\"",
+    "test:qwen05b:contract": "ts-node src/agents/qwen05b/tests/contract.test.ts",
+    "test:qwen05b:e2e": "ts-node tests/qwen-e2e-local.ts",
+    "test:contract": "python3 tests/contract_test.py",
+    "test:gos3": "npm run test:contract && npm run test:runtime-loop && npm run test:orchestrator && npm run test:grok && npm run test:qwen05b:contract",
     "grok:ping": "ts-node src/agents/grok/adapter/index.ts --fixture=ping",
     "grok:echo": "ts-node src/agents/grok/adapter/index.ts --fixture=echo",
     "grok:dry": "ts-node src/agents/grok/adapter/index.ts --fixture=dry",
     "build": "tsc -p tsconfig.gateway.json",
     "test:gateway": "ts-node src/gateway/gateway.test.ts",
-    "gateway": "ts-node src/gateway/index.ts"
+    "gateway": "ts-node src/gateway/index.ts",
+    "test:vua": "ts-node src/vortex/vua/tests/vua.test.ts",
+    "test:ollama:contract": "ts-node connectors/ollama/tests/connector.test.ts",
+    "test:github:contract": "ts-node connectors/github/tests/connector.test.ts"
   },
-  "devDependencies": {
-    "typescript": "^5.5.4",
-    "ts-node": "^10.9.2",
-    "@types/node": "^20.14.10"
-  }
+  "devDependencies": {"typescript": "^5.5.4", "ts-node": "^10.9.2", "@types/node": "^20.14.10"}
 }

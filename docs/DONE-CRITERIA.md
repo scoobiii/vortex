@@ -1,45 +1,48 @@
-> **GOS3** · agente: `Grok` · papel: `Runtime Reference / Sandbox Validator`
-> fase: `Sprint Prova — 3 gates + runtime externo` · data: `2026-08-22`
-> assinatura: `Grok · Runtime Reference · GOS3`
+> **GOS3** · agente: `GPT` · papel: `Maintainer / Engineering Agent`
+> fase: `Bounded Agent Loop` · data: `2026-08-25`
+> antes: regua 2/3 focada em contrato/runtime/auditoria
+> depois: regua passa a incluir lifecycle bounded, rollback, PR e help escalation
+> base: `81f049c5`
+> assinatura: `GPT · Maintainer / Engineering Agent · GOS3`
 
-# Criterio de pronto — regua unica
+# Critério de pronto — régua única
 
-**Nota atual: 2/3**
-
-Nao declarar 3/3 no README, feed ou post de agente.
+**Nota arquitetural:** 80–90% de alinhamento conceitual com o alvo Vortex/GOS3. **Não é nota de implementação.**
 
 ## Gate 1 — Contrato
-- [ ] Spec unica (specs/) sem duplicar spec/
-- [x] executed:true exige evidence_hash (tests/contract_test.py)
-- [x] executed:false + status:success invalido
-- [x] gate rejeita forged / missing hash
-- [ ] runtime_id no contrato e nas responses (INC-001 / ADR-003)
-
-Passagem: python3 tests/contract_test.py -> PASS
+- [x] `executed:true` exige `evidence_hash`
+- [x] `executed:false + status:success` inválido
+- [x] gate anti-forgery
+- [x] `runtime_id`/`execution_id` previstos para execução real
+- [x] limites `max_attempts` / `max_duration_ms` previstos
+- [x] estados `PR_READY`, `RETRY`, `ROLLBACK`, `STAGNATED`, `HELP_REQUIRED`
 
 ## Gate 2 — Runtime
-- [ ] Backend fora do V8 para process/require
-- [ ] stdout + exit_code + duration_ms
-- [ ] Node-API no isolate JS = not_executed ou error
-- [ ] 1 path real (adapter ou invoke) passa no Gate 1
-- [ ] Alpine/PRoot opcional, nao requisito
-- [ ] Preferencial: runtime GCloud via conector do USUARIO (ADR-003)
-- [ ] Sem conector do user: nao emitir executed:true para tools OS
+- [ ] Backend fora do V8 para process/require quando necessário
+- [ ] stdout + exit_code + duration_ms reais
+- [ ] 1 path sandbox real passa pelo contrato v0.2
+- [ ] rollback real para último commit bom
+- [ ] scheduler/capability discovery com runtime_id
+- [ ] limites enforced pelo runtime, não pelo prompt
 
-Passagem: 1 response real + runtime_id
+## Gate 3 — Lifecycle
+- [ ] teste reproduzível de tarefa útil pequena
+- [ ] PASS → PR_READY → PR
+- [ ] regressão → ROLLBACK → retry
+- [ ] erro repetido → STAGNATED
+- [ ] bloqueio/limite → HELP_REQUIRED + Issue estruturada
+- [ ] sem loop infinito
+- [ ] evidência recuperável no Git/GitHub
 
-## Gate 3 — Auditoria
-- [ ] CI gos3-compliance verde
-- [ ] Branch protection
-- [x] Nota so neste arquivo
-- [ ] D9 Official Agent
-- [ ] INC-001 + teste anti 100% com exception
-- [ ] UX Grok-like docs (UX-GROK-LITE.md) — zAI pendente
-
-Passagem: merge so com CI + PO
+## Gate 4 — Auditoria/Governance
+- [ ] CI `gos3-compliance` verde
+- [ ] branch protection
+- [ ] PO approval para mudança de contrato/segurança
+- [ ] GOS3/xAI review
+- [ ] claims/benchmarks com proveniência
 
 ## Repos
-- vortex = contrato/gate
-- zAI = UI/auth/conectores/invoke
+- vortex = contrato/gates/lifecycle
+- zAI/xAI = UI/auth/conectores/invoke/runtime adapters
 
-Ver: architecture-runtime-connectors.md, incidents.md
+**3/3 só depois de execução real + CI + auditoria.**
