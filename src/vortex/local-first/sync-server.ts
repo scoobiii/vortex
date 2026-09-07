@@ -1,3 +1,5 @@
+// Vortex / GOS3 v2.4 — Local-first Runtime
+// Rule: mexeu → testa → valida → publica.
 import { createServer, IncomingMessage, Server, ServerResponse } from "node:http";
 import { LocalFirstStore } from "./store";
 import { SyncBatch, SyncResult } from "./types";
