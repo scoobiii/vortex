@@ -10,7 +10,9 @@
     "grok:echo": "ts-node src/agents/grok/adapter/index.ts --fixture=echo",
     "grok:dry": "ts-node src/agents/grok/adapter/index.ts --fixture=dry",
     "test:local-first": "ts-node src/vortex/local-first/tests/local-first.test.ts",
-    "test": "npm run test:grok && npm run test:local-first",
+    "test:github": "ts-node src/vortex/github/tests/github-adapter.test.ts",
+    "test:e2e": "ts-node src/vortex/local-first/tests/end-to-end.test.ts",
+    "test": "npm run test:grok && npm run test:local-first && npm run test:github && npm run test:e2e",
     "build": "tsc -p tsconfig.json",
     "vortex:status": "ts-node src/vortex/local-first/cli.ts status",
     "vortex:sync": "ts-node src/vortex/local-first/cli.ts sync"
