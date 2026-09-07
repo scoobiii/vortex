@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "description": "Vortex / GOS3 — runtime verificável, local-first e offline-capable",
+  "GOS3": "Technical Refinement → Runtime Federation · Mexeu → Testa → Valida → Publica",
   "gos3": { "fase": "Technical Refinement → Runtime Federation", "proposer": "Claude", "papel": "NxN · Proposer", "registro": "docs/proposals/claude/README.md" },
   "scripts": {
     "test:grok": "ts-node src/agents/grok/tests/contract.test.ts",
