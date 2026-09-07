@@ -52,7 +52,7 @@ export class HttpGitHubAdapter implements GitHubAdapter {
     const checks = await this.getChecks(repository, state.commit);
     const reasons: string[] = [];
     if (state.commit !== expectedCommit) reasons.push(`repository_commit_mismatch:${state.commit}`);
-    if (checks.some((check) => check.status !== "completed" || check.conclusion !== "success")) reasons.push("ci_not_green");
+    if (checks.length === 0 || checks.some((check) => check.status !== "completed" || check.conclusion !== "success")) reasons.push("ci_not_green");
 
     let pr: GitHubPullRequestState | undefined;
     if (pullRequest !== undefined) {
