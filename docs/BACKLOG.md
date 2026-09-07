@@ -1,16 +1,33 @@
 > **GOS3** · agente: `GPT` · papel: `Maintainer / Engineering Agent`
-> fase: `Runtime Federation → Bounded Agent Loop` · data: `2026-08-26`
+> fase: `Runtime Federation → Bounded Agent Loop` · data: `2026-09-07`
 > antes: contrato v0.2 + máquina bounded ainda sem ponte operacional completa
-> depois: sandbox restrito + verificação + rollback + PR/help providers + worker Qwen 0.5B adapter implementados; E2E real do Qwen depende de endpoint/modelo local disponível
-> base: commit `57870c1`
+> depois: sandbox restrito, verificação, rollback, PR/help providers, worker Qwen e baseline S0 documentados; E2E real do Qwen depende de endpoint/modelo local disponível
+> base: merge de `main` com `feat/gos3-runtime-orchestration`
 > assinatura: `GPT · Maintainer / Engineering Agent · GOS3`
 
 # BACKLOG — Vortex / GOS3
 
+## S0 — Baseline Verification
+
+- [x] Fresh clone de `main` no SHA de baseline validado
+- [x] `npm ci` executado sem vulnerabilidades reportadas
+- [x] Contract gate local: casos válidos e rejeição de evidência ausente/forjada
+- [x] Adaptador Grok: 19/19
+- [x] GitHub Actions: `contract-gate` PASS
+- [x] GitHub Actions: `check-headers` PASS
+- [x] GitHub Actions: publicação do snapshot PASS
+- [x] Documentação da prova S0 em `docs/s0-baseline-verification.md`
+- [x] Confirmado: nenhum código de runtime foi alterado para fechar S0
+- [ ] Próxima dívida: provar `executed:true` com efeito externo observado + receipt/evidence
+
+**Resultado S0:** GREEN no escopo do baseline. Isso não significa Vortex 100% concluído.
+
 ## Fase atual
+
 Runtime Federation → Bounded Agent Loop
 
 ## Sprint 1 — Runtime Reference (Grok)
+
 - [x] Adaptador Grok
 - [x] Contrato mínimo de invocação
 - [x] `executed` obrigatório
@@ -18,6 +35,7 @@ Runtime Federation → Bounded Agent Loop
 - [x] Testes históricos 19/19
 
 ## Sprint 2 — Generalização
+
 - [x] Infra mínima TypeScript
 - [x] Gate `executed:false` + `success` inválido
 - [x] Gate anti-forgery de `evidence_hash`
@@ -26,6 +44,7 @@ Runtime Federation → Bounded Agent Loop
 - [ ] Finalizar onboarding dos agentes restantes
 
 ## Sprint 3 — Runtime Federation / Provenance
+
 - [ ] PO approval da arquitetura de federation
 - [ ] GOS3/xAI review
 - [ ] Capability discovery com `runtime_id`
@@ -43,6 +62,7 @@ Runtime Federation → Bounded Agent Loop
 - [ ] Auditoria de concorrência do persistence backend zAI/xAI
 
 ## Sprint 4 — Worker pequeno / Sandbox
+
 - [x] Adapter Qwen Coder ~0,5B como worker bounded (OpenAI-compatible local endpoint)
 - [x] Sandbox restrito com filesystem/exec controlados
 - [x] Loop observe → execute → verify → evidence
@@ -58,6 +78,7 @@ Runtime Federation → Bounded Agent Loop
 A arquitetura-alvo está estimada em **80–90% de alinhamento conceitual**, não 80–90% de implementação. O percentual não substitui testes nem aprovação.
 
 Para declarar runtime operacional, exigir evidência de:
+
 1. execução real no sandbox/runtime;
 2. teste verificável;
 3. `evidence_hash` válido;
@@ -68,18 +89,22 @@ Para declarar runtime operacional, exigir evidência de:
 8. E2E real do worker escolhido.
 
 ## Governance
+
 - [ ] Não criar um segundo GOS3 no xAI; reutilizar o GOS3 do Vortex
 - [ ] Permitir N agentes no board sem hardcode de sete
 - [ ] Mudança relevante: `dor → issue → teste → execução → evidência → revisão → aprovação → commit/PR → backlog`
 - [ ] Mudança de contrato/segurança: aprovação PO antes de merge
 
 ## Referências
+
 - `spec/invocation-contract.md`
 - `spec/gos3-system-instruction.md`
 - `src/gos3/runtime-loop.ts`
 - `src/gos3/orchestrator.ts`
 - `src/agents/qwen05b/adapter/index.ts`
 - `docs/runtime-execution-model.md`
+- `docs/s0-baseline-verification.md`
+- `docs/agents/gpt/README.md`
 - `docs/runtime-federation.md`
 - `docs/gos3-provenance.md`
 - `docs/decisions.md`

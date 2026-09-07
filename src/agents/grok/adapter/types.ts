@@ -1,11 +1,7 @@
 /**
- * GOS3 · agente: scoobiii · papel: Dev / Grok Adapter
- * fase: Sprint 2 - Governance Retroativo · data: 2026-08-16
- * base: 88c1ab4 · assinatura: scoobiii · PO · GOS3
- */
-/**
- * invocation-contract.md v0.1 — tipos de referência
- * Runtime Reference Agent (Grok)
+ * GOS3 · agente: GPT · papel: Engineering Agent / Grok Adapter
+ * fase: Sprint Proof-of-Execution · data: 2026-09-06
+ * assinatura: GPT · GOS3
  */
 
 export interface InvocationContext {
@@ -13,6 +9,25 @@ export interface InvocationContext {
   timeout_ms?: number;
   dry_run?: boolean;
   [key: string]: unknown;
+}
+
+export interface EffectObservation {
+  observed: boolean;
+  kind: string;
+  fingerprint: string;
+}
+
+export interface ExecutionReceipt {
+  invocation_id: string;
+  agent: string;
+  action: string;
+  started_at: string;
+  finished_at: string;
+  duration_ms: number;
+  exit_code: number;
+  effect_observed: boolean;
+  effect_kind: string;
+  effect_fingerprint: string;
 }
 
 export interface InvocationRequest {
@@ -26,15 +41,22 @@ export interface InvocationRequest {
 export interface InvocationResponse {
   invocation_id: string;
   agent: string;
-  /** Obrigatório pelo contrato v0.1 */
   executed: boolean;
   result: Record<string, unknown> | null;
   error: string | null;
   logs: string[];
   duration_ms: number;
+  receipt: ExecutionReceipt | null;
+  evidence_hash: string | null;
 }
+
+export type ActionHandlerResult = {
+  result: Record<string, unknown>;
+  logs: string[];
+  effect?: EffectObservation;
+};
 
 export type ActionHandler = (
   payload: Record<string, unknown>,
   ctx: InvocationContext
-) => Promise<{ result: Record<string, unknown>; logs: string[] }>;
+) => Promise<ActionHandlerResult>;

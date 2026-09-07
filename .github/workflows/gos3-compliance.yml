@@ -1,3 +1,9 @@
+# GOS3 · agente: GPT · papel: Maintainer / Engineering Agent
+# fase: Technical Refinement → Governance Enforcement · data: 2026-09-07
+# antes: branches divergentes mantinham nomes/jobs diferentes e quebravam a resolução de módulos no CI.
+# depois: workflow único com headers, política, contrato, runtime loop, orchestrator, Grok e truth gate.
+# base: merge de main com feat/gos3-runtime-orchestration
+# assinatura: GPT · Maintainer / Engineering Agent · GOS3
 name: GOS3 Compliance
 
 on:
@@ -10,86 +16,73 @@ permissions:
   contents: read
 
 jobs:
-  gos3-compliance:
+  check-headers:
+    name: check-headers
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Validate GOS3 headers on changed files
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${BASE_SHA:-}" ]]; then BASE_SHA="$(git rev-parse HEAD^ 2>/dev/null || true)"; fi
+          if [[ -z "${BASE_SHA:-}" ]]; then echo "No base commit available"; exit 1; fi
+          mapfile -t files < <(git diff --name-only "$BASE_SHA"...HEAD)
+          failures=0
+          for file in "${files[@]}"; do
+            [[ -f "$file" ]] || continue
+            case "$file" in
+              *.png|*.jpg|*.jpeg|*.gif|*.webp|*.ico|*.zip|*.gz|*.tar|*.pdf|*.woff|*.woff2) continue ;;
+            esac
+            if head -n 20 -- "$file" | grep -qE 'GOS3'; then echo "PASS: $file"; else echo "FAIL: missing GOS3 header: $file"; failures=$((failures + 1)); fi
+          done
+          if (( failures > 0 )); then exit 1; fi
+          echo "check-headers: PASS"
+
+  contract-gate:
     name: GOS3 compliance
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: npm
-
       - name: Install Node dependencies
-        run: npm install
-
-      - name: Gate 1 - Contract (comportamento)
+        run: npm ci
+      - name: Governance policy gate
+        run: python3 tests/change_validation_policy_test.py
+      - name: Gate 1 - Contract
         run: python3 tests/contract_test.py
-
       - name: Gate 2 - Runtime and orchestration tests
         run: |
           npm run test:runtime-loop
           npm run test:orchestrator
           npm run test:grok
-
       - name: Gate 3 - Validate repository truth
         shell: bash
         run: |
           set -euo pipefail
-
-          fail() {
-            echo "::error::$1"
-            exit 1
-          }
-
-          echo "== GOS3 Compliance =="
-
-          test -f spec/invocation-contract.md \
-            || fail "spec/invocation-contract.md missing"
-
-          grep -Eq "(Status:|fase:).*Technical Refinement" \
-            spec/invocation-contract.md \
-            || fail "invocation contract classification changed unexpectedly"
-
-          test -f docs/agents/gpt/TRUTH-MATRIX.md \
-            || fail "GPT truth matrix missing"
-
-          test -f src/agents/gpt/adapter/index.ts \
-            || fail "GPT adapter missing"
-
-          grep -q "requires an injected.*RuntimeExecutor" \
-            docs/agents/gpt/TRUTH-MATRIX.md \
-            || fail "GPT truth matrix does not require an authorized runtime"
-
-          grep -q "49/49 coverage.*NOT CLAIMED" \
-            docs/PRODUCT-TRUTH.md \
-            || fail "49/49 coverage is not explicitly marked NOT CLAIMED"
-
-          grep -q "GPT runtime is operational in Vortex.*NOT PROVEN" \
-            docs/PRODUCT-TRUTH.md \
-            || fail "GPT runtime truth classification is not conservative"
-
-          grep -q "IMPLEMENTED / EXECUTION UNPROVEN" \
-            docs/PRODUCT-TRUTH.md \
-            || fail "MetaAI execution-unproven classification missing"
-
-          for agent in claude grok manus metaai; do
-            test -d "src/agents/$agent" \
-              || fail "Expected agent directory missing: $agent"
-          done
-
-          if grep -nE '49/49.*IMPLEMENTED|GPT runtime.*IMPLEMENTED|metaai.*REAL EXECUTION' \
-              docs/PRODUCT-TRUTH.md; then
-            fail "Detected semantic inflation in PRODUCT-TRUTH.md"
-          fi
-
+          fail() { echo "::error::$1"; exit 1; }
+          test -f spec/invocation-contract.md || fail "spec/invocation-contract.md missing"
+          grep -Eq "(Status:|fase:).*Technical Refinement" spec/invocation-contract.md || fail "invocation contract classification changed unexpectedly"
+          test -f docs/agents/gpt/TRUTH-MATRIX.md || fail "GPT truth matrix missing"
+          test -f src/agents/gpt/adapter/index.ts || fail "GPT adapter missing"
+          grep -q "requires an injected.*RuntimeExecutor" docs/agents/gpt/TRUTH-MATRIX.md || fail "GPT truth matrix does not require an authorized runtime"
+          grep -q "49/49 coverage.*NOT CLAIMED" docs/PRODUCT-TRUTH.md || fail "49/49 coverage is not explicitly marked NOT CLAIMED"
+          grep -q "GPT runtime is operational in Vortex.*NOT PROVEN" docs/PRODUCT-TRUTH.md || fail "GPT runtime truth classification is not conservative"
+          grep -q "IMPLEMENTED / EXECUTION UNPROVEN" docs/PRODUCT-TRUTH.md || fail "MetaAI execution-unproven classification missing"
+          for agent in claude grok manus metaai; do test -d "src/agents/$agent" || fail "Expected agent directory missing: $agent"; done
+          if grep -nE '49/49.*IMPLEMENTED|GPT runtime.*IMPLEMENTED|metaai.*REAL EXECUTION' docs/PRODUCT-TRUTH.md; then fail "Detected semantic inflation in PRODUCT-TRUTH.md"; fi
           echo "GOS3 COMPLIANCE: PASS"
