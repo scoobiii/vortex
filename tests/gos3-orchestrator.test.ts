@@ -1,6 +1,6 @@
 // **GOS3** · agente: GPT · papel: Maintainer / Engineering Agent
 import assert from "node:assert/strict";
-import { runBoundedTask, type GitProvider, type Sandbox, type SandboxResult } from "../src/gos3/orchestrator.js";
+import { runBoundedTask, type GitProvider, type Sandbox, type SandboxResult } from "../src/gos3/orchestrator";
 
 class FakeSandbox implements Sandbox {
   constructor(private readonly results: SandboxResult[]) {}
@@ -40,7 +40,7 @@ async function main() {
 
   {
     const git = new FakeGit();
-    const result = await runBoundedTask(new FakeSandbox([ok, verifyFail, ok]), git, { command: "qwen", verifyCommand: "npm", verifyArgs: ["test"] }, { limits: { max_attempts: 3, max_duration_ms: 1000 }, allowGitHub: true });
+    const result = await runBoundedTask(new FakeSandbox([ok, verifyFail, ok, ok]), git, { command: "qwen", verifyCommand: "npm", verifyArgs: ["test"] }, { limits: { max_attempts: 3, max_duration_ms: 1000 }, allowGitHub: true });
     assert.equal(result.snapshot.state, "PR_READY");
     assert.equal(git.rollbacks.length, 1);
     assert.equal(git.rollbacks[0], "abc123");
