@@ -1,3 +1,11 @@
+# GOS3 · agente: GPT · papel: Maintainer / Engineering Agent
+# fase: Technical Refinement → Governance Enforcement · data: 2026-09-07 · hora: 00:00
+# antes: documento modificado no branch sem marcador GOS3 exigido pelo checker.
+# depois: conteúdo permanece inalterado e recebe apenas o header de governança obrigatório.
+# base: feat/gos3-runtime-orchestration
+# assinatura: GPT · Maintainer / Engineering Agent · GOS3
+# commit: registered by Git
+
 # Decisões — vortex (ADR-style)
 
 Registro formal de decisões. Mudanças de contrato/arquitetura entram aqui com contexto, decisão, alternativas e aprovação.
