@@ -1,3 +1,5 @@
+// Vortex / GOS3 v2.4 — Local-first Runtime
+// Rule: mexeu → testa → valida → publica.
 export interface ExecutionProof {
   protocol: "vortex-agent/v1";
   proof_version: 1;
