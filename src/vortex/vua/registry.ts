@@ -35,7 +35,7 @@ export class AdapterRegistry {
       name: adapter.identity.name,
       version: adapter.identity.version,
       status: adapter.identity.status,
-      environments: adapter.capabilities().map((capability) => capability.id),
+      environments: adapter.identity.environments ?? [],
       capabilities: adapter.capabilities().map((capability) => capability.id),
       offline: adapter.capabilities().every((capability) => capability.offline),
     }));
