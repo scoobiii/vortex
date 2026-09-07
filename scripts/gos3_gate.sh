@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+# Data:            2026-08-20
+# Diretório:       scripts/gos3_gate.sh
+# Responsabilidade: Executa tests/contract_test.py como Gate 1 local; falha se o contrato quebrar
+# Versão:          1.0.0
+# Assinatura:      scoobiii <sobrinhosj@gmail.com>
+
 set -euo pipefail
 cd "$(dirname "$0")/.."
 FAIL=0

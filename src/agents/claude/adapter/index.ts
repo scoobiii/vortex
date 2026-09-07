@@ -1,4 +1,13 @@
 /**
+ * Data:            2026-08-15
+ * Diretório:       src/agents/claude/adapter/index.ts
+  * Responsabilidade: Entrypoint invocável do adapter Claude via invoke().
+ * Versão:          1.0.0
+ * Assinatura:      scoobiii <sobrinhosj@gmail.com>
+ */
+
+
+/**
  * GOS3 · agente: Claude · papel: Arquiteto / Tech Writer (ver docs/team.md)
  * fase: Technical Refinement (E2) · data: 2026-08-17 · hora: 22:40:00 -03:00
  * antes: sem entrypoint invocável — Claude só produzia specs/docs, não código rodável

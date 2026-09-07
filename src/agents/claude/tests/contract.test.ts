@@ -1,3 +1,12 @@
+/**
+ * Data:            2026-08-20
+ * Diretório:       src/agents/claude/tests/contract.test.ts
+  * Responsabilidade: Testa conformidade do adapter Claude com o invocation-contract v0.1.
+ * Versão:          1.0.0
+ * Assinatura:      scoobiii <sobrinhosj@gmail.com>
+ */
+
+
 // **GOS3** · agente: `claude` · papel: `Arquiteto / Tech Writer` (ver docs/team.md)
 // fase: `Technical Refinement (E3)` · data: `2026-08-18`
 // antes: README.md prometia "suíte de conformidade (6 casos)" que não existia
