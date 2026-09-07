@@ -1,3 +1,5 @@
+// Vortex / GOS3 v2.4 — Local-first Runtime
+// Rule: mexeu → testa → valida → publica.
 import { sha256Json, sha256Text } from "./hash";
 import { BenchmarkRecord, ExecutionProof } from "./types";
 import { LocalFirstStore } from "./store";
