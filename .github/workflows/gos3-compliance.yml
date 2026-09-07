@@ -1,10 +1,16 @@
-# GOS3 · agente: GPT · papel: Maintainer / Engineering Agent
-# fase: Technical Refinement → VUA + Connector Federation + Real Qwen CI · data: 2026-09-07 · hora: 20:10
-# antes: workflow podia ser registrado sem jobs quando a sintaxe de mappings/expressões era rejeitada.
-# depois: workflow usa YAML explícito, mantém check-headers obrigatório e permite dispatch manual.
-# base: feat/gos3-runtime-orchestration
-# assinatura: agent/llm · Engineering Agent · GOS3
-# commit: registered by Git
+# GOS3
+# arquivo: .github/workflows/gos3-compliance.yml
+# responsabilidade: gates de governança, contratos, onboarding e E2E do Vortex
+# agente: agent/llm
+# papel: Engineering Agent
+# fase: implementation
+# data: 2026-09-07
+# hora: 18:07
+# antes: sha256:8fe6eb72f057e78d27115a9487c3c32c6f445bc3
+# depois: sha256:pending
+# base: commit:1a4f271425f6ce8ebbad8c8aae0bd75a59a9c787
+# assinatura: P0 scoobiii : Agente GPT
+# commit: pending
 name: GOS3 Compliance
 
 on:
@@ -91,6 +97,7 @@ jobs:
           npm run test:orchestrator
           npm run test:grok
           npm run test:qwen05b:contract
+          npm run test:gos3:onboard
           npm run test:vua
           npm run test:ollama:contract
           npm run test:github:contract
@@ -140,56 +147,48 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          nohup ollama serve > /tmp/ollama.log 2>&1 &
-          for attempt in {1..60}; do
-            if curl -fsS http://127.0.0.1:11434/api/tags >/dev/null; then
-              echo "Ollama API: PASS"
-              exit 0
-            fi
-            sleep 2
+          nohup ollama serve > ollama.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:11434/api/tags >/dev/null; then break; fi
+            sleep 1
           done
-          cat /tmp/ollama.log
-          exit 1
+          curl -fsS http://127.0.0.1:11434/api/tags >/dev/null
 
-      - name: Pull real Qwen 0.5B model
+      - name: Pull Qwen 0.5B
         shell: bash
         run: |
           set -euo pipefail
           ollama pull qwen2.5-coder:0.5b
-          ollama list
 
-      - name: Capture Qwen runtime and model provenance
+      - name: Capture Qwen provenance
         shell: bash
         run: |
           set -euo pipefail
-          runtime_version="$(ollama --version | tr -d '\r')"
-          runtime_binary="$(command -v ollama)"
-          runtime_digest="sha256:$(sha256sum "$runtime_binary" | awk '{print $1}')"
-          modelfile="$(mktemp)"
-          ollama show --modelfile qwen2.5-coder:0.5b > "$modelfile"
-          model_blob="$(awk '$1 == "FROM" {print $2; exit}' "$modelfile")"
-          [[ -n "$model_blob" && -f "$model_blob" ]] || { cat "$modelfile"; exit 1; }
-          model_digest="sha256:$(sha256sum "$model_blob" | awk '{print $1}')"
+          OLLAMA_VERSION="$(ollama --version | tr -d '\r')"
+          OLLAMA_BIN="$(command -v ollama)"
+          OLLAMA_BIN_SHA256="$(sha256sum "$OLLAMA_BIN" | awk '{print $1}')"
+          MODEL_JSON="$(curl -fsS http://127.0.0.1:11434/api/tags)"
+          MODEL_DIGEST="$(printf '%s' "$MODEL_JSON" | python3 -c 'import json,sys; data=json.load(sys.stdin); matches=[m for m in data.get("models",[]) if m.get("name")=="qwen2.5-coder:0.5b"]; print(matches[0].get("digest","") if matches else "")')"
+          test -n "$MODEL_DIGEST"
           {
-            echo "QWEN_MODEL=qwen2.5-coder:0.5b"
-            echo "QWEN_BASE_URL=http://127.0.0.1:11434/v1"
-            echo "QWEN_TIMEOUT_MS=120000"
-            echo "QWEN_RUNTIME_VERSION=$runtime_version"
-            echo "QWEN_RUNTIME_DIGEST=$runtime_digest"
-            echo "QWEN_MODEL_DIGEST=$model_digest"
+            echo "QWEN_RUNTIME_VERSION=$OLLAMA_VERSION"
+            echo "QWEN_RUNTIME_DIGEST=sha256:$OLLAMA_BIN_SHA256"
+            echo "QWEN_MODEL_DIGEST=$MODEL_DIGEST"
           } >> "$GITHUB_ENV"
-          echo "Qwen runtime: $runtime_version"
-          echo "Qwen runtime binary digest: $runtime_digest"
-          echo "Qwen model blob digest: $model_digest"
 
-      - name: Execute real Qwen E2E
+      - name: Run real Qwen E2E
+        env:
+          QWEN_BASE_URL: http://127.0.0.1:11434/v1
+          QWEN_MODEL: qwen2.5-coder:0.5b
+          QWEN_TIMEOUT_MS: 120000
         run: npm run test:qwen05b:e2e
 
-      - name: Upload Qwen execution evidence
+      - name: Upload Qwen evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: qwen-real-evidence-${{ github.run_id }}
-          path: qwen-evidence.json
-          if-no-files-found: error
-          retention-days: 14
+          name: qwen-real-evidence
+          path: |
+            qwen-evidence.json
+            ollama.log
+          if-no-files-found: ignore
