@@ -1,3 +1,5 @@
+// Vortex / GOS3 v2.4 — VUA Contract
+// Rule: mexeu → testa → valida → publica.
 import { createHash } from 'node:crypto';
 import { canonicalize } from '../local-first/canonical-json';
 import {
