@@ -13,7 +13,8 @@
     "test:local-first": "ts-node src/vortex/local-first/tests/local-first.test.ts",
     "test:github": "ts-node src/vortex/github/tests/github-adapter.test.ts",
     "test:e2e": "ts-node src/vortex/local-first/tests/end-to-end.test.ts",
-    "test": "npm run test:grok && npm run test:local-first && npm run test:github && npm run test:e2e",
+    "test:rhino": "ts-node src/vortex/rhino/tests/rhino-adapter.test.ts",
+    "test": "npm run test:grok && npm run test:local-first && npm run test:github && npm run test:e2e && npm run test:rhino",
     "build": "tsc -p tsconfig.json",
     "vortex:status": "ts-node src/vortex/local-first/cli.ts status",
     "vortex:sync": "ts-node src/vortex/local-first/cli.ts sync"
