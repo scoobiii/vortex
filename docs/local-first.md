@@ -1,3 +1,5 @@
+<!-- Vortex / GOS3 v2.4 — Local-first Runtime -->
+<!-- Rule: mexeu → testa → valida → publica. -->
 # Vortex Local-First / Offline Runtime
 
 **Status:** implemented on `feat/local-first-execution-proof`
