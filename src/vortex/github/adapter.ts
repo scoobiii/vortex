@@ -3,10 +3,18 @@
 
 import { GitHubCheck, GitHubPullRequestState, GitHubRepositoryState, GitHubValidationResult } from "./types";
 
+interface HttpResponse {
+  ok: boolean;
+  status: number;
+  json(): Promise<unknown>;
+}
+
+type FetchLike = (input: string, init?: { headers?: Record<string, string> }) => Promise<HttpResponse>;
+
 export interface GitHubAdapterOptions {
   token?: string;
   apiBaseUrl?: string;
-  fetchImpl?: typeof fetch;
+  fetchImpl?: FetchLike;
 }
 
 export interface GitHubAdapter {
@@ -23,11 +31,11 @@ interface CheckRunResponse { check_runs?: Array<{ name: string; status: string; 
 
 export class HttpGitHubAdapter implements GitHubAdapter {
   private readonly baseUrl: string;
-  private readonly fetchImpl: typeof fetch;
+  private readonly fetchImpl: FetchLike;
 
   constructor(private readonly options: GitHubAdapterOptions = {}) {
     this.baseUrl = (options.apiBaseUrl ?? "https://api.github.com").replace(/\/$/, "");
-    this.fetchImpl = options.fetchImpl ?? fetch;
+    this.fetchImpl = options.fetchImpl ?? defaultFetch;
   }
 
   async getRepositoryState(repository: string, ref: string): Promise<GitHubRepositoryState> {
@@ -78,6 +86,10 @@ export class HttpGitHubAdapter implements GitHubAdapter {
     if (!response.ok) throw new Error(`github_http_${response.status}`);
     return response.json() as Promise<T>;
   }
+}
+
+async function defaultFetch(input: string, init?: { headers?: Record<string, string> }): Promise<HttpResponse> {
+  return fetch(input, init);
 }
 
 function repositoryPath(repository: string): string {
