@@ -2,22 +2,23 @@
   "name": "vortex",
   "version": "0.0.1",
   "private": true,
-  "description": "Vortex / GOS3 v2.4 — runtime padrão de invocação verificável para LLMs",
-  "gos3": {
-    "fase": "Discovery → Technical Refinement",
-    "proposer": "Claude",
-    "papel": "NxN · Proposer",
-    "registro": "docs/proposals/claude/README.md"
-  },
+  "description": "Vortex / GOS3 — runtime verificável, local-first e offline-capable",
+  "GOS3": "Technical Refinement → Runtime Federation · Mexeu → Testa → Valida → Publica",
+  "gos3": { "fase": "Technical Refinement → Runtime Federation", "proposer": "Claude", "papel": "NxN · Proposer", "registro": "docs/proposals/claude/README.md" },
   "scripts": {
     "test:grok": "ts-node src/agents/grok/tests/contract.test.ts",
     "grok:ping": "ts-node src/agents/grok/adapter/index.ts --fixture=ping",
     "grok:echo": "ts-node src/agents/grok/adapter/index.ts --fixture=echo",
-    "grok:dry": "ts-node src/agents/grok/adapter/index.ts --fixture=dry"
+    "grok:dry": "ts-node src/agents/grok/adapter/index.ts --fixture=dry",
+    "test:local-first": "ts-node src/vortex/local-first/tests/local-first.test.ts",
+    "test:github": "ts-node src/vortex/github/tests/github-adapter.test.ts",
+    "test:e2e": "ts-node src/vortex/local-first/tests/end-to-end.test.ts",
+    "test:rhino": "ts-node src/vortex/rhino/tests/rhino-adapter.test.ts",
+    "test:vua": "ts-node src/vortex/vua/tests/vua.test.ts",
+    "test": "npm run test:grok && npm run test:local-first && npm run test:github && npm run test:e2e && npm run test:rhino && npm run test:vua",
+    "build": "tsc -p tsconfig.json",
+    "vortex:status": "ts-node src/vortex/local-first/cli.ts status",
+    "vortex:sync": "ts-node src/vortex/local-first/cli.ts sync"
   },
-  "devDependencies": {
-    "typescript": "^5.5.4",
-    "ts-node": "^10.9.2",
-    "@types/node": "^20.14.10"
-  }
+  "devDependencies": { "typescript": "^5.5.4", "ts-node": "^10.9.2", "@types/node": "^20.14.10" }
 }

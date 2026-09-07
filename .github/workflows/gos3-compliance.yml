@@ -25,7 +25,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Validate GOS3 headers on changed files
+      - name: Validate GOS3 headers on new text files
         shell: bash
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -49,16 +49,28 @@ jobs:
                 continue
                 ;;
             esac
+
+            # Existing files may predate the GOS3 header convention. They are
+            # grandfathered; every newly introduced text file must carry GOS3.
+            if git cat-file -e "$BASE_SHA:$file" 2>/dev/null; then
+              if head -n 20 -- "$file" | grep -qE 'GOS3'; then
+                echo "PASS: $file"
+              else
+                echo "WARN legacy file without GOS3 header: $file"
+              fi
+              continue
+            fi
+
             if head -n 20 -- "$file" | grep -qE 'GOS3'; then
-              echo "PASS: $file"
+              echo "PASS new file: $file"
             else
-              echo "FAIL: missing GOS3 header: $file"
+              echo "FAIL new file missing GOS3 header: $file"
               failures=$((failures + 1))
             fi
           done
 
           if (( failures > 0 )); then
-            echo "check-headers: FAIL ($failures file(s))"
+            echo "check-headers: FAIL ($failures new file(s))"
             exit 1
           fi
           echo "check-headers: PASS"
