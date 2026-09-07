@@ -4,12 +4,12 @@
  * responsabilidade: contrato de entrada do agente no arquivo antes da alteração
  * agente: agent/llm
  * papel: Engineering Agent
- * fase: onboard
+ * fase: implementation
  * data: 2026-09-07
- * hora: 00:00
+ * hora: 18:10
  * antes: sha256:pending
- * depois: pending
- * base: commit:main
+ * depois: sha256:pending
+ * base: commit:1a4f271425f6ce8ebbad8c8aae0bd75a59a9c787
  * assinatura: P0 scoobiii : Agente GPT
  * commit: pending
  */
@@ -171,6 +171,9 @@ export function validateOnboardHeader(content: string, expectedFile?: string): G
 
 export function onboardFile(content: string, options: OnboardOptions): OnboardSession {
   const existing = parseGos3Header(content);
+  if (existing && existing.arquivo !== options.file) {
+    throw new Error(`GOS3 onboarding blocked: arquivo mismatch (${existing.arquivo} != ${options.file})`);
+  }
   const body = bodyWithoutGos3Header(content);
   const originalHash = `sha256:${sha256(body)}`;
   const header: Gos3Header = existing
