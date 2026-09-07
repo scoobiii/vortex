@@ -67,8 +67,7 @@ const REQUIRED_KEYS = [
   "antes", "depois", "base", "assinatura", "commit",
 ] as const;
 
-const HEADER_RE = /^(?:\/\*|<!--|#)\s*GOS3\s*$/;
-const BLOCK_END_RE = /^(?:\*\/|-->|#\s*\/GOS3)\s*$/;
+const BLOCK_END_RE = /^(?:\*\/|-->)\s*$/;
 
 function sha256(value: string): string {
   return crypto.createHash("sha256").update(value, "utf8").digest("hex");
@@ -112,15 +111,19 @@ function splitHeader(content: string): { header: string | null; body: string } {
   if (!normalized) return { header: null, body: "" };
   const lines = normalized.split("\n");
   const first = lines[0].trim();
-  if (first === "/*" || first === "<!--" || first === "# GOS3") {
-    const end = first === "# GOS3" ? 0 : lines.findIndex((line, index) => index > 0 && BLOCK_END_RE.test(line.trim()));
+
+  if (first === "# GOS3") {
+    let end = 0;
+    while (end + 1 < lines.length && /^#\s+/.test(lines[end + 1])) end += 1;
+    return { header: lines.slice(0, end + 1).join("\n"), body: lines.slice(end + 1).join("\n").replace(/^\n+/, "") };
+  }
+
+  if (first === "/*" || first === "<!--") {
+    const end = lines.findIndex((line, index) => index > 0 && BLOCK_END_RE.test(line.trim()));
     if (end < 0) return { header: null, body: normalized };
     return { header: lines.slice(0, end + 1).join("\n"), body: lines.slice(end + 1).join("\n").replace(/^\n+/, "") };
   }
-  if (HEADER_RE.test(first)) {
-    const end = lines.findIndex((line, index) => index > 0 && BLOCK_END_RE.test(line.trim()));
-    if (end >= 0) return { header: lines.slice(0, end + 1).join("\n"), body: lines.slice(end + 1).join("\n").replace(/^\n+/, "") };
-  }
+
   return { header: null, body: normalized };
 }
 
@@ -217,6 +220,5 @@ export function preflightChangedFile(content: string, expectedFile?: string): { 
   if (expectedFile && header.arquivo !== expectedFile) throw new Error(`GOS3 preflight blocked: arquivo mismatch (${header.arquivo} != ${expectedFile})`);
   const actualHash = `sha256:${sha256(bodyWithoutGos3Header(content))}`;
   if (header.fase === "implementation" && header.depois !== actualHash) throw new Error(`GOS3 preflight blocked: depois hash mismatch for ${header.arquivo}`);
-  if (header.fase === "implementation" && header.antes === header.depois && header.commit === "pending" && actualHash !== header.antes) throw new Error("GOS3 preflight blocked: inconsistent unchanged-file hashes");
   return { header, bodyHash: actualHash };
 }
