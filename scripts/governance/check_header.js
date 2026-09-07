@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 // GOS3 · agente: agent/llm · papel: Engineering Agent · PO: scoobiii
 // fase: Technical Refinement → Governance Enforcement · data: 2026-09-07 · hora: registrada pelo Git
 // antes: o CI aceitava qualquer ocorrência de GOS3 nas primeiras 20 linhas.
@@ -6,7 +7,6 @@
 // assinatura: agent/llm · Engineering Agent · GOS3
 // commit: registrado pelo Git no commit que contém esta alteração.
 
-#!/usr/bin/env node
 const { execFileSync } = require("node:child_process");
 const { readFileSync, existsSync } = require("node:fs");
 
