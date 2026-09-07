@@ -1,0 +1,9 @@
+# GOS3 · Vortex Gateway Docker build exclusions
+node_modules
+npm-debug.log
+dist
+.git
+.github
+coverage
+.env*
+*.md
