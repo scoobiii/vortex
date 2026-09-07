@@ -1,10 +1,10 @@
-# GOS3 · agente: GPT · papel: Maintainer / Engineering Agent
-# fase: Technical Refinement → Runtime Federation · data: 2026-09-07 · hora: 00:00
-# antes: README refinado sem header GOS3, causando falha do gate check-headers no PR #51.
-# depois: header GOS3 obrigatório adicionado sem alterar o conteúdo refinado do README.
-# base: main
-# assinatura: GPT · Maintainer / Engineering Agent · GOS3
-# commit: registered by Git
+### GOS3 · agente: GPT · papel: Maintainer / Engineering Agent
+### fase: Technical Refinement → Runtime Federation · data: 2026-09-07 · hora: 00:00
+### antes: README refinado sem header GOS3, causando falha do gate check-headers no PR #51.
+### depois: header GOS3 obrigatório adicionado sem alterar o conteúdo refinado do README.
+### base: main
+### assinatura: GPT · Maintainer / Engineering Agent · GOS3
+### commit: registered by Git
 
 # Vortex
 
