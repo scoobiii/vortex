@@ -1,676 +1,424 @@
-> **GOS3** · agente: `GPT` · papel: `Maintainer / Engineering Agent`
-> fase: `Technical Refinement → Runtime Federation`
-> status: **proposta — aguardando aprovação do PO e revisão dos agentes GOS3**
-> regra: **mexeu, deixa rastro** — mudança relevante deve apontar para dor → issue → proposta → teste → execução → evidência → revisão → aprovação → commit.
+# GOS3 · agente: GPT · papel: Maintainer / Engineering Agent
+# fase: Technical Refinement → Runtime Federation · data: 2026-09-07 · hora: 00:00
+# antes: README refinado sem header GOS3, causando falha do gate check-headers no PR #51.
+# depois: header GOS3 obrigatório adicionado sem alterar o conteúdo refinado do README.
+# base: main
+# assinatura: GPT · Maintainer / Engineering Agent · GOS3
+# commit: registered by Git
 
 # Vortex
 
 ![USE VORTEX! - Python, LLMs, Sandbox & Runtime](docs/images/use-vortex-cover.png)
 
-> **Aprenda de verdade. Sem "funcionou aqui". Só resultados reais: HASH + TEMPO + LOG.**
+> **Proof over prose. HASH + TEMPO + LOG.**
 
-**Vortex** é uma proposta de runtime/protocolo para permitir que agentes LLM solicitem execução de tarefas em runtimes compatíveis e recebam uma resposta estruturada sobre essa execução.
-
-O objetivo é separar claramente:
-
-- **quem solicita** a execução;
-- **o que foi solicitado**;
-- **onde foi executado**;
-- **quais capacidades estavam disponíveis**;
-- **o que realmente aconteceu**;
-- **qual evidência pode ser auditada**.
-
-A ideia central é:
+**Vortex** é uma camada de contrato, execução e evidência para agentes LLM, runtimes e conectores. O projeto define como uma solicitação é representada, executada e registrada sem confundir **código existente**, **execução real** e **prova da execução**.
 
 ```text
-NxN = coordenação, backlog e estado compartilhado
+AGENTE
+  ↓
+INVOCATION CONTRACT
+  ↓
+GATEWAY / RUNTIME / CONNECTOR
+  ↓
+EXECUÇÃO
+  ↓
+EVIDÊNCIA + PROVENANCE
+```
 
-Nx1 = execução isolada de cada invocação
+## Entregáveis do projeto
 
-Vortex = contrato entre agente, executor e evidência
+O Vortex entrega uma **infraestrutura verificável de invocação** composta por contratos, runtime, gateway, conectores, governança, testes e evidências.
+
+| Entregável | O que entrega | Estado |
+|---|---|---|
+| **Invocation Contract** | request/response, `invocation_id`, agente, ação, payload, contexto, resultado, erro, logs e duração | **Implementado + testado** |
+| **GOS3 Governance** | headers, rastreabilidade, política de mudança e gates de CI | **Implementado** |
+| **Runtime Loop** | ciclo controlado de invocação, execução, resultado e estado | **Implementado + testado** |
+| **Orchestrator** | coordenação do fluxo de execução | **Implementado + testado** |
+| **Gateway** | fronteira comum para requests, connectors e execution proofs | **Implementado + testado** |
+| **Qwen 2.5 Coder 0.5B** | adapter funcional para runtime local via Ollama/OpenAI-compatible API | **Implementado + E2E real em CI** |
+| **Ollama Connector** | integração com runtime local | **Implementado + contract test** |
+| **GitHub Connector** | fronteira MCP → Gateway para operações GitHub | **Implementado + contract test** |
+| **Grok Adapter** | adapter de referência e fixtures de contrato | **Implementado + testado** |
+| **VUA** | adapter universal experimental | **P&D / experimental** |
+| **Provenance** | identidade, hashes, runtime/modelo e artefatos de evidência | **Implementado em fluxos específicos** |
+| **CI/CD** | gates de contrato, governança, truth matrix e E2E Qwen | **Implementado** |
+
+> **VUA é P&D. O runtime funcional do Qwen não depende de VUA.**
+
+---
+
+# Entregáveis por público
+
+## 1. Usuário — uso e resultado
+
+O usuário precisa saber **o que pode pedir, o que foi executado e qual evidência existe**.
+
+O Vortex entrega:
+
+- solicitação padronizada de execução;
+- identificação da invocação e do agente;
+- runtime/conector utilizado quando disponível;
+- resultado, erro, logs e duração;
+- distinção entre `dry_run` e execução;
+- evidência nos fluxos que suportam provenance;
+- hashes e artefatos para auditoria quando disponíveis;
+- rejeição explícita quando não há capacidade compatível;
+- rastreabilidade da mudança e do artefato utilizado.
+
+**Limite:** `executed: true` não é prova universal de side-effect externo. Prova forte de efeito externo continua sendo evolução do projeto.
+
+## 2. DevOps / SRE — operação e confiabilidade
+
+O Vortex entrega uma **superfície operacional observável e controlável** para agentes, runtimes e conectores.
+
+Entregáveis:
+
+- contratos versionados de invocação;
+- timeout e contexto de execução;
+- identificação de runtime e execução;
+- stdout/stderr e exit code nos fluxos aplicáveis;
+- duração da execução;
+- hashes de evidência;
+- provenance de modelo/runtime quando aplicável;
+- Gateway como fronteira entre agente, credencial e serviço externo;
+- conectores isolados por capacidade;
+- contract tests;
+- CI com gates obrigatórios;
+- E2E real do Qwen em CI;
+- branch protection e revisão por PR;
+- artefatos de CI para auditoria e troubleshooting.
+
+### Critério de DONE
+
+```text
+IMPLEMENTADO
++
+TESTE EXECUTÁVEL
++
+CI PASS
++
+INTEGRAÇÃO REAL
++
+EVIDÊNCIA
++
+HASH / PROVENIÊNCIA
+=
+DONE
+```
+
+Sem todas as evidências aplicáveis, o claim permanece **PARTIAL**, **NOT PROVEN** ou equivalente.
+
+## 3. Agentes LLM — invocação e autoridade
+
+O Vortex fornece uma **superfície de invocação previsível**, com fronteiras explícitas de capacidade e autoridade.
+
+Entregáveis:
+
+- Invocation Contract único;
+- `invocation_id` para rastreabilidade;
+- identificação do agente;
+- `action` e `payload` estruturados;
+- sandbox, timeout e `dry_run`;
+- resposta e erro estruturados;
+- logs e duração;
+- Gateway para ferramentas e conectores;
+- separação entre credencial e agente;
+- provenance para distinguir afirmação de execução observada;
+- documentação de capacidades e limites;
+- contract tests para integrações.
+
+### Regra para agentes
+
+```text
+DOCUMENTADO
+   ≠
+IMPLEMENTADO
+   ≠
+EXECUTADO
+   ≠
+VERIFICADO
+```
+
+O agente não deve declarar uma tarefa concluída além do nível de evidência disponível.
+
+---
+
+# Modelo de verdade
+
+- **PROMISED** — proposto ou planejado.
+- **IMPLEMENTED** — existe código/configuração correspondente.
+- **EXECUTED** — houve execução observada.
+- **VERIFIED** — existe evidência suficiente, reproduzível e auditável para o claim específico.
+
+```text
+PROMISED → IMPLEMENTED → EXECUTED → VERIFIED
+```
+
+A matriz canônica de claims está em [`docs/PRODUCT-TRUTH.md`](docs/PRODUCT-TRUTH.md).
+
+---
+
+# Arquitetura atual
+
+```text
+                         AGENT
+                           │
+                           ▼
+                 INVOCATION CONTRACT
+                           │
+                           ▼
+                      ORCHESTRATOR
+                           │
+                           ▼
+                       GATEWAY
+                    ┌──────┼──────┐
+                    │      │      │
+                    ▼      ▼      ▼
+                  QWEN   OLLAMA  GITHUB
+                    │      │      │
+                    ▼      ▼      ▼
+                 RUNTIME CONNECTOR / MCP
+                    │      │      │
+                    └──────┼──────┘
+                           ▼
+                       EXECUTION
+                           │
+                           ▼
+                 RESULT / LOG / PROVENANCE
+                           │
+                           ▼
+                        EVIDENCE
+```
+
+| Área | Responsabilidade |
+|---|---|
+| `src/agents/` | adapters e contratos específicos |
+| `src/gateway/` | fronteira de invocação, connector e execution proof |
+| `src/vortex/vua/` | adapter universal experimental (P&D) |
+| `connectors/ollama/` | integração com runtime local |
+| `connectors/github/` | integração MCP com GitHub através do Gateway |
+| `spec/` / `specs/` | contratos e regras de interface |
+| `docs/` | governança, truth, decisões, provenance e operação |
+| `.github/workflows/` | gates de CI e E2E |
+
+---
+
+# Qwen 0.5B — runtime funcional
+
+O Qwen 2.5 Coder 0.5B é o fluxo de execução local real atualmente coberto por E2E.
+
+```text
+Vortex → Qwen Adapter → Ollama → qwen2.5-coder:0.5b
+                                  ↓
+                         resposta real
+                                  ↓
+                       provenance + evidence hash
+```
+
+O E2E captura, quando disponível no ambiente:
+
+- modelo e digest;
+- versão do runtime;
+- hash do binário/runtime;
+- execution id;
+- stdout/stderr;
+- exit code;
+- duração;
+- hash da evidência.
+
+```bash
+npm ci
+npm run test:qwen05b:contract
+npm run test:qwen05b:e2e
+```
+
+O E2E exige Ollama funcional e o modelo `qwen2.5-coder:0.5b`. Mock não classifica esse fluxo como execução real.
+
+---
+
+# Connectors
+
+## Ollama
+
+Conecta o Vortex a runtimes locais baseados em Ollama.
+
+```bash
+npm run test:ollama:contract
+```
+
+O contract test valida a fronteira do conector; sozinho, não é evidência de execução real de modelo.
+
+## GitHub
+
+```text
+Agent / MCP Client
+       ↓
+GitHub MCP Connector
+       ↓
+Gateway / Credential Boundary
+       ↓
+GitHub API
+```
+
+O agente não deve receber automaticamente o token bruto do GitHub.
+
+```bash
+npm run test:github:contract
+```
+
+O contract test não é prova de side-effect real no GitHub.
+
+---
+
+# VUA — P&D
+
+**VUA (Vortex Universal Adapter)** é a linha experimental para investigar uma interface comum entre agentes, runtimes e conectores.
+
+```text
+src/vortex/vua/
+```
+
+Estado: **P&D / experimental**.
+
+Seu papel atual é validar arquitetura e contratos futuros **sem alterar o caminho funcional existente do Qwen**.
+
+```bash
+npm run test:vua
 ```
 
 ---
 
-## Princípio fundamental
+# Gateway
 
-> **Código existir não significa que código rodou.**
->
-> **`executed: true` também não deve ser tratado como prova suficiente de side-effect.**
-
-O Vortex separa quatro estados que frequentemente são confundidos:
+O Gateway fornece uma fronteira comum:
 
 ```text
-PROMISED
-   │
-   ▼
-IMPLEMENTED
-   │
-   ▼
-EXECUTED
-   │
-   ▼
-VERIFIED
+InvokeRequest → Gateway → Connector / Runtime → ExecutionProof
 ```
 
-Uma implementação pode existir sem ter sido executada.
-
-Uma execução pode ocorrer sem produzir evidência suficiente.
-
-Uma evidência pode existir sem provar o efeito alegado.
-
-Portanto, claims operacionais devem apontar para artefatos reproduzíveis.
-
----
-
-## Estado atual
-
-O Vortex encontra-se em **Technical Refinement**.
-
-### Já implementado/provado
-
-- contrato de invocação v0.1;
-- primeiro Runtime Reference para Grok;
-- adapter Grok;
-- validação básica do contrato;
-- fixtures `ping`, `echo` e `dry`;
-- testes automatizados do adapter;
-- governança GOS3;
-- documentação de backlog, handoff e provenance;
-- infraestrutura de snapshot do repositório para agentes que não possuem sandbox;
-- publicação do snapshot através de CI/GitHub Pages.
-
-### Ainda não fechado
-
-- prova criptograficamente/verificavelmente forte de side-effect real;
-- tipagem completa de `result` e `error` no contrato;
-- generalização dos adapters;
-- onboarding dos demais agentes;
-- runtime federation completa;
-- cadeia de identidade, autoridade e delegação;
-- mecanismo definitivo de evidência, assinatura e accountability.
-
-**Nada acima deve ser tratado como concluído apenas porque está descrito em documentação.**
-
----
-
-# Invocation Contract
-
-O contrato v0.1 define a interface mínima entre uma solicitação e seu executor.
-
-Uma solicitação contém:
+A prova atual registra:
 
 ```text
-contract_version
-invocation_id
-agent
-action
-payload
-context
-```
-
-O contexto inclui:
-
-```text
-sandbox
-timeout_ms
-dry_run
-```
-
-A resposta contém:
-
-```text
-invocation_id
-agent
+proof_version
+request_id
+connector_id
 executed
-result
-error
-logs
+status
+input_hash
+output_hash
+started_at
+completed_at
 duration_ms
+runtime_id
+credential_id
 ```
 
-O campo `executed` é obrigatório.
-
-Porém, existe uma dívida técnica conhecida:
-
-```text
-executed: true
-       ≠
-prova de side-effect externo
-```
-
-Na implementação atual do Runtime Reference, `executed` ainda deriva do contexto de execução (`!dry_run`). Isso é suficiente para demonstrar o comportamento do contrato atual, mas **não é uma prova independente de efeito externo**.
-
-O teste correspondente existe justamente para tornar essa limitação explícita.
+**Limite:** a prova demonstra o que o Gateway observou; não constitui, sozinha, prova criptográfica de side-effect externo.
 
 ---
 
-# Evidência
+# CI / Quality Gates
 
-O objetivo do Vortex é evoluir de:
+GitHub Actions valida gates de:
 
-```text
-"o agente disse que executou"
+- headers GOS3;
+- contrato de invocação;
+- runtime loop;
+- orchestrator;
+- Grok contract;
+- Qwen contract;
+- VUA;
+- Ollama contract;
+- GitHub contract;
+- Product Truth Matrix;
+- E2E real do Qwen com Ollama.
+
+Principais comandos locais:
+
+```bash
+npm run test:gos3
+npm run test:gateway
+npm run test:vua
+npm run test:ollama:contract
+npm run test:github:contract
+npm run build
 ```
 
-para:
-
-```text
-invocation
-    │
-    ├── request
-    ├── runtime_id
-    ├── capabilities
-    ├── execution
-    ├── stdout
-    ├── stderr
-    ├── exit_code
-    ├── duration_ms
-    ├── timestamp
-    └── evidence
-            │
-            ├── hash
-            ├── receipt
-            └── assinatura
-```
-
-Uma futura implementação poderá produzir uma cadeia verificável semelhante a:
-
-```text
-IDENTITY
-   ↓
-AUTHORITY
-   ↓
-DELEGATION
-   ↓
-INVOCATION
-   ↓
-RUNTIME
-   ↓
-EXECUTION
-   ↓
-EVIDENCE
-   ↓
-ACCOUNTABILITY
-```
-
-Essa arquitetura é **direção de projeto**, não uma alegação de que todas essas camadas já estejam implementadas.
+> **CI verde prova somente os checks definidos pelo workflow. Não amplia automaticamente o claim do que foi verificado.**
 
 ---
 
-# Runtime Federation
+# GOS3 e rastreabilidade
 
-O Vortex não precisa pressupor que todos os agentes executem no mesmo computador.
-
-A proposta de **runtime federation** permite separar o agente do executor:
-
-```text
-                    Agent
-                      │
-                      ▼
-              Vortex Gateway
-                      │
-                      ▼
-             Invocation Contract
-                      │
-                      ▼
-          Runtime Capability Discovery
-                      │
-          ┌───────────┼───────────┐
-          ▼           ▼           ▼
-        A23          VPS        Cloud
-       ARM64        Linux       GPU/CPU
-       Termux       Docker      Jobs
-          │           │           │
-          └───────────┼───────────┘
-                      ▼
-                 Execution
-                      │
-                      ▼
-                  Evidence
-```
-
-O scheduler deverá selecionar um runtime compatível com a tarefa considerando, por exemplo:
-
-- arquitetura;
-- sistema operacional;
-- memória;
-- CPU;
-- GPU;
-- backend disponível;
-- ferramentas instaladas;
-- limites de execução;
-- permissões;
-- credenciais autorizadas.
-
-### Importante
-
-Uma credencial ou conector de usuário **não equivale automaticamente a autoridade irrestrita sobre o runtime**.
-
-Capacidade e autoridade devem ser explicitamente declaradas.
-
----
-
-# Write once, run anywhere
-
-O objetivo não é prometer que qualquer binário executará em qualquer máquina.
-
-O princípio significa:
-
-> **o contrato e o artefato de execução devem ser portáveis; o runtime decide se possui capacidade compatível.**
-
-Por exemplo:
-
-```text
-               mesmo Invocation Contract
-                         │
-          ┌──────────────┼──────────────┐
-          ▼              ▼              ▼
-        ARM64           x86            GPU
-        Termux          VPS           Cloud
-          │              │              │
-          ▼              ▼              ▼
-       executor       executor       executor
-```
-
-Se o runtime não possuir capacidade suficiente, a execução deve ser rejeitada ou reportada como não executada.
-
-Não deve ser transformada artificialmente em `success`.
-
----
-
-# GOS3
-
-**GOS3 — Gang of Seven Senior Scrum** é o modelo de colaboração utilizado no desenvolvimento do Vortex.
-
-O board original inclui:
-
-```text
-Gemini
-Claude
-GPT
-Qwen
-DeepSeek
-Manus
-Perplexity
-```
-
-O registro atual está em:
-
-```text
-docs/team.md
-```
-
-O conjunto de agentes não precisa permanecer hardcoded.
-
-Agentes adicionais podem participar como:
-
-- proposer;
-- reviewer;
-- validator;
-- runtime reference;
-- executor.
-
-Participação de um agente, entretanto, não constitui certificação automática.
-
----
-
-# GOS3 não é um badge
-
-Termos como:
-
-```text
-Certified
-Complete
-100%
-Production ready
-Verified
-```
-
-não são evidência por si mesmos.
-
-Uma afirmação operacional deve apontar para:
-
-```text
-claim
-  ↓
-artifact
-  ↓
-test
-  ↓
-execution
-  ↓
-evidence
-  ↓
-review
-```
-
-A regra operacional é:
+**GOS3 — Gang of Seven Senior Scrum** é o modelo de colaboração e governança utilizado no projeto.
 
 > **Mexeu, deixa rastro.**
 
-Fluxo esperado:
+Mudança relevante deve ser rastreável por:
 
 ```text
-dor
+DOR
  ↓
-issue
+ISSUE / PROPOSTA
  ↓
-proposta
+IMPLEMENTAÇÃO
  ↓
-teste reproduzível
+TESTE
  ↓
-execução
+EXECUÇÃO
  ↓
-evidência
+EVIDÊNCIA
  ↓
-revisão
+REVISÃO
  ↓
-aprovação
- ↓
-commit / PR
- ↓
-backlog atualizado
+PR / COMMIT
 ```
+
+Provenance registra **quem participou e em qual contexto**; evidência registra **o que efetivamente aconteceu**.
 
 ---
 
-# Runtime Reference: Grok
-
-O primeiro runtime de referência é o adapter Grok.
-
-A implementação atual possui:
+# Segurança e autoridade
 
 ```text
-src/agents/grok/
-├── README.md
-├── adapter/
-│   ├── contract.ts
-│   ├── handler.ts
-│   └── index.ts
-└── tests/
-    └── contract.test.ts
+IDENTIDADE
+    ↓
+AUTORIDADE
+    ↓
+CAPACIDADE
+    ↓
+INVOCATION
+    ↓
+EXECUÇÃO
 ```
 
-O teste documentado possui:
+Possuir uma credencial ou connector não significa possuir autoridade irrestrita.
 
-```text
-19 assertions
-19 passed
-0 failed
-```
-
-O teste também contém explicitamente o caso que demonstra o gap entre:
-
-```text
-executed: true
-```
-
-e:
-
-```text
-side-effect verificável
-```
-
-Isso é importante: **o teste passar não significa que o gap foi resolvido**.
-
-Significa que o comportamento atual foi reproduzido e documentado.
-
----
-
-# CI e agentes sem sandbox
-
-Nem todo agente possui acesso direto ao filesystem ou ao sandbox do Vortex.
-
-Para esse cenário, o projeto possui um mecanismo de publicação de snapshot do repositório via CI.
-
-A ideia é:
-
-```text
-Git repository
-      │
-      ▼
-     CI
-      │
-      ▼
-repository snapshot
-      │
-      ▼
-HTTP-accessible artifact
-      │
-      ▼
-agent without sandbox
-```
-
-Isso permite que um agente consulte uma representação do estado do repositório sem receber automaticamente acesso de escrita.
-
-**Leitura do snapshot não concede autoridade para modificar o repositório.**
-
----
-
-# Segurança e governança
-
-Mudanças relacionadas a:
-
-- contrato de invocação;
-- segurança;
-- acesso;
-- autoridade;
-- credenciais;
-- execução externa;
-
-devem passar pelo fluxo de governança definido em:
-
-```text
-docs/PLAYBOOK.md
-```
-
-A política diferencia:
-
-```text
-leitura
-  ↓
-proposta
-  ↓
-escrita
-  ↓
-publicação
-```
-
-Escrever no repositório não implica automaticamente:
-
-```text
-commit
-push
-merge
-deploy
-```
-
-Essas ações pertencem a etapas distintas de autoridade.
-
----
-
-# Provenance
-
-A documentação de provenance registra a participação dos agentes no desenvolvimento.
-
-Exemplos:
-
-```text
-docs/agents/gpt/
-docs/gos3-provenance.md
-docs/decisions.md
-```
-
-Esses arquivos documentam:
-
-- agente;
-- papel;
-- fase;
-- proposta;
-- conectores;
-- decisões;
-- revisão;
-- aprovação;
-- artefatos relacionados.
-
-Provenance é uma camada de rastreabilidade.
-
-Ela **não substitui evidência de execução**.
-
----
-
-# O que o Vortex não é
-
-Vortex não é:
-
-- um chatbot;
-- uma rede social de agentes;
-- um simples wrapper de API;
-- um selo de certificação;
-- um dashboard que declara sucesso;
-- um sandbox único obrigatório;
-- uma promessa de execução universal;
-- uma substituição para GitHub;
-- uma substituição para os runtimes especializados.
-
-O Vortex pretende ser a camada de **contrato, execução e proveniência verificável** entre agentes e runtimes.
-
----
-
-# Arquitetura conceitual
-
-A arquitetura de longo prazo pode ser representada por:
-
-```text
-                 USER / SYSTEM
-                       │
-                       ▼
-                    IDENTITY
-                       │
-                       ▼
-                   AUTHORITY
-                       │
-                       ▼
-                  DELEGATION
-                       │
-                       ▼
-                  INVOCATION
-                       │
-                       ▼
-              CAPABILITY DISCOVERY
-                       │
-                       ▼
-                    RUNTIME
-                       │
-                       ▼
-                   EXECUTION
-                       │
-                       ▼
-                    EVIDENCE
-                       │
-                       ▼
-                 ACCOUNTABILITY
-                       │
-                       ▼
-                  REPUTATION
-                       │
-                       ▼
-                   REVOCATION
-```
-
-As camadas abaixo de `EXECUTION` representam direção arquitetural futura quando ainda não houver implementação correspondente.
-
----
-
-# Estrutura do projeto
-
-Principais áreas:
-
-```text
-.
-├── README.md
-├── package.json
-├── src/
-│   └── agents/
-│       └── grok/
-├── specs/
-│   └── invocation-contract.md
-└── docs/
-    ├── BACKLOG.md
-    ├── CHANGELOG.md
-    ├── PLAYBOOK.md
-    ├── handoff.md
-    ├── team.md
-    ├── agents/
-    ├── proposals/
-    └── images/
-        └── use-vortex-cover.png
-```
-
-A árvore detalhada deve ser mantida sincronizada com o estado real do repositório.
+As regras devem considerar menor privilégio, separação de credenciais, timeout, `dry_run`, capability boundaries, auditoria, provenance e revisão por PR.
 
 ---
 
 # Roadmap
 
-## P0 — Evidência de execução
+## P0 — Prova forte de side-effect
 
-Fechar a diferença entre:
+Fechar a diferença entre execução observada e efeito externo comprovado, com possíveis execution receipts, timestamps verificáveis, runtime identity, side-effect log, assinatura e cadeia de evidência.
 
-```text
-executed: true
-```
+## P1 — Contrato mais forte
 
-e:
-
-```text
-execução realmente comprovada
-```
-
-Possíveis componentes:
-
-- execution receipt;
-- timestamp;
-- hash;
-- runtime identity;
-- side-effect log;
-- assinatura;
-- cadeia de evidência.
-
----
-
-## P1 — Contrato
-
-Fortalecer a validação do contrato:
-
-- tipos de `result`;
-- tipos de `error`;
+- tipagem completa de `result` e `error`;
 - erros estruturados;
-- regras de `dry_run`;
 - compatibilidade entre versões;
+- regras de `dry_run`;
 - evidência obrigatória quando aplicável.
-
----
-
-## P1 — Adapter template
-
-Extrair um template genérico para novos runtimes/agentes:
-
-```text
-src/agents/_template/
-```
-
-O objetivo é evitar que cada adapter implemente uma interpretação diferente do contrato.
-
----
 
 ## P1 — Federation
 
-Implementar discovery de capacidades:
+Discovery/scheduling por capacidade:
 
 ```text
-runtime_id
 architecture
 os
 cpu
@@ -681,98 +429,99 @@ tools
 permissions
 ```
 
-O scheduler deve escolher somente runtimes compatíveis com a solicitação.
+## P2 — Trust chain
+
+```text
+identity → authority → delegation → invocation
+→ runtime → execution → evidence → accountability → revocation
+```
+
+Cada camada só deve ser marcada como implementada quando houver artefato e teste correspondentes.
 
 ---
 
-## P2 — Trust chain
+# Quick Start
 
-Evoluir para:
-
-```text
-identity
-authority
-delegation
-execution
-evidence
-accountability
-revocation
+```bash
+git clone https://github.com/scoobiii/vortex.git
+cd vortex
+npm ci
 ```
 
-Cada etapa deverá possuir um artefato verificável antes de ser considerada implementada.
+### Núcleo
+
+```bash
+npm run test:contract
+npm run test:runtime-loop
+npm run test:orchestrator
+npm run test:grok
+npm run test:qwen05b:contract
+```
+
+### Gateway e conectores
+
+```bash
+npm run test:gateway
+npm run test:ollama:contract
+npm run test:github:contract
+```
+
+### P&D
+
+```bash
+npm run test:vua
+```
+
+### Qwen real
+
+```bash
+npm run test:qwen05b:e2e
+```
+
+### Build
+
+```bash
+npm run build
+```
 
 ---
 
 # Documentação
 
-Documentos importantes:
-
-```text
-docs/PLAYBOOK.md
-docs/BACKLOG.md
-docs/CHANGELOG.md
-docs/handoff.md
-docs/team.md
-docs/gos3-provenance.md
-docs/runtime-federation.md
-docs/decisions.md
-specs/invocation-contract.md
-```
-
-Propostas que ainda não foram aprovadas devem permanecer identificadas como propostas.
-
----
-
-# Regra de verdade
-
-O Vortex adota uma distinção explícita:
-
-| Estado | Significado |
+| Documento | Finalidade |
 |---|---|
-| **Promised** | descrito como objetivo |
-| **Proposed** | existe uma proposta técnica |
-| **Implemented** | existe implementação no repositório |
-| **Executed** | foi executado em um runtime real |
-| **Verified** | existe evidência suficiente para reproduzir/auditar o claim |
-
-Não se deve promover um estado para outro apenas por documentação.
-
-```text
-documentado
-    ≠
-implementado
-    ≠
-executado
-    ≠
-verificado
-```
+| [`docs/PRODUCT-TRUTH.md`](docs/PRODUCT-TRUTH.md) | matriz canônica do que é e não é comprovado |
+| [`spec/invocation-contract.md`](spec/invocation-contract.md) | contrato de invocação |
+| [`docs/runtime-federation.md`](docs/runtime-federation.md) | arquitetura de federation |
+| [`docs/gos3-provenance.md`](docs/gos3-provenance.md) | provenance e rastreabilidade |
+| [`docs/PLAYBOOK.md`](docs/PLAYBOOK.md) | processo operacional |
+| [`docs/BACKLOG.md`](docs/BACKLOG.md) | backlog e próximos trabalhos |
+| [`docs/decisions.md`](docs/decisions.md) | decisões arquiteturais |
+| [`docs/team.md`](docs/team.md) | agentes e papéis |
 
 ---
 
-# Princípio final
+# O que o Vortex não é
 
-O Vortex existe para tornar uma pergunta simples auditável:
+Vortex não é:
 
-> **"O agente realmente fez o que disse que fez?"**
+- um chatbot;
+- um simples wrapper de API;
+- um selo de certificação;
+- um dashboard que declara sucesso sem evidência;
+- um sandbox único obrigatório;
+- uma promessa de execução universal;
+- uma substituição para GitHub;
+- uma substituição para runtimes especializados.
 
-A resposta não deve depender apenas da palavra do agente.
+O Vortex é a camada de **contrato, execução e proveniência verificável** entre agentes e runtimes.
 
-Deve ser sustentada por:
+---
 
-```text
-CONTRACT
-   +
-RUNTIME
-   +
-EXECUTION
-   +
-EVIDENCE
-   +
-PROVENANCE
-   +
-REVIEW
-```
+# Regra final
 
-**Proof over prose.**
-
-**HASH + TEMPO + LOG.**
+> **Código existir não significa que código rodou.**
+>
+> **Execução observada não significa automaticamente side-effect comprovado.**
+>
+> **Proof over prose. HASH + TEMPO + LOG.**
