@@ -5,8 +5,8 @@
 # papel: Engineering Agent
 # fase: implementation
 # data: 2026-09-07
-# hora: 18:07
-# antes: sha256:8fe6eb72f057e78d27115a9487c3c32c6f445bc3
+# hora: 18:09
+# antes: sha256:e2a4eff7180944edb7d591200c664ce4e4d01076
 # depois: sha256:pending
 # base: commit:1a4f271425f6ce8ebbad8c8aae0bd75a59a9c787
 # assinatura: P0 scoobiii : Agente GPT
@@ -183,6 +183,14 @@ jobs:
           QWEN_TIMEOUT_MS: 120000
         run: npm run test:qwen05b:e2e
 
+      - name: Run real Qwen sandbox E2E
+        env:
+          QWEN_BASE_URL: http://127.0.0.1:11434/v1
+          QWEN_MODEL: qwen2.5-coder:0.5b
+          QWEN_TIMEOUT_MS: 120000
+          QWEN_SANDBOX_EVIDENCE_FILE: qwen-sandbox-evidence.json
+        run: npm run test:qwen05b:sandbox:e2e
+
       - name: Upload Qwen evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -190,5 +198,6 @@ jobs:
           name: qwen-real-evidence
           path: |
             qwen-evidence.json
+            qwen-sandbox-evidence.json
             ollama.log
           if-no-files-found: ignore
