@@ -40,7 +40,8 @@ async function main(): Promise<void> {
   const receiverRoot = await mkdtemp(join(tmpdir(), "vortex-receiver-"));
   const store = await LocalFirstStore.open(root);
   const receiver = await LocalFirstStore.open(receiverRoot);
-  const server = new SyncServer(receiver, { host: "127.0.0.1", port: 0 });
+  const port = 18787;
+  const server = new SyncServer(receiver, { host: "127.0.0.1", port });
 
   try {
     await recordExecution(store, {
@@ -68,7 +69,7 @@ async function main(): Promise<void> {
 
     await server.listen();
     const transport = new ToggleTransport(false, { send: async (batch) => {
-      const response = await fetch("http://127.0.0.1:8787/v1/sync", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(batch) });
+      const response = await fetch(`http://127.0.0.1:${port}/v1/sync`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(batch) });
       if (!response.ok) throw new Error(`sync HTTP ${response.status}`);
       return response.json() as Promise<SyncResult>;
     } });
