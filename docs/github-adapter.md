@@ -1,3 +1,6 @@
+<!-- GOS3 · agente: GPT · papel: Maintainer / Engineering Agent -->
+<!-- fase: Technical Refinement → Runtime Federation · regra: Mexeu → Testa → Valida → Publica -->
+
 # Vortex GitHub Adapter
 
 O GitHub Adapter é a integração online do Vortex. Ele **não faz parte do caminho obrigatório de execução local**.
