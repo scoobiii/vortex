@@ -1,14 +1,21 @@
 /**
- * GOS3 · agente: GPT · papel: Maintainer / Engineering Agent
- * fase: Runtime Federation → Bounded Agent Loop · data: 2026-09-07 · hora: 00:00
- * antes: Qwen adapter misturava configuração, contrato, chamada HTTP e hash em um único bloco.
- * depois: adapter mantém a execução real e delega contrato/proveniência a módulos tipados, preservando a API invoke.
- * base: feat/gos3-runtime-orchestration
- * assinatura: GPT · Maintainer / Engineering Agent · GOS3
- * commit: registered by Git
+ * GOS3
+ * arquivo: src/agents/qwen05b/adapter/index.ts
+ * responsabilidade: execução local do Qwen e integração com sandbox GOS3
+ * agente: agent/llm
+ * papel: Engineering Agent
+ * fase: implementation
+ * data: 2026-09-07
+ * hora: 18:05
+ * antes: sha256:99350ce0d610309f7a1cf8d8a37525f26d838b56
+ * depois: sha256:pending
+ * base: commit:1a4f271425f6ce8ebbad8c8aae0bd75a59a9c787
+ * assinatura: P0 scoobiii : Agente GPT
+ * commit: pending
  */
 
 import crypto from "node:crypto";
+import { applyAgentChange, assertOnboarded, OnboardSession, ChangedFile } from "../../../gos3/onboard";
 import { computeEvidenceHash, sha256 } from "./provenance";
 import { QwenConfig, QwenEvidence } from "./types";
 
@@ -17,6 +24,11 @@ export type { QwenConfig, QwenEvidence } from "./types";
 const DEFAULT_BASE_URL = "http://127.0.0.1:11434/v1";
 const DEFAULT_MODEL = "qwen2.5-coder:0.5b";
 const DEFAULT_TIMEOUT_MS = 30_000;
+
+export interface QwenSandboxResult {
+  evidence: QwenEvidence;
+  change: ChangedFile | null;
+}
 
 export async function invoke(prompt: string, config: QwenConfig = {}): Promise<QwenEvidence> {
   const baseUrl = config.baseUrl ?? process.env.QWEN_BASE_URL ?? DEFAULT_BASE_URL;
@@ -78,4 +90,35 @@ export async function invoke(prompt: string, config: QwenConfig = {}): Promise<Q
   } finally {
     clearTimeout(timer);
   }
+}
+
+export async function invokeInSandbox(
+  session: OnboardSession,
+  instruction: string,
+  config: QwenConfig = {},
+): Promise<QwenSandboxResult> {
+  assertOnboarded(session);
+  if (!instruction.trim()) throw new Error("Qwen sandbox invocation requires a non-empty instruction");
+
+  const prompt = [
+    "GOS3 SANDBOX ONBOARD",
+    "You are operating inside an evidence-gated Vortex sandbox.",
+    "The file has already completed GOS3 onboard. Do not bypass or remove its header contract.",
+    "Return ONLY the complete file body to be written after the GOS3 header; no markdown fences, explanations, or prose.",
+    `arquivo: ${session.header.arquivo}`,
+    `responsabilidade: ${session.header.responsabilidade}`,
+    `fase: ${session.header.fase}`,
+    `antes: ${session.header.antes}`,
+    `base: ${session.header.base}`,
+    "Current file body:",
+    session.originalBody,
+    "Instruction:",
+    instruction,
+  ].join("\n");
+
+  const evidence = await invoke(prompt, config);
+  if (!evidence.executed) return { evidence, change: null };
+
+  const change = applyAgentChange(session, evidence.stdout);
+  return { evidence, change };
 }

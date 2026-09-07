@@ -1,16 +1,23 @@
 /**
- * GOS3 · agente: GPT · papel: Maintainer / Engineering Agent
- * fase: Runtime Federation → Qwen Contract Gate · data: 2026-09-07 · hora: 00:00
- * antes: não havia teste automatizado para erros, timeout e resposta OpenAI-compatible do Qwen adapter.
- * depois: contrato é validado com servidor HTTP local controlado, sem confundir mock com E2E do modelo.
- * base: feat/gos3-runtime-orchestration
- * assinatura: GPT · Maintainer / Engineering Agent · GOS3
- * commit: registered by Git
+ * GOS3
+ * arquivo: src/agents/qwen05b/tests/contract.test.ts
+ * responsabilidade: contrato do Qwen e regressão da integração sandbox/onboard
+ * agente: agent/llm
+ * papel: Engineering Agent
+ * fase: implementation
+ * data: 2026-09-07
+ * hora: 18:06
+ * antes: sha256:6d84fafe15891ed8c7490937b0bfbb1c81e56cfb
+ * depois: sha256:pending
+ * base: commit:1a4f271425f6ce8ebbad8c8aae0bd75a59a9c787
+ * assinatura: P0 scoobiii : Agente GPT
+ * commit: pending
  */
 
 import assert from "node:assert/strict";
 import http from "node:http";
-import { invoke } from "../adapter";
+import { invoke, invokeInSandbox } from "../adapter";
+import { onboardFile } from "../../../gos3/onboard";
 
 async function withServer(handler: http.RequestListener, fn: (baseUrl: string) => Promise<void>): Promise<void> {
   const server = http.createServer(handler);
@@ -62,6 +69,45 @@ async function main(): Promise<void> {
     assert.equal(result.executed, false);
     assert.equal(result.exit_code, 1);
     assert.match(result.stderr, /timeout after 20ms/);
+  });
+
+  await withServer((req, res) => {
+    let requestBody = "";
+    req.setEncoding("utf8");
+    req.on("data", (chunk) => { requestBody += chunk; });
+    req.on("end", () => {
+      const request = JSON.parse(requestBody) as { messages?: Array<{ content?: string }> };
+      const prompt = request.messages?.[0]?.content ?? "";
+      assert.match(prompt, /GOS3 SANDBOX ONBOARD/);
+      assert.match(prompt, /arquivo: src\/example\.ts/);
+      assert.match(prompt, /fase: onboard/);
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify({ choices: [{ message: { content: "export const answer = 42;\n" } }] }));
+    });
+  }, async (baseUrl) => {
+    const session = onboardFile("export const answer = 41;\n", {
+      file: "src/example.ts",
+      responsabilidade: "exemplo executável para teste de Qwen sandbox",
+      baseCommit: "abc123",
+      date: "2026-09-07",
+      time: "18:06",
+    });
+    const result = await invokeInSandbox(session, "change answer from 41 to 42", {
+      baseUrl,
+      model: "test-qwen",
+      timeoutMs: 2_000,
+      modelDigest: "sha256:test-model",
+      runtimeDigest: "sha256:test-runtime",
+      runtimeVersion: "test-runtime-1",
+    });
+    assert.equal(result.evidence.executed, true);
+    assert.ok(result.change);
+    assert.equal(result.change?.header.fase, "implementation");
+    assert.equal(result.change?.header.commit, "pending");
+    assert.match(result.change?.header.antes ?? "", /^sha256:[0-9a-f]{64}$/);
+    assert.match(result.change?.header.depois ?? "", /^sha256:[0-9a-f]{64}$/);
+    assert.match(result.change?.content ?? "", /GOS3/);
+    assert.match(result.change?.content ?? "", /answer = 42/);
   });
 
   console.log("QWEN CONTRACT: PASS");
