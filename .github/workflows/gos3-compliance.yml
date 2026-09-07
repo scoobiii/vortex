@@ -1,19 +1,24 @@
 # GOS3 · agente: GPT · papel: Maintainer / Engineering Agent
-# fase: Technical Refinement → VUA + Connector Federation + Real Qwen CI · data: 2026-09-07 · hora: 16:22
-# antes: CI validava runtime/Qwen, mas não exercitava VUA e contratos de conectores.
-# depois: CI valida headers, contratos VUA/connectors e E2E real Qwen/Ollama com proveniência.
+# fase: Technical Refinement → VUA + Connector Federation + Real Qwen CI · data: 2026-09-07 · hora: 20:10
+# antes: workflow podia ser registrado sem jobs quando a sintaxe de mappings/expressões era rejeitada.
+# depois: workflow usa YAML explícito, mantém check-headers obrigatório e permite dispatch manual.
 # base: feat/gos3-runtime-orchestration
 # assinatura: agent/llm · Engineering Agent · GOS3
 # commit: registered by Git
 name: GOS3 Compliance
+
 on:
   push:
-    branches: ["main"]
+    branches:
+      - main
   pull_request:
-    branches: ["main"]
+    branches:
+      - main
   workflow_dispatch:
+
 permissions:
   contents: read
+
 jobs:
   check-headers:
     name: check-headers
@@ -21,37 +26,65 @@ jobs:
     steps:
       - name: Checkout full history
         uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
+        with:
+          fetch-depth: 0
+
       - name: Validate GOS3 headers on changed files
         shell: bash
-        env: { BASE_SHA: ${{ github.event.pull_request.base.sha }} }
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           set -euo pipefail
-          if [[ -z "${BASE_SHA:-}" ]]; then BASE_SHA="$(git rev-parse HEAD^ 2>/dev/null || true)"; fi
+          if [[ -z "${BASE_SHA:-}" ]]; then
+            BASE_SHA="$(git rev-parse HEAD^ 2>/dev/null || true)"
+          fi
           [[ -n "${BASE_SHA:-}" ]] || { echo "No base commit available"; exit 1; }
           mapfile -t files < <(git diff --name-only "$BASE_SHA"...HEAD)
           failures=0
           for file in "${files[@]}"; do
             [[ -f "$file" ]] || continue
-            case "$file" in *.png|*.jpg|*.jpeg|*.gif|*.webp|*.ico|*.zip|*.gz|*.tar|*.pdf|*.woff|*.woff2) continue ;; esac
-            if head -n 20 -- "$file" | grep -qE 'GOS3'; then echo "PASS: $file"; else echo "FAIL: missing GOS3 header: $file"; failures=$((failures + 1)); fi
+            case "$file" in
+              *.png|*.jpg|*.jpeg|*.gif|*.webp|*.ico|*.zip|*.gz|*.tar|*.pdf|*.woff|*.woff2)
+                continue
+                ;;
+            esac
+            if head -n 20 -- "$file" | grep -qE 'GOS3'; then
+              echo "PASS: $file"
+            else
+              echo "FAIL: missing GOS3 header: $file"
+              failures=$((failures + 1))
+            fi
           done
           (( failures == 0 )) || exit 1
           echo "check-headers: PASS"
+
   contract-gate:
     name: GOS3 compliance
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
-      - uses: actions/setup-node@v4
-        with: { node-version: "22", cache: npm }
-      - run: npm ci
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
       - name: Governance policy gate
         run: python3 tests/change_validation_policy_test.py
+
       - name: Contract gate
         run: python3 tests/contract_test.py
+
       - name: Runtime and orchestration tests
         run: |
           npm run test:runtime-loop
@@ -61,6 +94,7 @@ jobs:
           npm run test:vua
           npm run test:ollama:contract
           npm run test:github:contract
+
       - name: Validate repository truth
         shell: bash
         run: |
@@ -76,15 +110,24 @@ jobs:
           grep -q "49/49 coverage.*NOT CLAIMED" docs/PRODUCT-TRUTH.md || fail "49/49 coverage is not explicitly marked NOT CLAIMED"
           grep -q "GPT runtime is operational in Vortex.*NOT PROVEN" docs/PRODUCT-TRUTH.md || fail "GPT runtime truth classification is not conservative"
           echo "GOS3 COMPLIANCE: PASS"
+
   qwen-real-e2e:
     name: qwen-real-e2e
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: "22", cache: npm }
-      - run: npm ci
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
       - name: Install Ollama runtime
         shell: bash
         run: |
@@ -92,19 +135,29 @@ jobs:
           curl -fsSL https://ollama.com/install.sh | sh
           command -v ollama
           ollama --version
+
       - name: Start Ollama
         shell: bash
         run: |
           set -euo pipefail
           nohup ollama serve > /tmp/ollama.log 2>&1 &
-          for attempt in {1..60}; do curl -fsS http://127.0.0.1:11434/api/tags >/dev/null && { echo "Ollama API: PASS"; exit 0; }; sleep 2; done
+          for attempt in {1..60}; do
+            if curl -fsS http://127.0.0.1:11434/api/tags >/dev/null; then
+              echo "Ollama API: PASS"
+              exit 0
+            fi
+            sleep 2
+          done
           cat /tmp/ollama.log
           exit 1
+
       - name: Pull real Qwen 0.5B model
+        shell: bash
         run: |
           set -euo pipefail
           ollama pull qwen2.5-coder:0.5b
           ollama list
+
       - name: Capture Qwen runtime and model provenance
         shell: bash
         run: |
@@ -128,8 +181,10 @@ jobs:
           echo "Qwen runtime: $runtime_version"
           echo "Qwen runtime binary digest: $runtime_digest"
           echo "Qwen model blob digest: $model_digest"
+
       - name: Execute real Qwen E2E
         run: npm run test:qwen05b:e2e
+
       - name: Upload Qwen execution evidence
         if: always()
         uses: actions/upload-artifact@v4
