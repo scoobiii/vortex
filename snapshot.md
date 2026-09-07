@@ -1,5 +1,6 @@
 # Git log
 ```
+bac3e7f feat: make executed=true require observed effect receipt
 a9083f0 docs: record S0 baseline verification
 8dddafc docs: record S0 baseline in backlog
 8c3ca39 docs: document S0 baseline verification
@@ -19,7 +20,6 @@ e75e49d chore: remove duplicate invocation contract spec
 2894472 docs(gpt): add agent changelog
 8b49152 docs(gpt): add execution backlog
 1b8f12a docs(gpt): add promise versus delivery matrix
-c4647ff docs(gpt): add skills and capability map
 ```
 
 # Git status
