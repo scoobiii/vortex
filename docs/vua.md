@@ -76,6 +76,22 @@ A production MCP server transport remains a separate integration task; this brid
 | Desktop gateway | Local/network gateway | Next |
 | VM/Docker/Kubernetes | Remote execution adapters | Future |
 
+## Definition of done
+
+VUA is considered production-ready only when all of the following are independently verifiable:
+
+1. a registered adapter is discoverable through the registry;
+2. a capability request is rejected when validation fails;
+3. destructive capabilities require explicit authorization;
+4. execution returns structured evidence;
+5. an observed side effect is represented by an effect receipt when the operation claims `executed=true`;
+6. the resulting execution proof is deterministically hashable;
+7. the same request/evidence state reproduces the same proof hash;
+8. the MCP bridge exposes capabilities without becoming an alternate policy engine;
+9. no credential or secret is persisted in proposals, evidence, or proofs.
+
+The registry and bridge in this change satisfy the VUA contract layer. They do not by themselves claim a physical environment side effect, production MCP transport, mobile runtime, desktop gateway, or universal gateway.
+
 ## Design rule
 
 Do not create one-off protocol logic inside each environment adapter. New environments implement the VUA contract; transports and agent protocols remain separate concerns.
