@@ -1,0 +1,116 @@
+name: vortex-qwen-execution-proof
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Never run this proof from pull_request: the job downloads and executes a native LLM binary.
+# This workflow is intentionally limited to trusted main/manual runs on GitHub-hosted runners.
+
+permissions:
+  contents: read
+  id-token: write
+  attestations: write
+
+jobs:
+  qwen-proof:
+    name: Qwen 0.5B direct vs Vortex proof
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      LLAMA_CPP_VERSION: b10516
+      LLAMA_TARBALL_SHA256: f263a91280471b4c33c4999d7c76259c0f3a0a53a0b3e692b2c0b84380137a35
+      QWEN_MODEL_SHA256: 1d9614638d18024d0fbb36575a15f1302a3adf044df10345688ec4f6e1c4ff32
+      QWEN_MODEL_URL: https://huggingface.co/Qwen/Qwen2.5-Coder-0.5B-Instruct-GGUF/resolve/bf1da6ca8f02b444067db175f02a14e74f49c5c0/qwen2.5-coder-0.5b-instruct-q4_k_m.gguf?download=true
+      LLAMA_TARBALL_URL: https://github.com/ggml-org/llama.cpp/releases/download/b10516/llama-b10516-bin-ubuntu-x64.tar.gz
+      VORTEX_LLM_BASE_URL: http://127.0.0.1:8080/v1
+      VORTEX_LLM_MODEL: qwen2.5-coder-0.5b-instruct
+      PROOF_OUTPUT: proof/results.json
+
+    steps:
+      - name: Checkout trusted revision
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+          ref: ${{ github.sha }}
+
+      - name: Enforce trusted main revision
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          test "$GITHUB_REF" = "refs/heads/main"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+          test "$(git status --porcelain)" = ""
+          echo "Trusted proof revision: $EXPECTED_SHA"
+
+      - name: Verify adapter and proof security tests
+        run: |
+          python3 -m py_compile vortex_ollama_adapter.py
+          python3 -m unittest discover -s tests -p 'test_vortex_ollama_adapter.py' -v
+          node --version
+          npm run test:qwen-proof-security
+
+      - name: Download pinned llama.cpp binary
+        run: |
+          mkdir -p .ci/llama models proof
+          curl --fail --location --retry 3 --retry-delay 2 \
+            "$LLAMA_TARBALL_URL" -o .ci/llama.tar.gz
+          echo "$LLAMA_TARBALL_SHA256  .ci/llama.tar.gz" | sha256sum -c -
+          tar -xzf .ci/llama.tar.gz -C .ci/llama
+          LLAMA_SERVER="$(find .ci/llama -type f -name llama-server -print -quit)"
+          test -n "$LLAMA_SERVER"
+          chmod +x "$LLAMA_SERVER"
+          echo "LLAMA_SERVER=$LLAMA_SERVER" >> "$GITHUB_ENV"
+          "$LLAMA_SERVER" --version
+
+      - name: Download pinned Qwen GGUF
+        run: |
+          curl --fail --location --retry 3 --retry-delay 2 \
+            "$QWEN_MODEL_URL" -o models/qwen2.5-coder-0.5b-instruct-q4_k_m.gguf
+          echo "$QWEN_MODEL_SHA256  models/qwen2.5-coder-0.5b-instruct-q4_k_m.gguf" | sha256sum -c -
+
+      - name: Start isolated local model server
+        run: |
+          "$LLAMA_SERVER" \
+            -m models/qwen2.5-coder-0.5b-instruct-q4_k_m.gguf \
+            --host 127.0.0.1 \
+            --port 8080 \
+            -c 2048 \
+            -n 96 \
+            -t 1 \
+            -ngl 0 \
+            > proof/llama-server.log 2>&1 &
+          echo $! > proof/llama-server.pid
+          for i in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:8080/health > /dev/null; then break; fi
+            sleep 1
+          done
+          curl --fail --silent http://127.0.0.1:8080/health
+
+      - name: Run direct vs Vortex benchmark
+        run: node scripts/proof/qwen_benchmark.js
+
+      - name: Verify proof gate
+        run: node scripts/proof/verify_qwen_proof.js proof/results.json
+
+      - name: Publish proof summary
+        run: cat proof/proof.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload proof evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: vortex-qwen-execution-proof
+          path: proof/
+          retention-days: 14
+
+      - name: Attest proof evidence
+        uses: actions/attest@v4
+        with:
+          subject-path: proof/results.json
+
+      - name: Cleanup local model server
+        if: always()
+        run: |
+          if [ -f proof/llama-server.pid ]; then kill "$(cat proof/llama-server.pid)" 2>/dev/null || true; fi
