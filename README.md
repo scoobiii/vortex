@@ -1,3 +1,11 @@
+# GOS3 · agente: GPT · papel: Maintainer / Engineering Agent
+# fase: Technical Refinement → Runtime Federation · data: 2026-09-07 · hora: 00:00
+# antes: README refinado sem header GOS3, causando falha do gate check-headers no PR #51.
+# depois: header GOS3 obrigatório adicionado sem alterar o conteúdo refinado do README.
+# base: main
+# assinatura: GPT · Maintainer / Engineering Agent · GOS3
+# commit: registered by Git
+
 # Vortex
 
 ![USE VORTEX! - Python, LLMs, Sandbox & Runtime](docs/images/use-vortex-cover.png)
@@ -22,21 +30,20 @@ EVIDÊNCIA + PROVENANCE
 
 O Vortex entrega uma **infraestrutura verificável de invocação** composta por contratos, runtime, gateway, conectores, governança, testes e evidências.
 
-| Entregável | O que entrega | Estado atual |
+| Entregável | O que entrega | Estado |
 |---|---|---|
-| **Invocation Contract** | request/response comum, `invocation_id`, agente, ação, payload, contexto, `executed`, resultado, erro, logs e duração | **Implementado + testado** |
+| **Invocation Contract** | request/response, `invocation_id`, agente, ação, payload, contexto, resultado, erro, logs e duração | **Implementado + testado** |
 | **GOS3 Governance** | headers, rastreabilidade, política de mudança e gates de CI | **Implementado** |
-| **Runtime Loop** | ciclo controlado de invocação, execução, resultado e controle de estado | **Implementado + testado** |
-| **Orchestrator** | coordenação do fluxo de execução do agente | **Implementado + testado** |
+| **Runtime Loop** | ciclo controlado de invocação, execução, resultado e estado | **Implementado + testado** |
+| **Orchestrator** | coordenação do fluxo de execução | **Implementado + testado** |
 | **Gateway** | fronteira comum para requests, connectors e execution proofs | **Implementado + testado** |
 | **Qwen 2.5 Coder 0.5B** | adapter funcional para runtime local via Ollama/OpenAI-compatible API | **Implementado + E2E real em CI** |
-| **Ollama Connector** | integração de runtime local sobre a camada existente | **Implementado + contract test** |
-| **GitHub Connector** | fronteira MCP → Gateway para operações GitHub sem expor credencial diretamente ao agente | **Implementado + contract test** |
+| **Ollama Connector** | integração com runtime local | **Implementado + contract test** |
+| **GitHub Connector** | fronteira MCP → Gateway para operações GitHub | **Implementado + contract test** |
 | **Grok Adapter** | adapter de referência e fixtures de contrato | **Implementado + testado** |
-| **VUA** | adapter universal experimental para pesquisa de uma interface comum | **P&D / experimental** |
-| **Provenance** | identidade da execução, hashes, runtime/modelo e artefatos de evidência | **Implementado em fluxos específicos** |
+| **VUA** | adapter universal experimental | **P&D / experimental** |
+| **Provenance** | identidade, hashes, runtime/modelo e artefatos de evidência | **Implementado em fluxos específicos** |
 | **CI/CD** | gates de contrato, governança, truth matrix e E2E Qwen | **Implementado** |
-| **Truth Model** | distinção entre `PROMISED`, `IMPLEMENTED`, `EXECUTED` e `VERIFIED` | **Implementado como regra** |
 
 > **VUA é P&D. O runtime funcional do Qwen não depende de VUA.**
 
@@ -44,56 +51,46 @@ O Vortex entrega uma **infraestrutura verificável de invocação** composta por
 
 # Entregáveis por público
 
-## 1. Usuário
+## 1. Usuário — uso e resultado
 
 O usuário precisa saber **o que pode pedir, o que foi executado e qual evidência existe**.
 
-### O Vortex entrega
+O Vortex entrega:
 
-- forma padronizada de solicitar uma execução;
+- solicitação padronizada de execução;
 - identificação da invocação e do agente;
-- indicação do runtime/conector quando disponível;
+- runtime/conector utilizado quando disponível;
 - resultado, erro, logs e duração;
 - distinção entre `dry_run` e execução;
-- evidência de execução nos fluxos que suportam provenance;
+- evidência nos fluxos que suportam provenance;
 - hashes e artefatos para auditoria quando disponíveis;
-- rejeição explícita quando o runtime não possui capacidade compatível;
-- rastreabilidade da mudança e do artefato usado.
+- rejeição explícita quando não há capacidade compatível;
+- rastreabilidade da mudança e do artefato utilizado.
 
-### Limite importante
+**Limite:** `executed: true` não é prova universal de side-effect externo. Prova forte de efeito externo continua sendo evolução do projeto.
 
-```text
-executed: true
-      ≠
-prova universal de side-effect externo
-```
+## 2. DevOps / SRE — operação e confiabilidade
 
-A prova forte de efeito externo ainda é uma evolução do projeto.
+O Vortex entrega uma **superfície operacional observável e controlável** para agentes, runtimes e conectores.
 
----
-
-## 2. DevOps / SRE
-
-O Vortex entrega uma **superfície operacional observável e controlável** para executar agentes e conectores.
-
-### Entregáveis operacionais
+Entregáveis:
 
 - contratos versionados de invocação;
 - timeout e contexto de execução;
 - identificação de runtime e execução;
 - stdout/stderr e exit code nos fluxos aplicáveis;
 - duração da execução;
-- hashes de artefatos de evidência;
+- hashes de evidência;
 - provenance de modelo/runtime quando aplicável;
-- Gateway para separar agente, credencial e serviço externo;
+- Gateway como fronteira entre agente, credencial e serviço externo;
 - conectores isolados por capacidade;
-- contract tests para impedir divergência;
+- contract tests;
 - CI com gates obrigatórios;
-- E2E real do Qwen em CI com captura de evidência;
+- E2E real do Qwen em CI;
 - branch protection e revisão por PR;
 - artefatos de CI para auditoria e troubleshooting.
 
-### Critério operacional
+### Critério de DONE
 
 ```text
 IMPLEMENTADO
@@ -111,28 +108,26 @@ HASH / PROVENIÊNCIA
 DONE
 ```
 
-Se uma dessas evidências não existir, o claim permanece **PARTIAL**, **NOT PROVEN** ou equivalente.
+Sem todas as evidências aplicáveis, o claim permanece **PARTIAL**, **NOT PROVEN** ou equivalente.
 
----
-
-## 3. Agentes LLM
+## 3. Agentes LLM — invocação e autoridade
 
 O Vortex fornece uma **superfície de invocação previsível**, com fronteiras explícitas de capacidade e autoridade.
 
-### Entregáveis para agentes
+Entregáveis:
 
 - Invocation Contract único;
-- `invocation_id` para rastrear solicitações;
+- `invocation_id` para rastreabilidade;
 - identificação do agente;
 - `action` e `payload` estruturados;
-- contexto de sandbox, timeout e `dry_run`;
+- sandbox, timeout e `dry_run`;
 - resposta e erro estruturados;
 - logs e duração;
-- Gateway para ferramentas/conectores;
+- Gateway para ferramentas e conectores;
 - separação entre credencial e agente;
 - provenance para distinguir afirmação de execução observada;
 - documentação de capacidades e limites;
-- contract tests para validar integrações.
+- contract tests para integrações.
 
 ### Regra para agentes
 
@@ -146,32 +141,22 @@ EXECUTADO
 VERIFICADO
 ```
 
-Um agente só deve declarar uma tarefa concluída com base no artefato que comprova a etapa correspondente.
+O agente não deve declarar uma tarefa concluída além do nível de evidência disponível.
 
 ---
 
 # Modelo de verdade
 
-O Vortex usa estados explícitos para evitar claims inflados:
-
-```text
-PROMISED
-   ↓
-IMPLEMENTED
-   ↓
-EXECUTED
-   ↓
-VERIFIED
-```
-
 - **PROMISED** — proposto ou planejado.
 - **IMPLEMENTED** — existe código/configuração correspondente.
 - **EXECUTED** — houve execução observada.
-- **VERIFIED** — há evidência suficiente, reproduzível e auditável para o claim específico.
+- **VERIFIED** — existe evidência suficiente, reproduzível e auditável para o claim específico.
 
-Uma execução pode ser real sem constituir prova suficiente de um side-effect externo.
+```text
+PROMISED → IMPLEMENTED → EXECUTED → VERIFIED
+```
 
-A matriz canônica de claims fica em [`docs/PRODUCT-TRUTH.md`](docs/PRODUCT-TRUTH.md).
+A matriz canônica de claims está em [`docs/PRODUCT-TRUTH.md`](docs/PRODUCT-TRUTH.md).
 
 ---
 
@@ -225,20 +210,14 @@ A matriz canônica de claims fica em [`docs/PRODUCT-TRUTH.md`](docs/PRODUCT-TRUT
 O Qwen 2.5 Coder 0.5B é o fluxo de execução local real atualmente coberto por E2E.
 
 ```text
-Vortex
-  ↓
-Qwen Adapter
-  ↓
-Ollama
-  ↓
-qwen2.5-coder:0.5b
-  ↓
-resposta real
-  ↓
-provenance + evidence hash
+Vortex → Qwen Adapter → Ollama → qwen2.5-coder:0.5b
+                                  ↓
+                         resposta real
+                                  ↓
+                       provenance + evidence hash
 ```
 
-O fluxo E2E captura, quando disponível no ambiente:
+O E2E captura, quando disponível no ambiente:
 
 - modelo e digest;
 - versão do runtime;
@@ -249,15 +228,13 @@ O fluxo E2E captura, quando disponível no ambiente:
 - duração;
 - hash da evidência.
 
-Comandos:
-
 ```bash
 npm ci
 npm run test:qwen05b:contract
 npm run test:qwen05b:e2e
 ```
 
-O E2E exige Ollama funcional e o modelo `qwen2.5-coder:0.5b`; mock não deve ser usado para classificar esse fluxo como execução real.
+O E2E exige Ollama funcional e o modelo `qwen2.5-coder:0.5b`. Mock não classifica esse fluxo como execução real.
 
 ---
 
@@ -274,8 +251,6 @@ npm run test:ollama:contract
 O contract test valida a fronteira do conector; sozinho, não é evidência de execução real de modelo.
 
 ## GitHub
-
-O conector expõe uma fronteira MCP e encaminha operações ao Gateway:
 
 ```text
 Agent / MCP Client
@@ -307,7 +282,7 @@ src/vortex/vua/
 
 Estado: **P&D / experimental**.
 
-Seu papel atual é validar arquitetura e contratos futuros sem alterar o caminho funcional existente do Qwen.
+Seu papel atual é validar arquitetura e contratos futuros **sem alterar o caminho funcional existente do Qwen**.
 
 ```bash
 npm run test:vua
@@ -320,16 +295,10 @@ npm run test:vua
 O Gateway fornece uma fronteira comum:
 
 ```text
-InvokeRequest
-    ↓
-Gateway
-    ↓
-Connector / Runtime
-    ↓
-ExecutionProof
+InvokeRequest → Gateway → Connector / Runtime → ExecutionProof
 ```
 
-A prova atual registra, entre outros:
+A prova atual registra:
 
 ```text
 proof_version
@@ -346,13 +315,13 @@ runtime_id
 credential_id
 ```
 
-**Limite conhecido:** essa prova demonstra o que o Gateway observou; não constitui, sozinha, prova criptográfica de side-effect externo. Recibos assinados e accountability são evolução futura.
+**Limite:** a prova demonstra o que o Gateway observou; não constitui, sozinha, prova criptográfica de side-effect externo.
 
 ---
 
 # CI / Quality Gates
 
-GitHub Actions valida o estado do projeto com gates de:
+GitHub Actions valida gates de:
 
 - headers GOS3;
 - contrato de invocação;
@@ -366,7 +335,7 @@ GitHub Actions valida o estado do projeto com gates de:
 - Product Truth Matrix;
 - E2E real do Qwen com Ollama.
 
-Comandos locais principais:
+Principais comandos locais:
 
 ```bash
 npm run test:gos3
@@ -383,7 +352,7 @@ npm run build
 
 # GOS3 e rastreabilidade
 
-**GOS3 — Gang of Seven Senior Scrum** é o modelo de colaboração/governança utilizado no projeto.
+**GOS3 — Gang of Seven Senior Scrum** é o modelo de colaboração e governança utilizado no projeto.
 
 > **Mexeu, deixa rastro.**
 
@@ -412,8 +381,6 @@ Provenance registra **quem participou e em qual contexto**; evidência registra 
 ---
 
 # Segurança e autoridade
-
-O Vortex separa:
 
 ```text
 IDENTIDADE
@@ -465,15 +432,8 @@ permissions
 ## P2 — Trust chain
 
 ```text
-identity
-→ authority
-→ delegation
-→ invocation
-→ runtime
-→ execution
-→ evidence
-→ accountability
-→ revocation
+identity → authority → delegation → invocation
+→ runtime → execution → evidence → accountability → revocation
 ```
 
 Cada camada só deve ser marcada como implementada quando houver artefato e teste correspondentes.
@@ -528,7 +488,7 @@ npm run build
 
 # Documentação
 
-| Documento | Para quê |
+| Documento | Finalidade |
 |---|---|
 | [`docs/PRODUCT-TRUTH.md`](docs/PRODUCT-TRUTH.md) | matriz canônica do que é e não é comprovado |
 | [`spec/invocation-contract.md`](spec/invocation-contract.md) | contrato de invocação |
@@ -550,28 +510,18 @@ Vortex não é:
 - um selo de certificação;
 - um dashboard que declara sucesso sem evidência;
 - um sandbox único obrigatório;
-- uma promessa de que qualquer binário roda em qualquer máquina;
-- substituto do GitHub;
-- substituto de runtimes especializados.
+- uma promessa de execução universal;
+- uma substituição para GitHub;
+- uma substituição para runtimes especializados.
 
-Vortex é a camada de **contrato + execução + gateway/conectores + evidência + proveniência** entre agentes e runtimes.
+O Vortex é a camada de **contrato, execução e proveniência verificável** entre agentes e runtimes.
 
 ---
 
 # Regra final
 
-```text
-Código existir
-    ≠
-Código executar
-    ≠
-Efeito acontecer
-    ≠
-Efeito ser comprovado
-```
-
-> **Proof over prose.**
+> **Código existir não significa que código rodou.**
 >
-> **HASH + TEMPO + LOG.**
-
-A classificação definitiva de cada claim deve ser consultada na **Product Truth Matrix** e nos artefatos de CI/teste correspondentes.
+> **Execução observada não significa automaticamente side-effect comprovado.**
+>
+> **Proof over prose. HASH + TEMPO + LOG.**
