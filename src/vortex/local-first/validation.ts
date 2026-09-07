@@ -1,3 +1,5 @@
+// Vortex / GOS3 v2.4 — Local-first Runtime
+// Rule: mexeu → testa → valida → publica.
 import { SyncBatch } from "./types";
 
 export function validateBatch(value: unknown): asserts value is SyncBatch {
