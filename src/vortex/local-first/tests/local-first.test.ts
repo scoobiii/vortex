@@ -1,3 +1,5 @@
+// Vortex / GOS3 v2.4 — Local-first Runtime Tests
+// Rule: mexeu → testa → valida → publica.
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -5,7 +7,7 @@ import { buildBenchmark, buildExecutionProof, recordExecution } from "../service
 import { canonicalize } from "../canonical-json";
 import { sha256Json } from "../hash";
 import { LocalFirstStore } from "../store";
-import { syncOnce, SyncTransport } from "../sync";
+import { HttpSyncTransport, syncOnce } from "../sync";
 import { SyncBatch, SyncResult } from "../types";
 
 let passed = 0; let failed = 0;
@@ -25,11 +27,13 @@ async function run(): Promise<void> {
     await recordExecution(store, input, "B001");
     let status = await store.status();
     assert(status.pending_proofs === 1 && status.pending_benchmarks === 1, "prova e benchmark ficam persistidos offline");
-    const offlineTransport: SyncTransport = { async send(): Promise<SyncResult> { throw new Error("offline"); } };
-    assert((await syncOnce(store, "device-test", offlineTransport)).accepted_proofs.length === 0, "falha de conectividade não perde dados");
+    const offlineTransport = new HttpSyncTransport("http://127.0.0.1:1/v1/sync");
+    let offlineFailed = false;
+    try { await syncOnce(store, "device-test", offlineTransport); } catch { offlineFailed = true; }
+    assert(offlineFailed, "falha de conectividade é reportada sem mascarar o erro");
     status = await store.status();
     assert(status.pending_proofs === 1 && status.pending_benchmarks === 1, "fila permanece pendente após falha de rede");
-    const transport: SyncTransport = { async send(batch: SyncBatch): Promise<SyncResult> { assert(batch.protocol === "vortex-sync/v1", "batch usa protocolo de sincronização v1"); return { accepted_proofs: batch.proofs.map((p) => p.proof.hash), accepted_benchmarks: batch.benchmarks.map((b) => b.benchmark_id), rejected: [] }; } };
+    const transport: { send(batch: SyncBatch): Promise<SyncResult> } = { async send(batch: SyncBatch): Promise<SyncResult> { assert(batch.protocol === "vortex-sync/v1", "batch usa protocolo de sincronização v1"); return { accepted_proofs: batch.proofs.map((p) => p.proof.hash), accepted_benchmarks: batch.benchmarks.map((b) => b.benchmark_id), rejected: [] }; } };
     const result = await syncOnce(store, "device-test", transport);
     assert(result.accepted_proofs.length === 1 && result.accepted_benchmarks.length === 1, "sync aceita proof e benchmark");
     status = await store.status();
