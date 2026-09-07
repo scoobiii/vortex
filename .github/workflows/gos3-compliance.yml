@@ -1,9 +1,10 @@
 # GOS3 · agente: GPT · papel: Maintainer / Engineering Agent
-# fase: Technical Refinement → Governance Enforcement · data: 2026-09-07
-# antes: branches divergentes mantinham nomes/jobs diferentes e quebravam a resolução de módulos no CI.
-# depois: workflow único com headers, política, contrato, runtime loop, orchestrator, Grok e truth gate.
-# base: merge de main com feat/gos3-runtime-orchestration
+# fase: Technical Refinement → Real Qwen CI · data: 2026-09-07 · hora: 00:00
+# antes: CI validava o adapter Qwen apenas de forma indireta; não havia execução real do modelo no runner.
+# depois: CI executa Qwen 0.5B real no runner, captura digest do runtime e manifesto do modelo e publica evidência.
+# base: feat/gos3-runtime-orchestration
 # assinatura: GPT · Maintainer / Engineering Agent · GOS3
+# commit: registered by Git
 name: GOS3 Compliance
 
 on:
@@ -70,6 +71,7 @@ jobs:
           npm run test:runtime-loop
           npm run test:orchestrator
           npm run test:grok
+          npm run test:qwen05b:contract
       - name: Gate 3 - Validate repository truth
         shell: bash
         run: |
@@ -86,3 +88,82 @@ jobs:
           for agent in claude grok manus metaai; do test -d "src/agents/$agent" || fail "Expected agent directory missing: $agent"; done
           if grep -nE '49/49.*IMPLEMENTED|GPT runtime.*IMPLEMENTED|metaai.*REAL EXECUTION' docs/PRODUCT-TRUTH.md; then fail "Detected semantic inflation in PRODUCT-TRUTH.md"; fi
           echo "GOS3 COMPLIANCE: PASS"
+
+  qwen-real-e2e:
+    name: qwen-real-e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install Node dependencies
+        run: npm ci
+      - name: Install Ollama runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://ollama.com/install.sh | sh
+          command -v ollama
+          ollama --version
+      - name: Start Ollama
+        shell: bash
+        run: |
+          set -euo pipefail
+          nohup ollama serve > /tmp/ollama.log 2>&1 &
+          for attempt in {1..60}; do
+            if curl -fsS http://127.0.0.1:11434/api/tags >/dev/null; then
+              echo "Ollama API: PASS"
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/ollama.log
+          exit 1
+      - name: Pull real Qwen 0.5B model
+        shell: bash
+        run: |
+          set -euo pipefail
+          ollama pull qwen2.5-coder:0.5b
+          ollama list
+      - name: Capture Qwen runtime and model provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          runtime_version="$(ollama --version | tr -d '\r')"
+          runtime_binary="$(command -v ollama)"
+          runtime_digest="sha256:$(sha256sum "$runtime_binary" | awk '{print $1}')"
+          manifest_root="${OLLAMA_MODELS:-$HOME/.ollama/models}/manifests"
+          manifest_file="$(find "$manifest_root" -type f -path '*qwen2.5-coder*0.5b' -print -quit)"
+          if [[ -z "$manifest_file" ]]; then
+            echo "Qwen model manifest not found under $manifest_root"
+            find "$manifest_root" -maxdepth 5 -type f 2>/dev/null | head -50 || true
+            exit 1
+          fi
+          model_digest="sha256:$(sha256sum "$manifest_file" | awk '{print $1}')"
+          {
+            echo "QWEN_MODEL=qwen2.5-coder:0.5b"
+            echo "QWEN_BASE_URL=http://127.0.0.1:11434/v1"
+            echo "QWEN_TIMEOUT_MS=120000"
+            echo "QWEN_RUNTIME_VERSION=$runtime_version"
+            echo "QWEN_RUNTIME_DIGEST=$runtime_digest"
+            echo "QWEN_MODEL_DIGEST=$model_digest"
+          } >> "$GITHUB_ENV"
+          echo "Qwen runtime: $runtime_version"
+          echo "Qwen runtime digest: $runtime_digest"
+          echo "Qwen model manifest: $manifest_file"
+          echo "Qwen model manifest digest: $model_digest"
+      - name: Execute real Qwen E2E
+        run: npm run test:qwen05b:e2e
+      - name: Upload Qwen execution evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qwen-real-evidence-${{ github.run_id }}
+          path: qwen-evidence.json
+          if-no-files-found: error
+          retention-days: 14
