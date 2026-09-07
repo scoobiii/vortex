@@ -13,7 +13,8 @@
     "test:grok": "ts-node src/agents/grok/tests/contract.test.ts",
     "grok:ping": "ts-node src/agents/grok/adapter/index.ts --fixture=ping",
     "grok:echo": "ts-node src/agents/grok/adapter/index.ts --fixture=echo",
-    "grok:dry": "ts-node src/agents/grok/adapter/index.ts --fixture=dry"
+    "grok:dry": "ts-node src/agents/grok/adapter/index.ts --fixture=dry",
+    "test:gos3:multiagent": "ts-node --transpile-only tests/gos3-multiagent-e2e.test.ts"
   },
   "devDependencies": {
     "typescript": "^5.5.4",
