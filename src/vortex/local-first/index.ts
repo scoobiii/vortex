@@ -1,3 +1,5 @@
+// Vortex / GOS3 v2.4 — Local-first Runtime
+// Rule: mexeu → testa → valida → publica.
 export * from "./types";
 export * from "./canonical-json";
 export * from "./hash";
