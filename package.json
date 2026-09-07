@@ -2,6 +2,7 @@
   "name": "vortex",
   "version": "0.0.1",
   "private": true,
+  "type": "commonjs",
   "description": "Vortex / GOS3 — runtime padrão de invocação verificável para LLMs",
   "gos3": {
     "fase": "Runtime Federation → Bounded Agent Loop",

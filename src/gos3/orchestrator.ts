@@ -53,7 +53,7 @@ export interface OrchestrationResult { snapshot: LoopSnapshot; pr_url?: string; 
 
 export async function runBoundedTask(sandbox: Sandbox, git: GitProvider, task: OrchestrationTask, options: OrchestrationOptions): Promise<OrchestrationResult> {
   const baseline = await git.head();
-  let snapshot = { ...initialLoop(options.limits), current_commit: baseline, last_good_commit: baseline };
+  let snapshot: LoopSnapshot = { ...initialLoop(options.limits), current_commit: baseline, last_good_commit: baseline };
   const timeoutMs = options.timeoutMs ?? options.limits.max_duration_ms;
   const start = Date.now();
   let pr_url: string | undefined;
