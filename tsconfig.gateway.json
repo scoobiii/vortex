@@ -1,0 +1,9 @@
+// GOS3 · production gateway TypeScript configuration
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  "include": ["src/gateway/**/*.ts"]
+}
