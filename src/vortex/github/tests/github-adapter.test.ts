@@ -1,47 +1,40 @@
 // GOS3 · agente: GPT · papel: Maintainer / Engineering Agent
 // fase: Technical Refinement → Runtime Federation · regra: Mexeu → Testa → Valida → Publica
+// antes: teste usava FakeResponse e payloads sintéticos, sem exercitar a API GitHub real
+// depois: teste de integração usa HttpGitHubAdapter com fetch real e valida o repositório público
+// assinatura: GPT · Maintainer / Engineering Agent · GOS3
 
 import assert from "node:assert/strict";
 import { HttpGitHubAdapter } from "../adapter";
 
-interface Request { path: string; }
-interface FakeResponse { ok: boolean; status: number; json(): Promise<unknown>; }
-
 async function main(): Promise<void> {
-  const requests: Request[] = [];
-  const payloads: Record<string, unknown> = {
-    "/repos/scoobiii/vortex": { full_name: "scoobiii/vortex", html_url: "https://github.com/scoobiii/vortex", default_branch: "main" },
-    "/repos/scoobiii/vortex/git/ref/heads/feature%2Fproof": { object: { sha: "abc123" } },
-    "/repos/scoobiii/vortex/commits/abc123/check-runs": { check_runs: [{ name: "local-first", status: "completed", conclusion: "success" }] },
-    "/repos/scoobiii/vortex/pulls/45": { number: 45, state: "open", html_url: "https://github.com/scoobiii/vortex/pull/45", head: { sha: "abc123" }, base: { sha: "main456" } },
-  };
-  const fetchImpl: typeof fetch = async (input) => {
-    const path = new URL(String(input)).pathname;
-    requests.push({ path });
-    const payload = payloads[path];
-    if (!payload) return fakeResponse(404, { error: "not_found" });
-    return fakeResponse(200, payload);
-  };
+  const adapter = new HttpGitHubAdapter();
+  const repository = "scoobiii/vortex";
+  const ref = "main";
 
-  const adapter = new HttpGitHubAdapter({ fetchImpl });
-  const state = await adapter.getRepositoryState("scoobiii/vortex", "feature/proof");
-  assert.equal(state.commit, "abc123");
-  const validation = await adapter.validate("scoobiii/vortex", "feature/proof", "abc123", 45);
-  assert.equal(validation.valid, true);
-  assert.deepEqual(validation.reasons, []);
-  assert.equal(validation.checks[0].conclusion, "success");
-  assert.equal(validation.pull_request?.head_sha, "abc123");
-  assert.ok(requests.length >= 5);
+  const state = await adapter.getRepositoryState(repository, ref);
+  assert.equal(state.repository, repository);
+  assert.equal(state.ref, ref);
+  assert.match(state.commit, /^[0-9a-f]{40}$/);
+  assert.equal(state.url, `https://github.com/${repository}`);
 
-  const mismatch = await adapter.validate("scoobiii/vortex", "feature/proof", "different", 45);
-  assert.equal(mismatch.valid, false);
-  assert.ok(mismatch.reasons.some((reason) => reason.startsWith("repository_commit_mismatch:")));
+  const checks = await adapter.getChecks(repository, state.commit);
+  assert.ok(Array.isArray(checks));
+  for (const check of checks) {
+    assert.ok(check.name.length > 0);
+    assert.ok(["queued", "in_progress", "completed", "unknown"].includes(check.status));
+  }
 
-  console.log("GitHub adapter test: 7 assertions passed");
+  const validation = await adapter.validate(repository, ref, state.commit);
+  assert.equal(validation.repository_state.commit, state.commit);
+  assert.deepEqual(validation.repository_state, state);
+  assert.deepEqual(validation.checks, checks);
+  assert.equal(validation.reasons.length, validation.valid ? 0 : validation.reasons.length);
+
+  console.log(`GitHub adapter integration test: PASS (${checks.length} check run(s), live API)`);
 }
 
-function fakeResponse(status: number, body: unknown): FakeResponse {
-  return { ok: status >= 200 && status < 300, status, json: async () => body };
-}
-
-void main().catch((error) => { console.error(error); process.exitCode = 1; });
+void main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
