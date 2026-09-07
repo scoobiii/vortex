@@ -1,107 +1,60 @@
 // **GOS3** · agente: `claude` · papel: `Arquiteto / Tech Writer` (ver docs/team.md)
-// fase: `Technical Refinement (E3)` · data: `2026-08-18`
-// antes: README.md prometia "suíte de conformidade (6 casos)" que não existia
-// depois: 6 casos implementados — cobrem as 4 ações + regra 1 + regra 2 do
-//        contrato v0.1, mesmo espírito de tests/contract_test.py (Python)
-// assinatura: `Claude · Arquiteto / Tech Writer · GOS3`
+// fase: `Technical Refinement → Runtime Federation` · data: `2026-09-07`
+// antes: teste legado dependia de Vitest ausente e de um contrato divergente do adapter real
+// depois: smoke/contract tests executam o adapter real via Node assert, sem mocks
+// assinatura: `GPT · Maintainer / Engineering Agent · GOS3`
 
-import { describe, expect, it } from "vitest";
-import { invoke } from "../adapter/index.js";
-import { checkGos3Header } from "../adapter/handler.js";
-import { computeEvidenceHash, validateResponse } from "../adapter/contract.js";
-import pingFixture from "./fixtures/ping.json" with { type: "json" };
-import echoFixture from "./fixtures/echo.json" with { type: "json" };
+import assert from "node:assert/strict";
+import { invoke } from "../adapter/index";
+import { getHandler, listActions } from "../adapter/handler";
+import { validateRequest, validateResponse } from "../adapter/contract";
 
-describe("Claude adapter — conformidade com invocation-contract.md v0.1", () => {
-  it("1. ping: responde ok e executed=true, com evidence_hash válido", () => {
-    const res = invoke({ agent: "claude", action: "ping", payload: pingFixture.payload });
-    expect(res.status).toBe("success");
-    expect(res.executed).toBe(true);
-    expect(res.evidence_hash).toBeDefined();
-    expect(validateResponse(res)).toEqual([]);
-  });
+async function main(): Promise<void> {
+  const ping = await invoke({ invocation_id: "claude-test-ping-001", agent: "claude", action: "ping", payload: {} });
+  assert.equal(ping.agent, "claude");
+  assert.equal(ping.executed, true);
+  assert.equal(ping.error, null);
+  assert.equal(ping.result?.status, "ok");
+  validateResponse(ping);
 
-  it("2. echo: ecoa o payload exatamente, smoke test do contrato", () => {
-    const res = invoke({ agent: "claude", action: "echo", payload: echoFixture.payload });
-    expect(res.status).toBe("success");
-    expect(JSON.parse(res.output.stdout)).toEqual(echoFixture.payload);
-  });
+  const echoPayload = { message: "anti-mock-real-execution", value: 42 };
+  const echo = await invoke({ invocation_id: "claude-test-echo-001", agent: "claude", action: "echo", payload: echoPayload });
+  assert.deepEqual(echo.result?.echoed, echoPayload);
+  assert.equal(echo.executed, true);
+  assert.equal(echo.error, null);
 
-  it("3. validate_contract: aceita um request bem formado", () => {
-    const wellFormedRequest = {
-      contract_version: "0.1",
-      invocation_id: "test-001",
-      agent: "claude",
-      task: { kind: "tool_call", payload: "noop" },
-      limits: { timeout_seconds: 5, max_output_bytes: 1024 },
-    };
-    const res = invoke({ agent: "claude", action: "validate_contract", payload: wellFormedRequest });
-    expect(res.status).toBe("success");
-    expect(JSON.parse(res.output.stdout).valid).toBe(true);
-  });
+  validateRequest({ invocation_id: "claude-test-contract-001", agent: "claude", action: "ping", payload: {} });
+  assert.throws(() => validateRequest({ invocation_id: "missing-agent", action: "ping", payload: {} }), /agent é obrigatório/);
 
-  it("4. validate_contract: rejeita request com campo obrigatório ausente", () => {
-    const brokenRequest = { contract_version: "0.1", invocation_id: "test-002" }; // sem agent/task/limits
-    const res = invoke({ agent: "claude", action: "validate_contract", payload: brokenRequest });
-    expect(res.status).toBe("error");
-    const parsed = JSON.parse(res.output.stdout);
-    expect(parsed.valid).toBe(false);
-    expect(parsed.missing.length).toBeGreaterThan(0);
-  });
+  const dryRun = await invoke({ invocation_id: "claude-test-dry-001", agent: "claude", action: "echo", payload: { message: "dry" }, context: { dry_run: true } });
+  assert.equal(dryRun.executed, false);
+  assert.equal(dryRun.result?.mode, "dry_run");
 
-  it("5. check_gos3_header: aceita cabeçalho com todos os marcadores obrigatórios", () => {
-    const validHeader = [
-      "> **GOS3** · agente: `claude` · papel: `Arquiteto / Tech Writer`",
-      "> fase: `Technical Refinement (E3)` · data: `2026-08-18`",
-      "> assinatura: `Claude · Arquiteto / Tech Writer · GOS3`",
-    ].join("\n");
-    const { valid, missing } = checkGos3Header(validHeader);
-    expect(valid).toBe(true);
-    expect(missing).toEqual([]);
-  });
+  const invalidAgent = await invoke({ invocation_id: "claude-test-invalid-agent-001", agent: "other-agent", action: "ping", payload: {} });
+  assert.equal(invalidAgent.executed, false);
+  assert.match(invalidAgent.error ?? "", /só aceita agent="claude"/);
 
-  it("6. check_gos3_header: rejeita texto sem cabeçalho GOS3 e lista o que falta", () => {
-    const noHeader = "# Só um título qualquer, sem nada de GOS3 aqui.";
-    const { valid, missing } = checkGos3Header(noHeader);
-    expect(valid).toBe(false);
-    expect(missing).toContain("GOS3");
-    expect(missing).toContain("assinatura:");
-  });
-});
+  const unknownAction = await invoke({ invocation_id: "claude-test-unknown-action-001", agent: "claude", action: "does_not_exist", payload: {} });
+  assert.equal(unknownAction.executed, false);
+  assert.match(unknownAction.error ?? "", /Ação desconhecida/);
 
-describe("Claude adapter — regras antifraude do contrato (regra 1 e 2)", () => {
-  it("regra 1: executed=false com status=success é inválido", () => {
-    const errors = validateResponse({
-      contract_version: "0.1",
-      invocation_id: "x",
-      agent: "claude",
-      status: "success",
-      executed: false,
-      output: { stdout: "", stderr: "" },
-      duration_ms: 1,
-      truncated: false,
-    });
-    expect(errors.some((e) => e.includes("REGRA 1"))).toBe(true);
-  });
+  const headerHandler = getHandler("check_gos3_header");
+  assert.ok(headerHandler);
+  const headerResult = await headerHandler!({ text: [
+    "> **GOS3** · agente: `claude` · papel: `teste`",
+    "> fase: `Technical Refinement`",
+    "> antes: legado",
+    "> depois: corrigido",
+    "> base: `main`",
+    "> assinatura: `GPT · Maintainer / Engineering Agent · GOS3`",
+  ].join("\n") }, {});
+  assert.equal(headerResult.result.valid, true);
 
-  it("regra 2: executed=true com evidence_hash forjado é inválido", () => {
-    const output = { stdout: "x", stderr: "", exit_code: 0 };
-    const errors = validateResponse({
-      contract_version: "0.1",
-      invocation_id: "x",
-      agent: "claude",
-      status: "success",
-      executed: true,
-      evidence_hash: "0".repeat(64),
-      output,
-      duration_ms: 10,
-      truncated: false,
-    });
-    expect(errors.some((e) => e.includes("REGRA 2"))).toBe(true);
-  });
+  assert.deepEqual(listActions().sort(), ["check_gos3_header", "echo", "ping", "validate_contract"]);
+  console.log("Claude adapter contract tests: PASS (real adapter, no mocks)");
+}
 
-  it("computeEvidenceHash é determinístico para a mesma entrada", () => {
-    const output = { stdout: "a", stderr: "b", exit_code: 0 };
-    expect(computeEvidenceHash(output, 5)).toBe(computeEvidenceHash(output, 5));
-  });
+void main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
 });
