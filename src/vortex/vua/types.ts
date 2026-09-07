@@ -1,3 +1,5 @@
+// Vortex / GOS3 v2.4 — VUA Contract
+// Rule: mexeu → testa → valida → publica.
 export type VuaProtocolVersion = 'vua/v1';
 
 export type AdapterStatus = 'active' | 'experimental' | 'deprecated';
