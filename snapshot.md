@@ -1,25 +1,25 @@
 # Git log
 ```
+3d39ecc Merge pull request #55 from scoobiii/feat/gos3-onboard-sandbox-qwen
+4982ef4 fix(gos3): construct typed onboarding header
+93106b5 refactor(qwen): remove duplicate onboard invocation surface
+6a011a7 fix(gos3): reject artifact identity mismatch during onboard
+f031619 build(qwen): expose sandbox E2E command
+02471d9 ci(qwen): execute real GOS3 sandbox E2E with Ollama
+fb9db7e test(qwen): add real sandbox onboarding E2E
+94e3ae4 ci(gos3): run onboard sandbox regression in contract gate
+bd834c3 test(qwen): cover GOS3 onboard sandbox gate
+61863ad feat(qwen): gate sandbox generation behind GOS3 onboard
+fc8a7c3 fix(gos3): align onboarding regression assertion
+a9e16aa feat(gos3): add onboarding contract test script
+402fb92 test(gos3): cover sandbox onboarding and pre-CI hash gate
+235dc1c feat(qwen): require GOS3 onboard before agent invocation
+aa41f13 fix(gos3): parse hash-style onboarding headers
+a817f22 feat(gos3): add pre-CI sandbox onboarding gate
 7919290 Merge pull request #54 from scoobiii/scoobiii-patch-3
 60d8843 Add GOS3 header to README
 bdfecd4 Merge pull request #53 from scoobiii/scoobiii-patch-2
 c171ae0 Update README header format and content
-4f52152 Merge pull request #51 from scoobiii/docs/refine-readme-deliverables
-2a1ea1c fix(gos3): restore required header in README
-02f29a1 docs: refine README around project deliverables
-1a4f271 Merge pull request #18 from scoobiii/feat/gos3-runtime-orchestration
-bc7c220 fix(ollama): make connector contract test CommonJS compatible
-d4b9999 chore(governance): add GOS3 header to gitignore
-5da58c0 fix(ci): make GOS3 workflow parseable and dispatchable
-ea40842 ci(gos3): add manual workflow dispatch for compliance gate
-1cecc46 feat: close VUA and connector federation tree
-a98163c feat: register VUA and connector federation layout
-e7ffc4a Merge branch 'main' into feat/gos3-runtime-orchestration
-81f6b9e fix(ci): hash actual Qwen model blob on runner
-cccec79 chore(governance): add required GOS3 header
-2dace3b chore(governance): add required GOS3 header
-8ad62d9 chore(governance): add required GOS3 header
-09f80cd ci(qwen): run real Qwen 0.5B E2E on GitHub runner
 ```
 
 # Git status
@@ -4403,8 +4403,10 @@ if __name__ == "__main__":
     "test:qwen05b": "ts-node -e \"import('./src/agents/qwen05b/adapter/index').then(async m => console.log(JSON.stringify(await m.invoke('reply with QWEN_OK'))))\"",
     "test:qwen05b:contract": "ts-node src/agents/qwen05b/tests/contract.test.ts",
     "test:qwen05b:e2e": "ts-node tests/qwen-e2e-local.ts",
+    "test:qwen05b:sandbox:e2e": "ts-node tests/qwen-sandbox-e2e-local.ts",
+    "test:gos3:onboard": "ts-node tests/gos3-onboard.test.ts",
     "test:contract": "python3 tests/contract_test.py",
-    "test:gos3": "npm run test:contract && npm run test:runtime-loop && npm run test:orchestrator && npm run test:grok && npm run test:qwen05b:contract",
+    "test:gos3": "npm run test:contract && npm run test:runtime-loop && npm run test:orchestrator && npm run test:grok && npm run test:qwen05b:contract && npm run test:gos3:onboard",
     "grok:ping": "ts-node src/agents/grok/adapter/index.ts --fixture=ping",
     "grok:echo": "ts-node src/agents/grok/adapter/index.ts --fixture=echo",
     "grok:dry": "ts-node src/agents/grok/adapter/index.ts --fixture=dry",
