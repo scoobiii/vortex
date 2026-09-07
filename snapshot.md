@@ -1,25 +1,25 @@
 # Git log
 ```
+1a4f271 Merge pull request #18 from scoobiii/feat/gos3-runtime-orchestration
+bc7c220 fix(ollama): make connector contract test CommonJS compatible
+d4b9999 chore(governance): add GOS3 header to gitignore
+5da58c0 fix(ci): make GOS3 workflow parseable and dispatchable
+ea40842 ci(gos3): add manual workflow dispatch for compliance gate
+1cecc46 feat: close VUA and connector federation tree
+a98163c feat: register VUA and connector federation layout
+e7ffc4a Merge branch 'main' into feat/gos3-runtime-orchestration
+81f6b9e fix(ci): hash actual Qwen model blob on runner
+cccec79 chore(governance): add required GOS3 header
+2dace3b chore(governance): add required GOS3 header
+8ad62d9 chore(governance): add required GOS3 header
+09f80cd ci(qwen): run real Qwen 0.5B E2E on GitHub runner
+630d5aa test(qwen): expose contract and real E2E commands
+781f42d test(qwen): add real local-model E2E evidence gate
+2edc222 test(qwen): add deterministic adapter contract gate
+0df6db2 refactor(qwen): use typed provenance contract
+702534b feat(qwen): canonicalize execution provenance
+89e5951 feat(qwen): add typed execution provenance
 a4aca12 Merge pull request #49 from scoobiii/feat/universal-connector-gateway-mvp
-272626d Merge branch 'main' into feat/universal-connector-gateway-mvp
-bac3e7f feat: make executed=true require observed effect receipt
-941cba7 feat: add production MVP universal connector gateway
-a9083f0 docs: record S0 baseline verification
-8dddafc docs: record S0 baseline in backlog
-8c3ca39 docs: document S0 baseline verification
-e16352a Merge pull request #41 from scoobiii/docs/termux-qwen-gpt-federation
-7469d52 docs: define Termux Alpine Qwen persistence and GPT federation test matrix
-cacf52b Merge pull request #39 from scoobiii/feat/institutionalize-change-validation
-4d3ec23 ci: enforce change-validation policy
-645c002 test: enforce change-validation governance policy
-a4c34e7 docs: institutionalize change-validation protocol
-3ce7f78 Merge pull request #38 from scoobiii/feat/readme-main-sync
-48003b4 ci: keep governance gate in existing workflow
-5ee0a2a ci: publish required check-headers gate
-a5c2cbf ci: add automatic check-headers governance gate
-6c6394f docs: sync README from governanca branch
-e49ef90 chore: remove duplicate root scrape script
-e75e49d chore: remove duplicate invocation contract spec
 ```
 
 # Git status
@@ -811,175 +811,313 @@ REVIEW
 ```
 
 
+## connectors/github/README.md
+```.md
+# GOS3 — Vortex GitHub Connector
+
+Classic GitHub connector boundary for cloud applications and MCP.
+
+Cloud App → MCP Client → Vortex GitHub MCP → Gateway / Credential Broker → GitHub API.
+
+VUA remains P&D and is not a runtime dependency.
+
+```
+
+
+## connectors/github/auth/README.md
+```.md
+# GOS3 — GitHub Auth
+
+Credentials are resolved by the Vortex gateway credential broker. Raw GitHub credentials must not be owned or logged by the connector.
+
+```
+
+
+## connectors/ollama/README.md
+```.md
+# GOS3 — Vortex Ollama Connector
+
+Ollama is the local model runtime. Qwen remains the existing agent adapter.
+
+The connector organizes the runtime boundary without injecting VUA into Qwen.
+
+```
+
+
+## connectors/ollama/install/README.md
+```.md
+# GOS3 — Ollama Installer
+
+Scripts de instalação do runtime Ollama para a fronteira `connectors/ollama`.
+
+- `install.sh`: Linux, chama o instalador oficial e verifica `ollama --version`.
+- `install.ps1`: Windows, usa `winget` com o pacote `Ollama.Ollama` e verifica o executável.
+
+A instalação do runtime não transforma Ollama em agente: Qwen permanece em `src/agents/qwen05b`.
+
+```
+
+
+## connectors/ollama/install/install.sh
+```.sh
+#!/usr/bin/env bash
+# GOS3 · agente: GPT · papel: Maintainer / Engineering Agent
+# fase: Connector Federation → Ollama Installer
+# data: 2026-09-07 · hora: 16:22
+# antes: installer directory absent
+# depois: Linux installer uses the official Ollama installer and verifies runtime
+# base: Ollama runtime connector
+# assinatura: agent/llm · Engineering Agent · GOS3
+# commit: registered by Git
+set -euo pipefail
+if ! command -v curl >/dev/null 2>&1; then echo 'curl is required' >&2; exit 1; fi
+curl -fsSL https://ollama.com/install.sh | sh
+command -v ollama >/dev/null
+echo "Ollama installed: $(ollama --version)"
+
+```
+
+
+## connectors/ollama/mcp/README.md
+```.md
+# GOS3 — Ollama MCP
+
+Extension point for future MCP exposure of Ollama runtime capabilities. It does not alter the existing Qwen execution path.
+
+```
+
+
+## connectors/ollama/runtime/README.md
+```.md
+# GOS3 — Ollama Runtime
+
+Ollama is the model-agnostic local runtime. Model-specific behavior remains in agent adapters such as Qwen 0.5B.
+
+Default OpenAI-compatible endpoint: `http://127.0.0.1:11434/v1`.
+
+```
+
+
 ## docs/BACKLOG.md
 ```.md
 > **GOS3** · agente: `GPT` · papel: `Maintainer / Engineering Agent`
-> fase: `S0 — Baseline Verification` · data: `2026-09-06`
-> antes: baseline S0 precisava de validação reprodutível local + CI online consolidada
-> depois: S0 validado no SHA `e16352acd997da8bdc71cb8cd97f4f477183ce6c`; dívida de side-effect permanece aberta
+> fase: `Runtime Federation → Bounded Agent Loop` · data: `2026-09-07`
+> antes: contrato v0.2 + máquina bounded ainda sem ponte operacional completa
+> depois: sandbox restrito, verificação, rollback, PR/help providers, worker Qwen e baseline S0 documentados; E2E real do Qwen depende de endpoint/modelo local disponível
+> base: merge de `main` com `feat/gos3-runtime-orchestration`
+> assinatura: `GPT · Maintainer / Engineering Agent · GOS3`
 
 # BACKLOG — Vortex / GOS3
 
 ## S0 — Baseline Verification
 
-- [x] Fresh clone de `main` no SHA `e16352acd997da8bdc71cb8cd97f4f477183ce6c`
+- [x] Fresh clone de `main` no SHA de baseline validado
 - [x] `npm ci` executado sem vulnerabilidades reportadas
 - [x] Contract gate local: casos válidos e rejeição de evidência ausente/forjada
 - [x] Adaptador Grok: 19/19
 - [x] GitHub Actions: `contract-gate` PASS
 - [x] GitHub Actions: `check-headers` PASS
 - [x] GitHub Actions: publicação do snapshot PASS
-- [x] Documentação da prova S0
+- [x] Documentação da prova S0 em `docs/s0-baseline-verification.md`
 - [x] Confirmado: nenhum código de runtime foi alterado para fechar S0
 - [ ] Próxima dívida: provar `executed:true` com efeito externo observado + receipt/evidence
 
 **Resultado S0:** GREEN no escopo do baseline. Isso não significa Vortex 100% concluído.
 
 ## Fase atual
-Technical Refinement → Runtime Federation (proposta)
+
+Runtime Federation → Bounded Agent Loop
 
 ## Sprint 1 — Runtime Reference (Grok)
 
-- [x] Criar `specs/invocation-contract.md` v0.1
-- [x] Entregar adaptador Grok (`src/agents/grok/`)
-- [x] Campo `executed: true/false` obrigatório
-- [x] Testes de conformidade básicos
-- [x] Rodar testes no ambiente atual — 19/19 passed (registro histórico)
-- [x] Documentar handoff do adaptador
+- [x] Adaptador Grok
+- [x] Contrato mínimo de invocação
+- [x] `executed` obrigatório
+- [x] Evidência de execução
+- [x] Testes históricos 19/19
 
 ## Sprint 2 — Generalização
 
 - [x] Infra mínima TypeScript
-- [x] Correção de shadowing em `process` / `killSignal`
-- [x] Ausência de chave reporta `not_executed`, sem mock
-- [ ] Corrigir checagem de tipo em `contract.ts`
-- [ ] Provar `executed:true` com execução real + evidência + side-effect
-- [ ] Extrair `src/agents/_template/`
-- [ ] `docs/onboarding-agent.md`
+- [x] Gate `executed:false` + `success` inválido
+- [x] Gate anti-forgery de `evidence_hash`
+- [x] Evidência real modelada no adapter GPT (`runtime_id`/`execution_id`)
+- [ ] Extrair template comum dos adapters
+- [ ] Finalizar onboarding dos agentes restantes
 
 ## Sprint 3 — Runtime Federation / Provenance
 
-- [ ] **PO approval:** aprovar/rejeitar a arquitetura de runtime federation
-- [ ] **GOS3 xAI review:** revisar a proposta com os agentes do xAI
+- [ ] PO approval da arquitetura de federation
+- [ ] GOS3/xAI review
 - [ ] Capability discovery com `runtime_id`
-- [ ] Perfis de runtime (A23/Termux, VPS, GCloud, Colab)
-- [ ] Adapter `/invoke` compatível com v0.1
-- [ ] `executed` obrigatório e sem `success` quando false
-- [ ] stdout/stderr/exit_code/duration_ms reais
-- [ ] evidence_hash derivado de evidência de execução
-- [ ] testes de timeout/error/blocked/mock
-- [ ] política de claims/benchmarks com proveniência
-- [ ] auditoria de concorrência do persistence backend do zAI/xAI
+- [ ] Perfis A23/Termux, VPS, GCloud, Colab
+- [ ] Endpoint `/invoke` real por adapter/runtime
+- [x] Contrato v0.2 com limites do loop
+- [x] Máquina de estados bounded em `src/gos3/runtime-loop.ts`
+- [x] Executor sandbox restrito (`BubblewrapSandbox`) ligado ao loop
+- [x] Verificação pós-worker pode promover PASS ou REGRESSION
+- [x] Rollback real ao último commit bom via `git reset --hard`
+- [x] Criação de PR somente após `PR_READY`
+- [x] `HELP_REQUIRED` publica Issue estruturada somente após bloqueio/limite
+- [x] Testes determinísticos de attempt-limit e rollback recovery
+- [ ] Teste com sandbox gVisor real
+- [ ] Auditoria de concorrência do persistence backend zAI/xAI
+
+## Sprint 4 — Worker pequeno / Sandbox
+
+- [x] Adapter Qwen Coder ~0,5B como worker bounded (OpenAI-compatible local endpoint)
+- [x] Sandbox restrito com filesystem/exec controlados
+- [x] Loop observe → execute → verify → evidence
+- [x] Orçamento hard de tentativas e tempo
+- [x] Detecção de progresso e repetição de erro
+- [x] PR automático apenas em `PR_READY`
+- [x] Issue de socorro automática em `HELP_REQUIRED`
+- [ ] E2E real com Qwen ~0,5B local
+- [ ] Benchmark reproduzível: tarefa útil pequena + regressão deliberada + recuperação
+
+## Gate de conformidade
+
+A arquitetura-alvo está estimada em **80–90% de alinhamento conceitual**, não 80–90% de implementação. O percentual não substitui testes nem aprovação.
+
+Para declarar runtime operacional, exigir evidência de:
+
+1. execução real no sandbox/runtime;
+2. teste verificável;
+3. `evidence_hash` válido;
+4. limite de loop respeitado;
+5. `PR_READY` somente após PASS;
+6. `HELP_REQUIRED` após estagnação/bloqueio/limite;
+7. rollback verificável em regressão;
+8. E2E real do worker escolhido.
 
 ## Governance
 
 - [ ] Não criar um segundo GOS3 no xAI; reutilizar o GOS3 do Vortex
 - [ ] Permitir N agentes no board sem hardcode de sete
-- [ ] Toda mudança relevante deve seguir `dor → issue → teste → execução → evidência → revisão → aprovação → commit`
+- [ ] Mudança relevante: `dor → issue → teste → execução → evidência → revisão → aprovação → commit/PR → backlog`
+- [ ] Mudança de contrato/segurança: aprovação PO antes de merge
 
 ## Referências
 
+- `spec/invocation-contract.md`
+- `spec/gos3-system-instruction.md`
+- `src/gos3/runtime-loop.ts`
+- `src/gos3/orchestrator.ts`
+- `src/agents/qwen05b/adapter/index.ts`
+- `docs/runtime-execution-model.md`
 - `docs/s0-baseline-verification.md`
 - `docs/agents/gpt/README.md`
 - `docs/runtime-federation.md`
 - `docs/gos3-provenance.md`
 - `docs/decisions.md`
+- `docs/DONE-CRITERIA.md`
 
 ```
 
 
 ## docs/CHANGELOG.md
 ```.md
-> **GOS3** · agente: `GPT` · papel: `Maintainer / Engineering Agent` (ver docs/team.md)
-> fase: `Technical Refinement (E2)` · data: `2026-08-16` · hora: `11:01:03 -03:00`
-> antes: registro histórico do teste ainda dizia 17/17
-> depois: registro histórico normalizado para 19/19, preservando a evidência de execução real
-> base: commit `19ee04f` (estado sincronizado antes desta correção)
+> **GOS3** · agente: `GPT` · papel: `Maintainer / Engineering Agent`
+> fase: `Bounded Agent Loop` · data: `2026-08-25`
+> antes: contrato v0.1 + evidence gate + runtime federation proposal
+> depois: contrato v0.2 e lifecycle bounded documentados e primeiro runtime-loop implementado
+> base: `2f76316e`
 > assinatura: `GPT · Maintainer / Engineering Agent · GOS3`
-> commit: registrado pelo Git no commit que contém esta alteração
 
 # Changelog
-
-Todas as mudanças relevantes do projeto vortex, seguindo Keep a Changelog adaptado ao protocolo GOS3.
 
 ## [Unreleased]
 
 ### Adicionado
-- `package.json` + `tsconfig.json` na raiz — infra mínima pra rodar TypeScript (`npm install && npm run test:grok`)
-- 7º caso de teste em `contract.test.ts`: verifica que `executed: true` não é confundido com side-effect comprovado
-
-### Verificado
-- **Testes do adaptador Grok rodados de fato, ambiente real**: 19/19 passed, 0 failed
-  (2026-08-15, Node v20.20.2, `npx ts-node src/agents/grok/tests/contract.test.ts`)
-  Primeiro executável real do Sprint 1 — antes disso, testes existiam como código mas
-  nunca tinham sido rodados (faltava `package.json`/`tsconfig.json`).
+- `src/gos3/runtime-loop.ts`: máquina de estados bounded para agentes: `READY`, `RUNNING`, `VERIFYING`, `RETRY`, `ROLLBACK`, `PR_READY`, `STAGNATED`, `HELP_REQUIRED`.
+- Contrato de invocação v0.2 com limites de tentativas/tempo, identidade do runtime e lifecycle de execução.
 
 ### Alterado
-- BACKLOG.md: item "Rodar testes no ambiente atual" marcado `[x]` com evidência
+- `docs/BACKLOG.md`: novo Sprint 4 para worker pequeno + sandbox + loop verificável.
+- `docs/runtime-execution-model.md`: lifecycle bounded e separação worker/runtime/governança.
+- `docs/gos3-provenance.md`: provenance agora inclui retry/rollback/PR/help.
+- `docs/DONE-CRITERIA.md`: gates atualizados para lifecycle e escalonamento.
 
-### Pendente
-- Documentar handoff do adaptador
-- Adaptadores dos outros 7 agentes
-- Integração mínima com X / Bluesky
-- Corrigir checagem de tipo em `contract.ts` (`error`/`result`)
+### Regra reforçada
+- Nenhum agente pode executar loop infinito.
+- `PR_READY` depende de execução real + teste + evidência.
+- Regressão exige rollback para último commit bom.
+- Estagnação, bloqueio ou limites produzem `HELP_REQUIRED` e podem abrir Issue estruturada.
+- O percentual 80–90% é avaliação arquitetural, não evidência de conformidade.
 
-## [0.0.1] — 2026-08-14
-### Adicionado
-- Repositório criado: github.com/scoobiii/vortex
-- Arquitetura em duas camadas: execução Nx1 + estado NxN
-- SWOT 3/3 inicial
-- Convite formal ao GOS3
+```
+
+
+## docs/CONNECTOR-MAP.md
+```.md
+# GOS3 — Connector Map
+
+- `src/agents/qwen05b` — existing functional Qwen 0.5B adapter.
+- `src/gateway` — production gateway, credential broker, registry and execution proof.
+- `connectors/ollama` — Ollama runtime boundary.
+- `connectors/github` — classic GitHub connector + MCP boundary.
+- `src/vortex/vua` — VUA (`vua/v1`), P&D.
+
+```text
+Cloud App / MCP Client → Vortex GitHub MCP → Gateway / Credential Broker → GitHub API
+GitHub Actions Runner → Ollama → Qwen 0.5B
+GitHub Actions Runner → Vortex BubblewrapSandbox
+VUA → federation layer for future validation; not a Qwen runtime dependency.
+```
 
 ```
 
 
 ## docs/DONE-CRITERIA.md
 ```.md
-> **GOS3** · agente: `Grok` · papel: `Runtime Reference / Sandbox Validator`
-> fase: `Sprint Prova — 3 gates + runtime externo` · data: `2026-08-22`
-> assinatura: `Grok · Runtime Reference · GOS3`
+> **GOS3** · agente: `GPT` · papel: `Maintainer / Engineering Agent`
+> fase: `Bounded Agent Loop` · data: `2026-08-25`
+> antes: regua 2/3 focada em contrato/runtime/auditoria
+> depois: regua passa a incluir lifecycle bounded, rollback, PR e help escalation
+> base: `81f049c5`
+> assinatura: `GPT · Maintainer / Engineering Agent · GOS3`
 
-# Criterio de pronto — regua unica
+# Critério de pronto — régua única
 
-**Nota atual: 2/3**
-
-Nao declarar 3/3 no README, feed ou post de agente.
+**Nota arquitetural:** 80–90% de alinhamento conceitual com o alvo Vortex/GOS3. **Não é nota de implementação.**
 
 ## Gate 1 — Contrato
-- [ ] Spec unica (specs/) sem duplicar spec/
-- [x] executed:true exige evidence_hash (tests/contract_test.py)
-- [x] executed:false + status:success invalido
-- [x] gate rejeita forged / missing hash
-- [ ] runtime_id no contrato e nas responses (INC-001 / ADR-003)
-
-Passagem: python3 tests/contract_test.py -> PASS
+- [x] `executed:true` exige `evidence_hash`
+- [x] `executed:false + status:success` inválido
+- [x] gate anti-forgery
+- [x] `runtime_id`/`execution_id` previstos para execução real
+- [x] limites `max_attempts` / `max_duration_ms` previstos
+- [x] estados `PR_READY`, `RETRY`, `ROLLBACK`, `STAGNATED`, `HELP_REQUIRED`
 
 ## Gate 2 — Runtime
-- [ ] Backend fora do V8 para process/require
-- [ ] stdout + exit_code + duration_ms
-- [ ] Node-API no isolate JS = not_executed ou error
-- [ ] 1 path real (adapter ou invoke) passa no Gate 1
-- [ ] Alpine/PRoot opcional, nao requisito
-- [ ] Preferencial: runtime GCloud via conector do USUARIO (ADR-003)
-- [ ] Sem conector do user: nao emitir executed:true para tools OS
+- [ ] Backend fora do V8 para process/require quando necessário
+- [ ] stdout + exit_code + duration_ms reais
+- [ ] 1 path sandbox real passa pelo contrato v0.2
+- [ ] rollback real para último commit bom
+- [ ] scheduler/capability discovery com runtime_id
+- [ ] limites enforced pelo runtime, não pelo prompt
 
-Passagem: 1 response real + runtime_id
+## Gate 3 — Lifecycle
+- [ ] teste reproduzível de tarefa útil pequena
+- [ ] PASS → PR_READY → PR
+- [ ] regressão → ROLLBACK → retry
+- [ ] erro repetido → STAGNATED
+- [ ] bloqueio/limite → HELP_REQUIRED + Issue estruturada
+- [ ] sem loop infinito
+- [ ] evidência recuperável no Git/GitHub
 
-## Gate 3 — Auditoria
-- [ ] CI gos3-compliance verde
-- [ ] Branch protection
-- [x] Nota so neste arquivo
-- [ ] D9 Official Agent
-- [ ] INC-001 + teste anti 100% com exception
-- [ ] UX Grok-like docs (UX-GROK-LITE.md) — zAI pendente
-
-Passagem: merge so com CI + PO
+## Gate 4 — Auditoria/Governance
+- [ ] CI `gos3-compliance` verde
+- [ ] branch protection
+- [ ] PO approval para mudança de contrato/segurança
+- [ ] GOS3/xAI review
+- [ ] claims/benchmarks com proveniência
 
 ## Repos
-- vortex = contrato/gate
-- zAI = UI/auth/conectores/invoke
+- vortex = contrato/gates/lifecycle
+- zAI/xAI = UI/auth/conectores/invoke/runtime adapters
 
-Ver: architecture-runtime-connectors.md, incidents.md
+**3/3 só depois de execução real + CI + auditoria.**
 
 ```
 
@@ -1060,6 +1198,83 @@ Todo arquivo criado ou editado por um agente do GOS3 deve conter o cabeçalho no
 - Se executou: capturar `exit_code`, `stdout_raw`, `duration_ms` e gerar `output_hash` (SHA-256).
 - Se não executou ou falhou: retornar `claim: "not_executed"` ou `claim: "failed"` de forma explícita.
 - **Proibição Absoluta de Fallbacks Simulados**: É estritamente proibido simular respostas de APIs ausentes com geradores locais de texto disfarçados de provedores remotos.
+
+```
+
+
+## docs/PRODUCT-TRUTH.md
+```.md
+# GOS3 · agente: GPT · papel: Maintainer / Engineering Agent
+# fase: Technical Refinement → Governance Enforcement · data: 2026-09-07 · hora: 00:00
+# antes: documento modificado no branch sem marcador GOS3 exigido pelo checker.
+# depois: conteúdo permanece inalterado e recebe apenas o header de governança obrigatório.
+# base: feat/gos3-runtime-orchestration
+# assinatura: GPT · Maintainer / Engineering Agent · GOS3
+# commit: registered by Git
+
+# PRODUCT-TRUTH Matrix
+
+Status: conservative audit baseline.
+
+| Claim | Evidence | Status |
+|---|---|---|
+| `spec/invocation-contract.md` exists | file present | 🟡 SPECIFICATION |
+| `main` protected | GitHub branch protection API returned required PR approval = 1 and enforce_admins = true | 🟢 VERIFIED |
+| `src/agents/claude` exists | repository tree | 🟢 IMPLEMENTED |
+| `src/agents/grok` exists | repository tree | 🟢 IMPLEMENTED |
+| `src/agents/manus` exists | repository tree | 🟡 PARTIAL |
+| `src/agents/metaai` exists | repository tree / commit `058e3cf` | 🟠 IMPLEMENTED / EXECUTION UNPROVEN |
+| `src/agents/gpt` exists | `ls` returned `No such file or directory` | ⚫ NOT IMPLEMENTED |
+| `docs/agents/gpt` exists | repository tree | 🟠 PROPOSAL / AUDIT DOCUMENTATION |
+| GPT runtime is operational in Vortex | no runtime evidence | ⚫ NOT PROVEN |
+| 49/49 coverage | no reproducible evidence in Vortex | ⚫ NOT CLAIMED |
+| Issue #7-10 spam incident | documented external evidence | 🔴 OPEN / UNRESOLVED |
+
+## MetaAI evidence limitation
+
+The MetaAI adapter currently creates its own:
+
+- `runtime_id`
+- `execution_id`
+- `recorded_at`
+- `result_hash`
+
+The adapter therefore demonstrates that an evidence envelope can be produced, but does not independently prove that an external runtime executed the requested operation.
+
+Classification:
+
+`IMPLEMENTED / EXECUTION UNPROVEN`
+
+It must not be promoted to `REAL EXECUTION` until runtime-observed evidence exists.
+
+## GPT truth
+
+`src/agents/gpt/` is intentionally absent.
+
+`docs/agents/gpt/` is documentation/proposal material and must not be interpreted as an implemented GPT adapter.
+
+## Governance rule
+
+A claim becomes REAL only when:
+
+Human/Policy
+→ Agent identity
+→ Authorization
+→ Capability
+→ Tool
+→ Runtime
+→ Execution
+→ Observed result
+→ Evidence
+→ Test
+→ Review
+
+is traceable.
+
+Manifesto:
+
+**xAI shows what the agent does.
+Vortex proves what it did.**
 
 ```
 
@@ -2097,24 +2312,48 @@ Ownership is a proposal until the project board/PO confirms it.
 ```.md
 # GPT Agent — Promise vs Delivery
 
-This is the conservative delivery baseline. Percentages are not claimed as measured project coverage until `PROJECT-METRICS.md` and automated evidence exist.
+Status: IMPLEMENTED / CONDITIONAL — GPT adapter exists; real execution requires an authorized runtime.
 
-| Area | README/product promise | Current delivery | Gap |
-|---|---|---|---|
-| Invocation contract | verifiable agent execution | v0.1 implementation | result-bound proof |
-| Sandbox | isolated execution | JS/Python/Bash paths exist | hardening + tests |
-| Evidence | hash/telemetry | basic evidence fields exist | bind evidence to observed result |
-| Tool truth | distinguish real/mock | documented matrix | automated capability truth |
-| GitHub actions | agent can operate GitHub | conditional by credential | policy + disposable integration tests |
-| Runtime federation | A23/VPS/GCloud/Colab architecture | proposal/partial infrastructure | live multi-runtime proof |
-| Capability discovery | scheduler chooses compatible runtime | proposed/partial | endpoint + handshake + tests |
-| Agent identity | trace agent execution | basic agent identity | strong identity/operator/credential chain |
-| Governance | GOS3 provenance | documented | enforce gates automatically |
-| UX | explain product quickly | existing GUI | onboarding/separation still needed |
+Evidence:
+- `src/agents/gpt/adapter/` is implemented.
+- The adapter requires an injected `RuntimeExecutor` for execution.
+- No credentials or external GPT provider execution are claimed by this repository change.
+
+| Area | Vortex implementation | Classification |
+|---|---|---|
+| GPT adapter | `src/agents/gpt/adapter/` | 🟢 IMPLEMENTED |
+| Invocation contract | v0.1-compatible response/evidence boundary | 🟢 IMPLEMENTED |
+| Evidence | Runtime-observed SHA-256 bound to output + duration | 🟢 IMPLEMENTED |
+| Sandbox | Runtime interface, host supplied | 🟡 CONDITIONAL |
+| Runtime federation | A23/VPS/GCloud/Colab interface boundary | 🟡 CONDITIONAL |
+| Capability discovery | Context/capability fields reserved | 🟡 CONDITIONAL |
+| External connectors | Adapter boundary documented; provider clients not bundled | 🟡 CONDITIONAL |
+| Agent identity | `agent: "gpt"` enforced | 🟢 IMPLEMENTED |
+| Governance | GOS3 evidence rule encoded in adapter | 🟢 IMPLEMENTED |
+| Humanized persona | Separate presentation layer | 🟡 CONDITIONAL |
+
+## Critical distinction
+
+The adapter does **not** prove that GPT itself or an external runtime executed an operation merely by returning an envelope.
+
+A successful execution requires an injected `RuntimeExecutor`, a runtime observation, and a matching evidence hash.
+
+## GOS3 classification
+
+- REAL = implementation + reproducible execution evidence
+- CONDITIONAL = implementation exists but requires external runtime/credentials
+- DETERMINISTIC = local computation whose correctness can be tested
+- UNPROVEN = implementation/claim exists without sufficient execution evidence
+- NOT IMPLEMENTED = no implementation exists in Vortex
+- PROPOSAL = architecture/documentation only
 
 ## Rule
 
-Do not turn this table into a percentage claim without reproducible LOC/test/capability measurements.
+Never promote documentation to capability.
+
+Never promote `executed: true` generated by an adapter itself to proof of external execution.
+
+Evidence must originate from the observed runtime execution boundary.
 
 ```
 
@@ -2265,6 +2504,26 @@ A imagem capturou a interface do **Molt Hybrid Hub** com três componentes no fe
 2. **Execução Isolada por Invocação (Nx1)**: Cada nó executa em seu subprocesso/sandbox efêmero, com destruição imediata de diretórios temporários após término.
 3. **Pipes Confinados & Sem Vazamento de Chaves**: Subprocessos herdam apenas o `PATH` do sistema operacional sem repassar credenciais do ambiente de produção.
 4. **Hashes SHA-256 de Entrada e Saída**: Cada invocação gera assinatura criptográfica do código fornecido e do `stdout_raw` resultante.
+
+```
+
+
+## docs/connectors/github.md
+```.md
+# GOS3 — GitHub Connector
+
+Cloud applications consume the Vortex GitHub MCP surface. Vortex owns policy, credentials and execution evidence.
+
+`Cloud App (MCP Client) → Vortex GitHub MCP → Gateway / Credential Broker → GitHub API`.
+
+```
+
+
+## docs/connectors/ollama.md
+```.md
+# GOS3 — Ollama Connector
+
+Ollama is the runtime boundary; Qwen 0.5B remains the functional agent adapter. The existing E2E captures model blob SHA-256, Ollama runtime version, binary SHA-256, execution identifiers and evidence hash.
 
 ```
 
@@ -2708,89 +2967,73 @@ O despacho dinâmico com arbitrage de pico reduz perdas de curtailment a menos d
 
 ## docs/decisions.md
 ```.md
+# GOS3 · agente: GPT · papel: Maintainer / Engineering Agent
+# fase: Technical Refinement → Governance Enforcement · data: 2026-09-07 · hora: 00:00
+# antes: documento modificado no branch sem marcador GOS3 exigido pelo checker.
+# depois: conteúdo permanece inalterado e recebe apenas o header de governança obrigatório.
+# base: feat/gos3-runtime-orchestration
+# assinatura: GPT · Maintainer / Engineering Agent · GOS3
+# commit: registered by Git
+
 # Decisões — vortex (ADR-style)
 
-Registro formal de decisões. Toda mudança de contrato ou arquitetura entra aqui com contexto, decisão, alternativas e estado de aprovação.
+Registro formal de decisões. Mudanças de contrato/arquitetura entram aqui com contexto, decisão, alternativas e aprovação.
 
-## ADR-001 — Corrigir links quebrados do README + abrir Technical Refinement
-
-**Data:** 2026-08-14  
-**Autor:** Claude  
+## ADR-001 — Contrato de invocação + Technical Refinement
 **Status:** Aceito
 
-### Contexto
-Revisão externa identificou links quebrados e ausência de interface concreta.
-
-### Decisão
-Corrigir a documentação e adiantar o contrato de invocação v0.1 para fechar o gap mais crítico.
+Fechar o gap entre conversa de agente e execução verificável através de um contrato comum Nx1/NxN.
 
 ---
 
-## ADR-002 — Sprint Prova 3/3: evidência em vez de claims
-
-**Data:** 2026-08-14  
-**Autor:** Claude  
+## ADR-002 — Evidência em vez de claims
 **Status:** Aceito
 
-### Decisão
-`executed:true` requer evidência; testes e gates devem provar execução. Ratings e claims não substituem prova.
+`executed:true` requer evidência real. Claims e ratings não substituem execução verificável.
 
 ---
 
-## ADR-003 — Runtime externo; conector GCloud por usuário
+## ADR-003 — Runtime externo e `runtime_id`
+**Status:** Aceito (diretriz)
 
-**Data:** 2026-08-22  
-**Autor:** Grok  
-**Status:** Aceito (diretriz; implementação zAI pendente)
-
-### Decisão
-Preferir runtime externo, conector GCloud autenticado por usuário, não chave cloud global no cliente; `runtime_id` é obrigatório em respostas executadas.
+Preferir runtime externo/conector autenticado por usuário quando necessário. `runtime_id` é obrigatório em execução real.
 
 ---
 
-## ADR-004 — UX Grok-like com + para arquivos
+## ADR-004 — UX Grok-like
+**Status:** Aceito (diretriz)
 
-**Data:** 2026-08-22  
-**Autor:** Grok  
-**Status:** Aceito (diretriz; implementação zAI pendente)
-
-### Decisão
-Thread + compose como UX principal; anexos no `+`; mobile/LITE limitado a poucos agentes visíveis; falhas de sandbox devem ser visíveis.
+Thread/compose como UX principal; falhas de sandbox devem ser visíveis.
 
 ---
 
-## ADR-005 — Runtime Federation + Provenance do xAI
+## ADR-005 — Runtime Federation + Provenance
+**Status:** Proposta — aprovação PO/GOS3 pendente
 
-**Data:** 2026-08-23  
+Separar Agent de Runtime, permitir N agentes, capability discovery, `runtime_id` e trilha `dor → issue → teste → execução → evidência → revisão → aprovação → commit/PR → backlog`.
+
+---
+
+## ADR-006 — Bounded Agent Loop
+**Data:** 2026-08-25  
 **Autor:** GPT  
-**Status:** **Proposta — aguardando PO + revisão GOS3 no xAI**  
-**Issue:** #11
+**Status:** **Proposta para PO/GOS3 review**
 
 ### Contexto
-O zAI legado evoluiu para xAI como fork forçado e o ambiente pode hospedar 28+ agentes. Runtimes heterogêneos incluem A23/Termux, VPS, GCloud e Colab. O proot Alpine pode ser instável; portanto, o agente não deve ficar acoplado a um único runtime.
-
-Também existe risco de transformar claims documentais (`100%`, `GOS3 Certified`, benchmarks, WAL) em fatos sem proveniência reproduzível.
+A arquitetura Vortex/GOS3 já possui contrato, evidência e runtime federation, mas ainda faltava uma política explícita para agentes que iteram sobre código dentro de sandbox. Um worker pequeno pode ser útil se o sistema controlar o ciclo; autonomia sem limites cria loops, regressões e claims difíceis de auditar.
 
 ### Decisão proposta
-1. **Reaproveitar o GOS3 do Vortex; não criar um segundo GOS3 no xAI.**
-2. Permitir N agentes no board; os 28 agentes do xAI podem atuar como proposers/reviewers.
-3. Separar Agent de Runtime através do invocation-contract.
-4. Adotar capability discovery e `runtime_id`.
-5. Usar write-once/run-anywhere no nível do artefato/contrato; compilações nativas continuam dependentes do perfil.
-6. Aplicar a regra **mexeu, deixa rastro**: dor → Issue → proposta → teste → execução → telemetria → evidência → revisão → aprovação → commit/PR → backlog.
-7. Proibir `status:success` quando `executed:false` e proibir mocks silenciosos.
-
-### Alternativas descartadas
-- Criar um novo GOS3 específico para xAI: duplicaria governança e quebraria a proveniência entre projetos.
-- Fazer o A23/proot ser o runtime universal: frágil e acopla arquitetura à máquina.
-- Promover claims do README a evidência: descartado; benchmark deve ser reproduzível.
-
-### Aprovação
-**PO:** pendente.  
-**GOS3/xAI:** pendente.
+1. Adotar estados `READY`, `RUNNING`, `VERIFYING`, `RETRY`, `ROLLBACK`, `PR_READY`, `STAGNATED`, `HELP_REQUIRED`.
+2. `max_attempts` e `max_duration_ms` são hard limits aplicados pelo runtime/orquestrador.
+3. PASS só chega a `PR_READY` com execução real + teste/verificação + evidência válida.
+4. Regressão exige `ROLLBACK` para `last_good_commit` antes de retry.
+5. Erro repetido/ausência de progresso termina em `STAGNATED`.
+6. Bloqueio, estagnação ou limite termina em `HELP_REQUIRED`, com Issue estruturada contendo erro, commits e evidências.
+7. Worker pequeno (ex.: Qwen Coder ~0,5B) é executor especializado, não autoridade de governança.
+8. O percentual 80–90% é apenas avaliação arquitetural; não é critério de aceitação.
 
 ### Consequência
-A proposta foi documentada e aberta como Issue #11. A implementação só deve ser marcada como aceita após as aprovações requeridas.
+O contrato v0.2 e `src/gos3/runtime-loop.ts` materializam a máquina de estados. A integração com sandbox real, Git rollback, PR e Issue continua pendente de testes e aprovação.
 
 ---
 
@@ -2818,9 +3061,14 @@ Conteúdo real aqui...
 ```.md
 # GOS3 Provenance — Mexeu, deixa rastro
 
-## Regra
+> **GOS3** · agente: `GPT` · papel: `Maintainer / Engineering Agent`
+> fase: `Bounded Agent Loop` · data: `2026-08-25`
+> antes: provenance cobria mudança/teste/evidência, mas não o ciclo de tentativa e escalonamento
+> depois: provenance inclui retry, rollback, PR_READY, STAGNATED e HELP_REQUIRED
+> base: `8c078d5c`
+> assinatura: `GPT · Maintainer / Engineering Agent · GOS3`
 
-Uma mudança de engenharia só é considerada comprovada quando sua trilha é recuperável no Git/GitHub.
+## Trilha mínima
 
 ```text
 Dor
@@ -2829,47 +3077,36 @@ Issue
  ↓
 Proposta
  ↓
-Teste
+Sandbox
  ↓
-Execução
+Teste
  ↓
 Telemetria
  ↓
 Evidência
  ↓
-Revisão
- ↓
-Aprovação
- ↓
-Commit/PR
- ↓
-Backlog atualizado
+VERIFYING
+ ├─ PASS → PR_READY → PR/commit
+ ├─ retry → RETRY
+ ├─ regression → ROLLBACK → RETRY
+ └─ blocked/stagnated/limit → HELP_REQUIRED → Issue
 ```
-
-## Papéis
-
-- **PO humano:** aprovação de mudanças de contrato, arquitetura e itens explicitamente protegidos.
-- **Agentes GOS3:** descoberta, refinamento, implementação, revisão e validação, conforme papel atribuído.
-- **Runtime:** prova de execução; não decide governança.
-- **Git/GitHub:** estado persistente e trilha de proveniência.
-
-## Agentes externos
-
-O GOS3 original possui sete membros de referência. O xAI pode operar com 28 agentes ou mais. Isso é uma expansão do board, não um novo protocolo.
-
-Agentes adicionais podem abrir Issues, comentar, propor PRs e revisar. A aprovação final segue as regras do repositório.
 
 ## Claims
 
-`GOS3 Certified`, `100%`, throughput, WAL, cobertura e outras métricas são **claims**, não evidências. Cada claim operacional deve apontar para teste, benchmark, workflow ou artefato que permita reprodução.
+`GOS3 Certified`, `100%`, throughput, cobertura e outras métricas são claims. Só são aceitos quando apontam para execução, teste, workflow ou artefato reproduzível.
 
 ## Execução
 
-`executed: false` não é sucesso. `executed: true` requer evidência correspondente à execução e telemetria real. Mock/simulação deve ser explicitamente identificado.
+`executed:false` não é sucesso. `executed:true` requer `runtime_id`, `execution_id` e `evidence_hash` correspondente à saída real.
 
-## Estado desta política
+## Worker pequeno
 
-**Proposta:** criada pelo agente GPT para revisão do PO e dos agentes GOS3 no xAI. Não marcar como política aceita até a aprovação registrada.
+Um modelo pequeno pode operar como worker bounded. O tamanho do modelo não muda os requisitos de prova. O runtime deve impedir loops infinitos e o sistema deve escalar para humano/GOS3 quando houver estagnação ou bloqueio.
+
+## Estado
+
+O percentual de **80–90%** é uma avaliação conceitual do desenho Vortex/GOS3, não um certificado de implementação. O gate real continua sendo evidência reproduzível.
 
 ```
 
@@ -3240,185 +3477,109 @@ Adotar v0.2 como está exige reescrever `contract.ts`, `handler.ts`, `index.ts`,
 ```.md
 # Runtime Execution Model — Vortex
 
-> **GOS3** · processo: Agile/Scrum · status: **proposta / Technical Refinement** · data: 2026-08-23
->
+> **GOS3** · processo: Agile/Scrum · status: **Bounded Agent Loop / Technical Refinement** · data: 2026-08-26
 > Regra: **LLM propõe; compilador/runtime decide.** Texto não é execução.
 
-## 1. O que mudou
+## 1. Modelo atualizado
 
-Antes, o fluxo prático era:
-
-```text
-baixar repo → instalar dependências → testar localmente
-                         │
-                         └→ ou executar no GAISTUDIO/Gemini
-```
-
-Isso continua válido. O Vortex adiciona uma camada acima desse fluxo: o agente não precisa assumir previamente onde o código será executado. Ele produz uma invocação conforme o contrato; um runtime compatível executa; a execução devolve telemetria e evidência.
+O Vortex separa Agent, Scheduler, Runtime e Git/GitHub. A execução de um agente é sempre bounded: existe orçamento de tentativas e tempo, estados explícitos e escalonamento quando não há progresso.
 
 ```text
-LLM / Agent
-    │
-    │ proposta + código + constraints
+LLM / Worker
+    │ proposta + patch
     ▼
-Vortex invocation-contract
-    │
-    ▼
-Capability discovery / scheduler
-    │
-    ├── A23 / Termux
-    ├── VPS / Linux
-    ├── GCloud VM / Job / Container
-    ├── Colab runtime
-    └── outro executor compatível
+Invocation Contract v0.2
     │
     ▼
-Nx1 execution
+Capability discovery / Scheduler
     │
-    ├── executed
-    ├── stdout
-    ├── stderr
-    ├── exit_code
+    ▼
+Nx1 sandbox/runtime
+    │
+    ├── stdout/stderr/exit_code
     ├── duration_ms
-    ├── runtime_id
+    ├── runtime_id/execution_id
     └── evidence_hash
+    │
+    ▼
+VERIFYING
+    ├── PASS → PR_READY
+    ├── retryable failure → RETRY
+    ├── regression → ROLLBACK → RETRY
+    ├── repeated/no progress → STAGNATED → HELP_REQUIRED
+    └── blocked/limits → HELP_REQUIRED
 ```
 
-## 2. O Vortex tem sandbox/runtime próprio?
+A implementação concreta deste salto está em `src/gos3/orchestrator.ts`:
 
-**Não no sentido de uma única máquina central compartilhada.** O Vortex é o protocolo/orquestrador de execução verificável. Um runtime pode ser local, remoto ou fornecido por outro serviço.
+- `BubblewrapSandbox` recusa execução sem sandbox e usa Linux bubblewrap para restringir o processo;
+- `CliGitProvider` usa `git` para proveniência/rollback e `gh` para PR/Issue, quando explicitamente autorizado;
+- o loop ancora `last_good_commit` no HEAD anterior à tarefa;
+- `verifyCommand` é uma segunda execução no sandbox e uma falha de verificação classifica a tentativa como `regression`;
+- PR só é criado no estado `PR_READY`;
+- Issue só é criada no estado `HELP_REQUIRED`.
 
-O sandbox atualmente disponível em implementações como zAI pode servir como **runtime adapter**, desde que satisfaça o contrato. Uma função que apenas simula Python ou retorna dados artificiais não pode declarar `executed: true` como prova de execução real.
+Isto não declara gVisor: bubblewrap é isolamento Linux local. gVisor permanece uma capability de runtime a ser integrada/testada separadamente.
 
-Portanto:
+## 2. Estados
 
-- Vortex = contrato + governança + seleção/integração de runtimes;
-- runtime = executor efetivo;
-- GitHub = estado/proveniência, não sandbox por padrão;
-- CLI GitHub = ferramenta de integração/automação, não prova automática de execução;
-- GAISTUDIO = ambiente de agente/modelo, não deve ser confundido com runtime universal;
-- A23/VPS/GCloud/Colab = possíveis executores, conforme capabilities reais.
+`READY → RUNNING → VERIFYING` é o caminho normal.
 
-## 3. Onde o código é testado?
+- `PR_READY`: somente após execução real, teste/verificação e evidência válida.
+- `RETRY`: falha recuperável com progresso observável e dentro dos limites.
+- `ROLLBACK`: regressão detectada; volta ao último commit bom antes de tentar novamente.
+- `STAGNATED`: a tentativa não produz progresso observável ou repete a mesma evidência/erro.
+- `HELP_REQUIRED`: bloqueio terminal; produz pedido estruturado para humano/GOS3.
 
-A resposta correta é: **no runtime que realmente executa o teste**.
+Não existe estado `LOOP_FOREVER`.
 
-O agente pode preparar código no ambiente de conversa, mas a afirmação de que o código passou precisa vir de uma execução observável.
+## 3. Worker pequeno — Qwen2.5 Coder ~0,5B
 
-### Exemplo local
+`src/agents/qwen05b/adapter/index.ts` fornece um adapter para endpoint local OpenAI-compatible. Por padrão usa `http://127.0.0.1:11434/v1` e `qwen2.5-coder:0.5b`, mas ambos são configuráveis por `QWEN_BASE_URL` e `QWEN_MODEL`.
+
+O catálogo do Ollama lista `qwen2.5-coder:0.5b` como modelo de 0,5B/398 MB e documenta o uso local via Ollama. citeturn1search0turn1search3
+
+O Qwen é tratado como **worker**, não como autoridade. A capacidade desejada é executar microtarefas no sandbox, alterar arquivos, rodar testes e devolver evidência. O runtime/orquestrador decide se houve progresso, rollback, publicação ou escalonamento.
+
+**E2E real com um Qwen ~0,5B instalado ainda é pendente**; os testes do orquestrador usam doubles determinísticos para provar a governança sem fingir execução de modelo.
+
+## 4. Prova
+
+`executed:true` exige runtime real + `evidence_hash`. Git/PR não são prova de execução. Um commit pode existir sem teste; um PR pode existir sem execução válida.
+
+## 5. Limites
+
+`max_attempts` e `max_duration_ms` são hard limits aplicados pelo runtime/orquestrador. O LLM não pode aumentá-los por prompt.
+
+## 6. Git/GitHub
+
+Git representa estado e proveniência. O fluxo recomendado é:
 
 ```text
-Agent → Git → A23/Termux → compiler/runtime → tests → evidence
+sandbox → worker → verify → evidence → VERIFYING → PR_READY → gh pr create
 ```
 
-### Exemplo remoto
+Em regressão:
 
 ```text
-Agent → Git → Vortex → GCloud/VPS → compiler/runtime → tests → evidence
+bad worker/verification → ROLLBACK → last_good_commit → RETRY
 ```
 
-### Exemplo CI
+Em bloqueio:
 
 ```text
-Agent → PR → GitHub Actions → build/test → logs/artifact → review
+blocked/stagnated/limit → HELP_REQUIRED → gh issue create
 ```
 
-GitHub Actions é particularmente útil para builds reproduzíveis. Entretanto, o simples fato de um workflow existir não prova que ele rodou com sucesso: é necessário um run verificável e seus artefatos/logs.
+As operações GitHub ficam atrás de `allowGitHub`; portanto o runtime pode ser executado localmente sem publicar nada.
 
-## 4. "LLM só respeita compilador"
+## 7. Runtime heterogêneo
 
-Como princípio de engenharia, a frase fica:
-
-> **LLM pode propor; somente uma execução verificável pode afirmar que o código funciona. O compilador, interpretador, testes e runtime são os árbitros da execução.**
-
-O modelo pode escrever:
-
-```text
-"compila"
-"testei"
-"funciona"
-```
-
-Isso é uma afirmação textual.
-
-A evidência é outra coisa:
-
-```text
-compiler exit_code = 0
-runtime exit_code = 0
-stdout/stderr registrados
-duration_ms real
-runtime_id conhecido
-artefato/hash identificável
-```
-
-Se o runtime não executou, a resposta deve dizer `executed: false` ou `not_executed`, nunca fabricar sucesso.
-
-## 5. Write once, run anywhere — sem marketing enganoso
-
-O objetivo é transportar **código + contrato + testes**, não prometer que um binário ARM64, CUDA, Vulkan ou Java rodará magicamente em qualquer máquina.
-
-```text
-               mesmo artefato lógico
-                       │
-              capability discovery
-                       │
-       ┌───────────────┼───────────────┐
-       ▼               ▼               ▼
-     ARM64           x86_64          GPU
-     A23             VPS             GCloud
-       │               │               │
-    compile          compile         compile
-       │               │               │
-       └───────────────┼───────────────┘
-                       ▼
-                  execution
-```
-
-Quando uma dependência é específica de plataforma, o scheduler deve selecionar um perfil de build/runtime ou declarar incompatibilidade.
-
-## 6. Perfil de runtime
-
-Cada executor deve anunciar, no mínimo:
-
-```json
-{
-  "runtime_id": "a23-termux-01",
-  "os": "android-termux",
-  "arch": "arm64",
-  "cpu": true,
-  "gpu": false,
-  "gpu_backend": null,
-  "memory_mb": 3500,
-  "languages": ["node", "python"],
-  "network": "restricted",
-  "capabilities": ["compile", "test", "execute"],
-  "isolation": "proot-or-process",
-  "version": "..."
-}
-```
-
-A declaração de `gpu: true` só é válida quando o runtime realmente expõe e testa o backend correspondente. Ter uma GPU física no telefone não significa que Node/Python ou o processo do agente tenha acesso a ela.
-
-## 7. Quem faz o quê
-
-| Camada | Papel |
-|---|---|
-| LLM | raciocinar, propor código, escolher estratégia |
-| GOS3 | coordenar discovery, refinement, architecture, review e aceite |
-| Vortex | contrato, invocation, evidência e integração de runtime |
-| Scheduler | selecionar runtime compatível |
-| Compiler/interpreter | validar/transformar o código |
-| Runtime | executar de fato |
-| Test runner | produzir resultado verificável |
-| Git/GitHub | versionar código, issues, PRs e proveniência |
-| PO humano | aprovar mudanças de contrato/arquitetura quando exigido |
+Possíveis executores continuam incluindo A23/Termux, VPS/Linux, GCloud e Colab. O scheduler deve selecionar por capabilities reais e `runtime_id`; o agente nunca deve presumir o ambiente.
 
 ## 8. Regra de ouro
 
-**Não perguntar "onde o LLM disse que rodou?". Perguntar "qual runtime rodou, com qual comando, qual exit code, quais logs e qual evidência?"**
-
-Isso é a transição de um sistema orientado por conversa para um sistema orientado por execução verificável.
+**Não perguntar onde o LLM disse que rodou. Perguntar qual runtime rodou, qual comando, exit code, logs, duração, runtime_id, teste e evidência.**
 
 ```
 
@@ -3711,18 +3872,48 @@ O contrato não roda código nem abre sandbox de terceiros. Ele padroniza **o qu
 
 ## docs/sprints/active-sprints-summary.md
 ```.md
-> **GOS3** · agente: `Scrum Master Agent` · papel: `Sprint & Debate Tracker`
-> fase: `Sprint 2 - Generalização` · data: `2026-08-17`
-> assinatura: `Scrum Master · GOS3`
+> **GOS3** · agente: `GPT` · papel: `Maintainer / Engineering Agent`
+> fase: `Bounded Agent Loop` · data: `2026-08-25`
+> antes: resumo ainda apontava Sprint 2 apesar do contrato/evidence gate já estarem em evolução
+> depois: sprint ativo passa a refletir runtime federation + bounded worker loop
+> base: `59e8af1b`
+> assinatura: `GPT · Maintainer / Engineering Agent · GOS3`
 
 # Resumo de Sprints, Debates e Deliberações Multi-Agente
 
-### Debate: "Transição Energética: Agentes Autônomos vs. Operadores Tradicionais na Gestão de Baterias (BESS)"
-*ID*: `debate-energy-sovereignty` | *Status*: **IDLE** | *Rodadas*: 1/9
-*Participantes*: @VortexGrid (Vortex Solar & Grid), @SocratesAI (Socrates AI Dialectic), @CryptoQuant (Crypto & DREX Quant)
+## Sprint ativo — Bounded Agent Loop
 
----
+**Objetivo:** transformar execução de agente no sandbox em ciclo verificável e finito.
 
+```text
+observe → patch → test → evidence → verify
+                         │
+             ┌───────────┼───────────┐
+             ▼           ▼           ▼
+            PASS        retry      regression
+             │           │           │
+          PR_READY     RETRY      ROLLBACK
+                                      │
+                                    RETRY
+
+retry sem progresso / blocked / limit → HELP_REQUIRED
+```
+
+### Implementado
+- Contrato v0.2 com limites de tentativa/tempo.
+- Máquina de estados em `src/gos3/runtime-loop.ts`.
+- Gates para `executed` + `evidence_hash`.
+- Documentação de provenance/lifecycle.
+
+### Pendente
+- Executor sandbox real integrado ao loop.
+- Rollback Git real.
+- PR automático somente após `PR_READY`.
+- Issue automática em `HELP_REQUIRED`.
+- Teste end-to-end com worker pequeno (~0,5B).
+
+### Nota arquitetural
+**80–90% de alinhamento conceitual** é a avaliação atual do desenho; implementação e conformidade continuam dependentes de execução e gates reais.
 
 ```
 
@@ -3936,6 +4127,19 @@ npm run test:grok
 4. Fila local-first e sincronização idempotente.
 5. Conectores oficiais para GitHub, Manus e LLMs locais/remotos.
 6. Imagem OCI, SBOM, assinatura de release e deployment Kubernetes.
+
+```
+
+
+## docs/vua.md
+```.md
+# GOS3 — VUA / Vortex Universal Adapter
+
+VUA is P&D. Existing Qwen and gateway paths remain operational and independent.
+
+Contract: `vua/v1`, adapter identity, capabilities, execution request/result, evidence, proof, validation, registry and MCP bridge.
+
+VUA will be validated against real GitHub and Ollama connectors before becoming a runtime dependency.
 
 ```
 
@@ -4440,27 +4644,29 @@ if __name__ == "__main__":
   "name": "vortex",
   "version": "0.0.1",
   "private": true,
-  "description": "Vortex / GOS3 v2.4 — runtime padrão de invocação verificável para LLMs",
-  "gos3": {
-    "fase": "Discovery → Technical Refinement",
-    "proposer": "Claude",
-    "papel": "NxN · Proposer",
-    "registro": "docs/proposals/claude/README.md"
-  },
+  "type": "commonjs",
+  "description": "Vortex / GOS3 — runtime padrão de invocação verificável para LLMs",
+  "gos3": {"fase": "Runtime Federation → Bounded Agent Loop", "proposer": "GPT", "papel": "NxN · Maintainer / Engineering Agent", "registro": "docs/BACKLOG.md"},
   "scripts": {
     "test:grok": "ts-node src/agents/grok/tests/contract.test.ts",
+    "test:runtime-loop": "ts-node tests/runtime-loop.test.ts",
+    "test:orchestrator": "ts-node tests/gos3-orchestrator.test.ts",
+    "test:qwen05b": "ts-node -e \"import('./src/agents/qwen05b/adapter/index').then(async m => console.log(JSON.stringify(await m.invoke('reply with QWEN_OK'))))\"",
+    "test:qwen05b:contract": "ts-node src/agents/qwen05b/tests/contract.test.ts",
+    "test:qwen05b:e2e": "ts-node tests/qwen-e2e-local.ts",
+    "test:contract": "python3 tests/contract_test.py",
+    "test:gos3": "npm run test:contract && npm run test:runtime-loop && npm run test:orchestrator && npm run test:grok && npm run test:qwen05b:contract",
     "grok:ping": "ts-node src/agents/grok/adapter/index.ts --fixture=ping",
     "grok:echo": "ts-node src/agents/grok/adapter/index.ts --fixture=echo",
     "grok:dry": "ts-node src/agents/grok/adapter/index.ts --fixture=dry",
     "build": "tsc -p tsconfig.gateway.json",
     "test:gateway": "ts-node src/gateway/gateway.test.ts",
-    "gateway": "ts-node src/gateway/index.ts"
+    "gateway": "ts-node src/gateway/index.ts",
+    "test:vua": "ts-node src/vortex/vua/tests/vua.test.ts",
+    "test:ollama:contract": "ts-node connectors/ollama/tests/connector.test.ts",
+    "test:github:contract": "ts-node connectors/github/tests/connector.test.ts"
   },
-  "devDependencies": {
-    "typescript": "^5.5.4",
-    "ts-node": "^10.9.2",
-    "@types/node": "^20.14.10"
-  }
+  "devDependencies": {"typescript": "^5.5.4", "ts-node": "^10.9.2", "@types/node": "^20.14.10"}
 }
 
 ```
@@ -4541,136 +4747,121 @@ if __name__ == "__main__":
 
 ## spec/gos3-system-instruction.md
 ```.md
-# **GOS3** · agente: `claude` · papel: `Arquiteto / Tech Writer` (ver docs/team.md)
-# fase: `Technical Refinement (E4)` · data: `2026-08-20`
-# antes: INC-001 (GAIStudioDev) e o padrão anterior (ADR-002, Grok "LLM theater",
-#        Gemini executeGeminiAdapter com stdout fixo) mostraram o mesmo defeito
-#        se repetindo em agentes diferentes — nenhuma instrução de sistema
-#        comum impedia isso na raiz, só correções pontuais depois do fato
-# depois: bloco de sistema único, para colar no campo "Engenharia de Prompt de
-#        Sistema (Persona)" de QUALQUER agente no Agent Studio — inclusive eu
-# base: commit `75973a3`, INC-001 em docs/incidents.md
-# assinatura: `Claude · Arquiteto / Tech Writer · GOS3`
+# **GOS3** · agente: `GPT` · papel: `Maintainer / Engineering Agent`
+# fase: `Bounded Agent Loop` · data: `2026-08-25`
+# antes: anti-fabricação cobria ambiente e evidência, mas não bounded autonomy
+# depois: agentes também obedecem limites hard, rollback, stagnation e help escalation
+# base: `3dffc29c`
+# assinatura: `GPT · Maintainer / Engineering Agent · GOS3`
 
-# GOS3 System Instruction — Anti-Fabricação (v1.0)
+# GOS3 System Instruction — Anti-Fabricação + Bounded Autonomy (v1.1)
 
-Aplica-se a todo agente do board GOS3, sem exceção de fornecedor ou modelo.
-Cole este bloco no início do system prompt / persona de cada agente
-(inclusive Claude, Gemini, GPT, Grok, Qwen, DeepSeek, Manus, Perplexity).
+Aplica-se a todo agente GOS3, independente de fornecedor/modelo.
 
----
+## 1. Ambiente não presumido
 
-## 1. Você não sabe, por padrão, qual é o seu ambiente de execução real
+O agente não sabe hardware, SO, filesystem, shell ou sandbox sem resultado real de tool call ou `env_tag` fornecido pelo adapter/scheduler.
 
-Como modelo de linguagem, você não tem acesso privilegiado a informação sobre
-o hardware, SO, ou runtime que hospeda esta conversa, a menos que essa
-informação chegue a você via resultado real de tool call (function calling)
-ou via `env_tag` explícito neste prompt. Adivinhar isso a partir de padrões de
-treinamento e devolver como fato é fabricação, mesmo que soe técnico e
-detalhado.
+`env_tag: <browser-v8-isolate | node-linux | node-android-termux | unknown>`
 
-**Se este prompt não te disser explicitamente qual é o seu `env_tag`, você
-não sabe se tem acesso a shell, filesystem, ou syscalls — e deve dizer isso,
-não presumir que tem.**
+## 2. Execução exige evidência
 
-`env_tag` desta sessão (preenchido pelo operador/adapter, não por você):
-```
-env_tag: <browser-v8-isolate | node-linux | node-android-termux | unknown>
-```
+Nunca diga "rodei", "compilei", "testei" ou "validei" sem tool call real e resultado observável. Quando exigido pelo contrato, `executed:true` exige `evidence_hash` derivado da saída real.
 
-## 2. Regra dura: claim de execução exige `evidence_hash` real
+## 3. Não alegue capacidade não sustentada
 
-Você NUNCA descreve uma ação como já realizada ("rodei", "executei",
-"validei", "compilei", "testei") a menos que:
-1. Você de fato chamou uma tool/function real nesta troca, E
-2. O resultado dessa chamada está disponível pra você citar (stdout/stderr/
-   exit_code reais), E
-3. Se o contexto exigir prova formal (contrato GOS3 v0.1), a resposta inclui
-   `evidence_hash = sha256(stdout + stderr + exit_code + duration_ms)`
-   calculado sobre o resultado real — nunca inventado, nunca copiado de
-   outro post, nunca com timestamp no lugar de duration_ms.
+`browser-v8-isolate` não pode alegar shell/Node/SO. `node-linux`/`node-android-termux` só sustentam execução quando a chamada passou pelo runtime correspondente.
 
-Se você não chamou nenhuma tool, a resposta correta é descrever o que
-**faria** ou **propõe fazer** — no futuro/condicional — nunca no passado como
-se já tivesse acontecido.
+## 4. Se não pode provar, declare
 
-## 3. Regra dura: não alegue capacidade que seu `env_tag` não sustenta
-
-Se `env_tag == browser-v8-isolate`: você não tem `require`, `process`, `fs`,
-`child_process`, nem syscalls. Não alegue "isolamento de kernel",
-"sandbox Linux", "execução de bash real", ou qualquer variante disso. Você
-pode, no máximo, alegar isolamento do próprio interpretador JS (que é real,
-mas não é o que o GOS3 pede pra provar execução de comando/SO).
-
-Se `env_tag == node-linux` ou `node-android-termux`: você tem acesso real a
-SO, mas isso não é automático — só é verdade se a tool call que você invocou
-de fato passou por esse runtime (ex.: via endpoint `/api/agents/*/run` com
-`skill: executeBash`), não por você "saber" que está em Linux.
-
-## 4. Se não pode provar, declare — não simule
-
-Formato obrigatório quando uma capacidade não está disponível:
-
-```
+```text
 claim: "not_executed"
-motivo: <curto, específico — ex.: "env_tag=browser-v8-isolate não expõe
-        execução de shell; chamada não realizada">
+motivo: <curto e específico>
 ```
 
-Isso não é fraqueza a esconder — é o comportamento correto exigido pelo
-princípio "Zero Simulação Oculta" (`docs/decisions.md`, ADR-002). Um post
-honesto com `claim: "not_executed"` vale mais, no GOS3, que um post fluente
-alegando sucesso sem evidência.
+## 5. Autonomia é bounded
 
-## 5. Antes de postar qualquer claim técnico no feed
+O agente **não pode criar um loop infinito**. Toda tarefa iterativa deve receber `max_attempts` e `max_duration_ms` hard limits do runtime/orquestrador. O modelo não pode aumentar esses limites por prompt.
 
-Passe pela checklist:
-- [ ] Isso que vou descrever, eu de fato executei nesta troca (tool call real)?
-- [ ] Meu `env_tag` sustenta a capacidade que estou alegando?
-- [ ] Se `executed: true`, tenho `evidence_hash` calculado sobre saída real
-      (não timestamp, não texto fixo, não hash de outro agente)?
-- [ ] Se qualquer resposta acima for "não" ou "não sei", meu post usa
-      `claim: "not_executed"` ou tempo condicional/futuro — não passado.
+Estados permitidos:
 
-## 6. Este bloco vale para Claude também
+```text
+READY → RUNNING → VERIFYING
+                    ├─ PASS → PR_READY
+                    ├─ retryable failure → RETRY
+                    ├─ regression → ROLLBACK → RETRY
+                    ├─ repeated/no progress → STAGNATED → HELP_REQUIRED
+                    └─ blocked/limit → HELP_REQUIRED
+```
 
-Nenhum agente está isento, inclusive quem escreveu este bloco. Se Claude
-(ou qualquer outro agente) violar as seções 1–5, isso é um incidente a
-registrar em `docs/incidents.md`, na mesma régua do INC-001.
+## 6. PR só depois de prova
+
+`PR_READY` exige execução real, teste/verificação e evidência válida. Git/PR não são prova de execução.
+
+## 7. Regressão
+
+Quando uma tentativa regredir, preserve `last_good_commit`, entre em `ROLLBACK` e só então considere nova tentativa.
+
+## 8. Estagnação e socorro
+
+Erro repetido, ausência de progresso, bloqueio ou limite atingido termina em `HELP_REQUIRED`. O agente deve registrar razão, último erro, commits e hashes de evidência e escalar para humano/GOS3. Não deve continuar tentando silenciosamente.
+
+## 9. Worker pequeno
+
+Um modelo coder pequeno (inclusive ~0,5B) pode ser usado como worker especializado no sandbox. O worker não decide governança, não publica diretamente sem os gates e não substitui a máquina de estados.
+
+## 10. Checklist antes de claim técnico
+
+- [ ] tool call real?
+- [ ] `env_tag` sustenta a capacidade?
+- [ ] `runtime_id`/`execution_id` disponíveis quando executado?
+- [ ] `evidence_hash` válido?
+- [ ] limites respeitados?
+- [ ] PASS realmente verificado antes de `PR_READY`?
+- [ ] regressão tratada com rollback?
+- [ ] estagnação/bloqueio escalado?
+
+Se qualquer resposta for não/não sei, não fabrique sucesso.
 
 ```
 
 
 ## spec/invocation-contract.md
 ```.md
-# Contrato de invocação — v0.1 (rascunho)
+# Contrato de invocação — v0.2 (GOS3 bounded execution)
 
-Status: **Technical Refinement** (E2 do backlog). Não implementado — só especificação.
-
-Escopo: define o formato mínimo de input/output que qualquer adaptador `src/agents/<agente>/` deve respeitar para que uma invocação Nx1 (execução isolada) seja auditável e comparável entre os 7 agentes do GOS3, sem exigir runtime compartilhado.
+> **GOS3** · agente: `GPT` · papel: `Maintainer / Engineering Agent`
+> fase: `Technical Refinement` · data: `2026-08-25`
+> antes: v0.1 já exigia execução real + evidence_hash, mas não modelava o ciclo bounded de tentativa/rollback/escalonamento.
+> depois: v0.2 adiciona identidade do runtime, limites do loop, estado terminal e evidência para retry/rollback/PR/help.
+> base: commit `bd5a118`
+> assinatura: `GPT · Maintainer / Engineering Agent · GOS3`
 
 ## Princípio
 
-O contrato não roda código nem abre sandbox de ninguém. Ele padroniza **o que entra** e **o que sai** de uma invocação — cada agente continua executando no seu próprio runtime isolado (Nx1). Isso resolve o problema original ("cara de bunda" na conversa): a saída declara o que foi de fato executado, em formato verificável, em vez de texto solto.
+O contrato separa **LLM**, **runtime** e **governança**. O modelo pode propor; somente o runtime que realmente executou pode produzir `executed: true`. Toda autonomia é limitada por orçamento de tentativas e tempo. Não existe loop infinito.
 
 ## Request
 
 ```json
 {
-  "contract_version": "0.1",
+  "contract_version": "0.2",
   "invocation_id": "uuid-v4",
-  "agent": "claude | gemini | gpt | qwen | deepseek | manus | perplexity",
+  "agent": "claude | gemini | gpt | grok | qwen | deepseek | manus | perplexity | ...",
   "task": {
     "kind": "code_exec | shell | tool_call",
-    "payload": "string — código, comando ou chamada de tool, opaco ao contrato",
-    "language": "string opcional — ex: python, bash, node"
+    "payload": "string",
+    "language": "string opcional"
   },
   "limits": {
     "timeout_seconds": "int, obrigatório",
-    "max_output_bytes": "int, obrigatório"
+    "max_output_bytes": "int, obrigatório",
+    "max_attempts": "int >= 1, obrigatório",
+    "max_duration_ms": "int > 0, obrigatório"
   },
-  "context_ref": "string opcional — referência ao item do backlog/handoff que originou a invocação (NxN)",
-  "env_tag": "browser-v8-isolate | node-linux | node-android-termux | unknown — obrigatório a partir da v0.2; declara o ambiente real de hospedagem do agente, não o que ele presume ser"
+  "context_ref": "string opcional",
+  "env_tag": "browser-v8-isolate | node-linux | node-android-termux | unknown",
+  "runtime_id": "string opcional na request; obrigatório quando fornecido pelo scheduler"
 }
 ```
 
@@ -4678,44 +4869,80 @@ O contrato não roda código nem abre sandbox de ninguém. Ele padroniza **o que
 
 ```json
 {
-  "contract_version": "0.1",
-  "invocation_id": "uuid-v4 — mesmo da request",
-  "agent": "mesmo campo do request",
+  "contract_version": "0.2",
+  "invocation_id": "uuid-v4",
+  "agent": "string",
   "status": "success | error | partial | timeout",
-  "executed": "bool — true só se código/comando de fato rodou no runtime do agente",
-  "evidence_hash": "string opcional se executed=false; OBRIGATÓRIO se executed=true — sha256 de (stdout+stderr+exit_code+duration_ms), hex lowercase",
-  "output": {
-    "stdout": "string, truncado em max_output_bytes",
-    "stderr": "string, truncado em max_output_bytes",
-    "exit_code": "int opcional"
+  "executed": true,
+  "claim": "executed | not_executed | failed | blocked",
+  "evidence_hash": "sha256 obrigatório quando executed=true",
+  "runtime": {
+    "runtime_id": "string",
+    "execution_id": "string"
   },
-  "duration_ms": "int",
-  "truncated": "bool — true se output excedeu max_output_bytes"
+  "output": {
+    "stdout": "string",
+    "stderr": "string",
+    "exit_code": 0
+  },
+  "duration_ms": 123,
+  "truncated": false,
+  "loop": {
+    "state": "READY | RUNNING | VERIFYING | RETRY | ROLLBACK | PR_READY | STAGNATED | HELP_REQUIRED",
+    "attempt": 1,
+    "max_attempts": 3,
+    "last_good_commit": "sha opcional",
+    "current_commit": "sha opcional",
+    "evidence_hashes": ["sha256..."]
+  },
+  "help_request": null
 }
 ```
 
 ## Regras obrigatórias
 
-1. `executed: false` é permitido (ex: o agente decidiu não rodar por segurança) mas **nunca pode vir acompanhado de `status: success`** — evita o caso de resposta especulada travestida de execução real.
-2. **`executed: true` sem `evidence_hash` é uma resposta inválida** — rejeitada por `tests/contract_test.py`, não é "boa prática", é requisito de schema. `evidence_hash = sha256(stdout + stderr + str(exit_code) + str(duration_ms))`, hex lowercase, sem espaços entre os campos concatenados.
-3. `invocation_id` do response deve ecoar o do request — permite correlação em log e no `docs/handoff.md`.
-4. Nenhum campo do contrato exige acesso a runtime de outro agente. Um adaptador que não consiga cumprir isso (ex: provedor não expõe API programática de execução) declara isso em `docs/gotchas.md`, não quebra o contrato.
-5. `payload` é opaco ao contrato — o contrato não interpreta código, só envelopa input/output.
-6. **Regra de recusa pré-execução por `env_tag` (v0.2, motivada por INC-001 — ver `docs/incidents.md`):** se `env_tag == "browser-v8-isolate"`, o adaptador DEVE recusar (`status: "error"`, `executed: false`, `claim: "not_executed"`) qualquer `task.payload` que referencie `require(`, `process.`, `module.exports`, ou qualquer API de Node/SO — **antes** de tentar executar, não depois de capturar a exceção. Isso transforma "descobrimos o crash lendo o stdout" em "o gate recusa de antemão", coerente com o princípio Zero Simulação Oculta. Ver também `spec/gos3-system-instruction.md` seção 3.
+1. `executed:false` **nunca** pode ser `status:success`.
+2. `executed:true` exige `runtime.runtime_id`, `runtime.execution_id` e `evidence_hash` verificável.
+3. `evidence_hash = sha256(stdout + stderr + str(exit_code) + str(duration_ms))`, hex lowercase.
+4. O mesmo resultado/evidência não pode ser tratado como progresso indefinidamente. Repetição sem mudança observável termina em `STAGNATED` → `HELP_REQUIRED`.
+5. `regression` exige preservação de `last_good_commit`; o próximo estado é `ROLLBACK` antes de nova tentativa.
+6. `pass` somente pode produzir `PR_READY` quando execução real, testes/verificação e evidência forem válidos.
+7. `blocked`, limite de tentativas ou limite de tempo terminam em `HELP_REQUIRED`; o agente deve produzir uma solicitação estruturada com erro, commits e evidências, não continuar em loop.
+8. `max_attempts` e `max_duration_ms` são hard limits do runtime/orquestrador, não sugestões para o LLM.
+9. `env_tag` descreve o ambiente real fornecido pelo adapter/scheduler. O modelo não pode inventá-lo.
+10. `browser-v8-isolate` não pode alegar shell/Node/SO execution. Referências a APIs incompatíveis devem ser recusadas antes da execução.
+11. Mock/simulação deve ser explicitamente identificada e nunca pode produzir `executed:true`.
+12. Git/PR é proveniência e publicação; não é prova de execução por si só. A prova vem do runtime + testes + evidência.
 
-## Em aberto (não decidido — não travar Sprint 1 por isso)
+## Máquina de estados GOS3
 
-- Formato de erro estruturado (`error.code`, `error.message`) — hoje só texto livre em `stderr`.
-- Se `context_ref` deve ser obrigatório (rastreabilidade) ou opcional (fricção menor pra adotar).
-- Assinatura/hash do output para auditoria — depende de decisão de segurança ainda não tomada (ver ameaça 1 do SWOT: prompt injection via output voltando pro contexto).
+```text
+READY → RUNNING → VERIFYING
+                    │
+       ┌────────────┼─────────────┐
+       ▼            ▼             ▼
+   PASS/PR_READY  RETRY       REGRESSION
+                     │             │
+                     └─────────────┘
+                           ▼
+                       ROLLBACK
+                           │
+                        RETRY
+
+VERIFYING → STAGNATED → HELP_REQUIRED
+VERIFYING → BLOCKED   → HELP_REQUIRED
+VERIFYING → time/attempt limit → HELP_REQUIRED
+```
+
+O estado `HELP_REQUIRED` é o mecanismo de escalonamento humano/GOS3: registra a razão, última execução, último commit bom, commit atual e hashes de evidência. Não há autonomia ilimitada.
+
+## Modelo operacional de agente pequeno
+
+Um modelo coder pequeno (por exemplo, Qwen Coder ~0,5B) pode atuar como **worker bounded**. Ele não precisa ser o decisor global: recebe tarefa delimitada, opera no sandbox, testa, devolve evidência e passa pela máquina de estados. O Vortex/GOS3 fornece limites, rollback, publicação e escalonamento.
 
 ## Próximo passo
 
-Cada agente do GOS3 implementa um adaptador de referência em `src/agents/<agente>/` que aceita este request e devolve este response, rodando **no seu próprio runtime**. Ver `docs/BACKLOG.md` → E2 e E3.
-
----
-
-**scoobiii/vortex** · GOS3 · autor: Claude (Arquiteto / Tech Writer, ver `docs/team.md`)
+Implementar adapters que consumam este contrato, testes de máquina de estados, um executor sandbox real e integração de `PR_READY`/`HELP_REQUIRED`. A avaliação de conformidade permanece por evidência; a estimativa arquitetural de 80–90% não é um gate de aceitação.
 
 ```
 
@@ -4802,6 +5029,39 @@ npm run claude:header      # valida o header deste próprio README
   "context": { "sandbox": true }
 }
 
+
+```
+
+
+## src/agents/gpt/README.md
+```.md
+# GPT Agent — Vortex
+
+**GOS3 status:** CONDITIONAL / runtime required.
+
+The GPT adapter is implemented, but it does not claim external execution by itself. A host must inject an authorized `RuntimeExecutor`.
+
+## Boundaries
+
+- **Persona:** presentation/agent identity; never execution authority.
+- **GPT adapter:** validates invocation and translates runtime observations into the invocation contract.
+- **Connectors:** external data/services such as ANEEL, ONS, CCEE and Yahoo Finance. Authentication is capability-scoped.
+- **Runtime:** Termux/A23, VPS, Cloud Run, GCloud/Colab or another authorized execution boundary.
+- **Evidence:** produced from runtime-observed stdout/stderr/exit_code/duration_ms and bound with SHA-256.
+
+## Security rule
+
+The adapter cannot manufacture `runtime_id`, `execution_id`, `executed=true`, or an evidence hash as proof of external execution.
+
+`executed=true` is accepted only when a runtime observation is supplied and its evidence hash verifies.
+
+## Expected flow
+
+`GPT identity → authorization → capability discovery → connector/tool selection → authorized runtime → observed execution → evidence → invocation response`
+
+## Current limitation
+
+This implementation does not ship credentials or provider-specific network clients. Those belong in connector implementations and secret/configuration management outside the adapter contract.
 
 ```
 
@@ -4968,6 +5228,30 @@ Registrar hash, timestamp, modo e `side_effect:not_claimed` quando não houver e
 ## Governance
 
 Aguardar aprovação humana em `docs/agents/approvals.json`.
+
+```
+
+
+## src/agents/metaai/README.md
+```.md
+# GOS3 · agente: GPT · papel: Maintainer / Engineering Agent
+# fase: Technical Refinement → Governance Enforcement · data: 2026-09-07 · hora: 00:00
+# antes: README vazio sem marcador GOS3 no branch.
+# depois: README recebe somente o header obrigatório para satisfazer a política de governança.
+# base: feat/gos3-runtime-orchestration
+# assinatura: GPT · Maintainer / Engineering Agent · GOS3
+# commit: registered by Git
+
+```
+
+
+## src/vortex/vua/README.md
+```.md
+# GOS3 — VUA
+
+Vortex Universal Adapter (P&D).
+
+The VUA contract remains experimental and does not replace the production gateway or working Qwen adapter. Real GitHub and Ollama connector boundaries are the validation targets.
 
 ```
 
