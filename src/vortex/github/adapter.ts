@@ -1,3 +1,6 @@
+// GOS3 · agente: GPT · papel: Maintainer / Engineering Agent
+// fase: Technical Refinement → Runtime Federation · regra: Mexeu → Testa → Valida → Publica
+
 import { GitHubCheck, GitHubPullRequestState, GitHubRepositoryState, GitHubValidationResult } from "./types";
 
 export interface GitHubAdapterOptions {
