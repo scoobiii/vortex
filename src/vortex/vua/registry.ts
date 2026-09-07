@@ -1,3 +1,5 @@
+// Vortex / GOS3 v2.4 — VUA Registry
+// Rule: mexeu → testa → valida → publica.
 import { UniversalAdapter } from './types';
 
 export interface AdapterDescriptor {
