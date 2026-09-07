@@ -15,6 +15,7 @@
  */
 
 import assert from "node:assert/strict";
+import crypto from "node:crypto";
 import {
   applyAgentChange,
   assertOnboarded,
@@ -54,14 +55,14 @@ validateOnboardHeader(blank.content, options.file);
 const readyBody = "export const answer = 41;\n";
 const ready = onboardFile(readyBody, options);
 assert.equal(ready.originalBody, readyBody);
-assert.equal(ready.header.antes, `sha256:${require("node:crypto").createHash("sha256").update(readyBody).digest("hex")}`);
+assert.equal(ready.header.antes, `sha256:${crypto.createHash("sha256").update(readyBody).digest("hex")}`);
 assert.match(ready.content, /^\/\*\n \* GOS3\n/);
 
 const changed = applyAgentChange(ready, "export const answer = 42;\n", { date: "2026-09-07", time: "20:31" });
 assert.equal(changed.changed, true);
 assert.equal(changed.header.fase, "implementation");
 assert.equal(changed.header.antes, ready.originalHash);
-assert.equal(changed.header.depois, `sha256:${require("node:crypto").createHash("sha256").update("export const answer = 42;\n").digest("hex")}`);
+assert.equal(changed.header.depois, `sha256:${crypto.createHash("sha256").update("export const answer = 42;\n").digest("hex")}`);
 assert.equal(changed.header.commit, "pending");
 assert.deepEqual(preflightChangedFile(changed.content, options.file), { header: changed.header, bodyHash: changed.finalHash });
 
@@ -70,11 +71,10 @@ expectThrow(() => validateOnboardHeader(changed.content, options.file), "phase m
 const tampered = changed.content.replace("answer = 42", "answer = 43");
 expectThrow(() => preflightChangedFile(tampered, options.file), "depois hash mismatch");
 
-const withoutHeader = readyBody;
-expectThrow(() => preflightChangedFile(withoutHeader, options.file), "canonical header is missing or invalid");
+expectThrow(() => preflightChangedFile(readyBody, options.file), "canonical header is missing or invalid");
 
 const fakeSession = { ...ready, phase: "implementation" as const };
-expectThrow(() => assertOnboarded(fakeSession as never), "must start at onboard");
+expectThrow(() => assertOnboarded(fakeSession as never), "agent must onboard");
 
 const python = onboardFile("print('ok')\n", { ...options, file: "scripts/example.py" });
 assert.match(python.content, /^# GOS3\n# arquivo: scripts\/example\.py\n/);
