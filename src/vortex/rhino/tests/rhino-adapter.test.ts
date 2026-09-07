@@ -33,15 +33,19 @@ assert.equal(bad.valid, false);
 assert.ok(bad.errors.some((error) => error.includes("invalid characters")));
 assert.ok(bad.errors.some((error) => error.includes("size[1]")));
 
-let received = "";
-const adapter = new RhinoAdapter({
-  async execute(scriptToRun) {
-    received = scriptToRun;
-    return { exit_code: 0, stdout: "ok", stderr: "", artifact_paths: ["/tmp/vortex-part.step"] };
-  }
+(async () => {
+  let received = "";
+  const adapter = new RhinoAdapter({
+    async execute(scriptToRun) {
+      received = scriptToRun;
+      return { exit_code: 0, stdout: "ok", stderr: "", artifact_paths: ["/tmp/vortex-part.step"] };
+    }
+  });
+  const result = await adapter.execute(proposal);
+  assert.equal(result.exit_code, 0);
+  assert.match(received, /VORTEX_RHINO_EXECUTION_READY/);
+  console.log("Rhino adapter tests: PASS");
+})().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
 });
-const result = await adapter.execute(proposal);
-assert.equal(result.exit_code, 0);
-assert.match(received, /VORTEX_RHINO_EXECUTION_READY/);
-
-console.log("Rhino adapter tests: PASS");
