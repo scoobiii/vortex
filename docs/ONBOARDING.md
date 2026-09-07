@@ -37,7 +37,7 @@ Override it with `VORTEX_DATA_DIR`.
 Check local state:
 
 ```bash
-npm install
+npm ci
 npm run build
 npm run vortex:status
 ```
@@ -46,10 +46,11 @@ No network is required for `build`, local proof persistence, or local status.
 
 ## 2. DevOps
 
-A deployment needs two independent concerns:
+A deployment has three independent concerns:
 
 1. a local connector/runtime that executes work and persists proofs;
-2. an optional remote sync receiver.
+2. an optional remote sync receiver;
+3. an optional GitHub control-plane adapter for repository/PR/CI validation.
 
 The remote receiver is not the execution runtime. It accepts validated proof/benchmark envelopes.
 
@@ -69,14 +70,19 @@ For GitHub-backed projects, keep GitHub as the repository/PR control plane rathe
 ```text
 local execution
     |
-    +--> local proof
+    +--> local proof + benchmark
     |
     +--> optional remote sync
     |
-    +--> GitHub integration / PR
+    +--> GitHub Adapter
+             |
+             +--> repository ref/commit
+             +--> PR state/head
+             +--> CI checks
+             +--> Vortex validation
 ```
 
-A GitHub connection should be used to read repository state, publish an approved change, and let CI/PR protections perform remote validation. It should not be required merely to run a local command or retain its proof.
+The first GitHub Adapter is read-only. It validates repository state, PR state and CI; it does not create commits or merge PRs.
 
 ## 3. Agent
 
@@ -94,6 +100,7 @@ IDENTITY
   -> PROOF HASH
   -> LOCAL PERSISTENCE
   -> OPTIONAL SYNC
+  -> GITHUB/CI STATE
   -> VORTEX VALIDATION
 ```
 
@@ -116,21 +123,23 @@ Agent/App
 When connectivity returns:
 
 ```text
-pending proof
+pending proof/benchmark
   -> SyncWorker
   -> HTTPS POST /v1/sync
   -> remote validation
   -> accepted IDs
   -> local records marked synced
+  -> GitHub Adapter
+  -> repository + PR + CI validation
 ```
 
 A rejected record remains available for inspection and is not silently converted to success.
 
 ## 5. GitHub online mode
 
-GitHub is an adapter/control-plane integration, not the local database.
+GitHub is an adapter/control-plane integration, not the local database and not the execution runtime.
 
-The recommended online flow is:
+The complete flow is:
 
 ```text
 LOCAL CONNECTOR
@@ -139,24 +148,36 @@ LOCAL CONNECTOR
       |
       +--> Benchmark
       |
-      +--> sync
+      +--> durable local queue
+      v
+NETWORK RETURNS
+      |
+      +--> /v1/sync
       v
 VORTEX REMOTE VALIDATOR
       |
-      +--> repository state / policy validation
+      +--> repository state
+      +--> policy validation
+      v
+GITHUB ADAPTER
+      |
+      +--> branch/ref commit
+      +--> Pull Request
+      +--> Check Runs / CI
+      v
+VORTEX VALIDATION
+      |
+      +--> commit matches proof
+      +--> CI completed/success
+      +--> PR open/head matches (when applicable)
+      v
+HUMAN / POLICY APPROVAL
       |
       v
-GITHUB
-      |
-      +--> branch / PR
-      +--> CI
-      +--> required checks
-      +--> human review
-      v
-    MERGE
+MERGE / DEPLOY
 ```
 
-This preserves the distinction between evidence synchronization and source-control authority.
+This closes the distinction between `proof synchronization` and `GitHub source-control authority`.
 
 ## 6. Local development
 
@@ -169,8 +190,14 @@ git fetch origin
 git switch --track origin/feat/local-first-execution-proof
 npm ci
 npm run build
-npm run test:local-first
-npm run vortex:status
+npm run test
+```
+
+The test suite now covers:
+
+```text
+npm run test:github  -> GitHub repository/PR/CI adapter
+npm run test:e2e     -> offline -> reconnect -> sync -> GitHub/CI -> validation
 ```
 
 To return to main:
@@ -180,7 +207,7 @@ git switch main
 git pull --ff-only
 ```
 
-The CI gate for the feature runs `npm run build` and `npm run test:local-first`.
+The CI gate for the feature runs build plus the complete test suite.
 
 ## 7. First local smoke test
 
@@ -199,3 +226,4 @@ The command should report `mode: offline-first` and the selected data directory.
 - Do not execute commands from `/v1/sync` payloads.
 - Keep local data permissions restricted to the runtime user.
 - Treat repository state, policy version, execution evidence, and change hash as separate validation inputs.
+- Treat a GitHub check as validation evidence, not as permission to merge by itself.
