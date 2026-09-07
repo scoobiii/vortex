@@ -1,9 +1,10 @@
-# GOS3 · agente: GPT · papel: Maintainer / Engineering Agent
-# fase: Technical Refinement → Governance Enforcement · data: 2026-09-05
-# antes: o workflow validava headers e contrato, mas não verificava a existência das invariantes do protocolo de mudança.
-# depois: o workflow também executa o teste automatizado da política Mexeu → Testa → Valida → Publica.
-# base: commit `main`
-# assinatura: GPT · Maintainer / Engineering Agent · GOS3
+# GOS3 · agente: agent/llm · papel: Engineering Agent · PO: scoobiii
+# fase: Technical Refinement → Governance Enforcement · data: 2026-09-07 · hora: registrada pelo Git
+# antes: o workflow aceitava qualquer ocorrência de GOS3 nas primeiras 20 linhas e ignorava headers ausentes em arquivos legados alterados.
+# depois: o workflow delega a validação do contrato GOS3 ao checker canônico e falha em qualquer arquivo de texto alterado sem os campos obrigatórios.
+# base: commit `feat/rhino-cad-connector`
+# assinatura: agent/llm · Engineering Agent · GOS3
+# commit: registrado pelo Git no commit que contém esta alteração.
 
 name: gos3-compliance
 
@@ -25,7 +26,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Validate GOS3 headers on new text files
+      - name: Validate GOS3 headers on changed text files
         shell: bash
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -38,42 +39,7 @@ jobs:
             echo "No base commit available; cannot verify changed files."
             exit 1
           fi
-
-          mapfile -t files < <(git diff --name-only "$BASE_SHA"...HEAD)
-          failures=0
-          for file in "${files[@]}"; do
-            [[ -f "$file" ]] || continue
-            case "$file" in
-              *.png|*.jpg|*.jpeg|*.gif|*.webp|*.ico|*.zip|*.gz|*.tar|*.pdf|*.woff|*.woff2)
-                echo "SKIP binary: $file"
-                continue
-                ;;
-            esac
-
-            # Existing files may predate the GOS3 header convention. They are
-            # grandfathered; every newly introduced text file must carry GOS3.
-            if git cat-file -e "$BASE_SHA:$file" 2>/dev/null; then
-              if head -n 20 -- "$file" | grep -qE 'GOS3'; then
-                echo "PASS: $file"
-              else
-                echo "WARN legacy file without GOS3 header: $file"
-              fi
-              continue
-            fi
-
-            if head -n 20 -- "$file" | grep -qE 'GOS3'; then
-              echo "PASS new file: $file"
-            else
-              echo "FAIL new file missing GOS3 header: $file"
-              failures=$((failures + 1))
-            fi
-          done
-
-          if (( failures > 0 )); then
-            echo "check-headers: FAIL ($failures new file(s))"
-            exit 1
-          fi
-          echo "check-headers: PASS"
+          BASE_SHA="$BASE_SHA" node scripts/governance/check_header.js
 
   contract-gate:
     runs-on: ubuntu-latest
