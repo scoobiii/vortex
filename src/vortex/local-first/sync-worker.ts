@@ -1,3 +1,5 @@
+// Vortex / GOS3 v2.4 — Local-first Runtime
+// Rule: mexeu → testa → valida → publica.
 import { LocalFirstStore } from "./store";
 import { SyncTransport, syncOnce } from "./sync";
 
