@@ -146,7 +146,20 @@ function parseHeader(headerText: string | null): Gos3Header | null {
   }
   if (!REQUIRED_KEYS.every((key) => values[key])) return null;
   if (values.fase !== "onboard" && values.fase !== "implementation") return null;
-  return values as Gos3Header;
+  return {
+    arquivo: values.arquivo,
+    responsabilidade: values.responsabilidade,
+    agente: values.agente,
+    papel: values.papel,
+    fase: values.fase,
+    data: values.data,
+    hora: values.hora,
+    antes: values.antes,
+    depois: values.depois,
+    base: values.base,
+    assinatura: values.assinatura,
+    commit: values.commit,
+  };
 }
 
 export function parseGos3Header(content: string): Gos3Header | null {
