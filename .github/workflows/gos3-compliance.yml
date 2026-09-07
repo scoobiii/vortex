@@ -1,7 +1,7 @@
 # GOS3 · agente: GPT · papel: Maintainer / Engineering Agent
 # fase: Technical Refinement → Real Qwen CI · data: 2026-09-07 · hora: 00:00
-# antes: CI validava o adapter Qwen apenas de forma indireta; não havia execução real do modelo no runner.
-# depois: CI executa Qwen 0.5B real no runner, captura digest do runtime e manifesto do modelo e publica evidência.
+# antes: CI tentava localizar manifesto em um caminho fixo que não corresponde ao usuário do serviço Ollama.
+# depois: CI obtém o caminho do blob pelo modelfile real e calcula SHA-256 do binário do runtime e do blob Qwen efetivamente instalado.
 # base: feat/gos3-runtime-orchestration
 # assinatura: GPT · Maintainer / Engineering Agent · GOS3
 # commit: registered by Git
@@ -137,14 +137,15 @@ jobs:
           runtime_version="$(ollama --version | tr -d '\r')"
           runtime_binary="$(command -v ollama)"
           runtime_digest="sha256:$(sha256sum "$runtime_binary" | awk '{print $1}')"
-          manifest_root="${OLLAMA_MODELS:-$HOME/.ollama/models}/manifests"
-          manifest_file="$(find "$manifest_root" -type f -path '*qwen2.5-coder*0.5b' -print -quit)"
-          if [[ -z "$manifest_file" ]]; then
-            echo "Qwen model manifest not found under $manifest_root"
-            find "$manifest_root" -maxdepth 5 -type f 2>/dev/null | head -50 || true
+          modelfile="$(mktemp)"
+          ollama show --modelfile qwen2.5-coder:0.5b > "$modelfile"
+          model_blob="$(awk '$1 == "FROM" {print $2; exit}' "$modelfile")"
+          if [[ -z "$model_blob" || ! -f "$model_blob" ]]; then
+            echo "Qwen model blob not found from ollama show --modelfile"
+            cat "$modelfile"
             exit 1
           fi
-          model_digest="sha256:$(sha256sum "$manifest_file" | awk '{print $1}')"
+          model_digest="sha256:$(sha256sum "$model_blob" | awk '{print $1}')"
           {
             echo "QWEN_MODEL=qwen2.5-coder:0.5b"
             echo "QWEN_BASE_URL=http://127.0.0.1:11434/v1"
@@ -154,9 +155,9 @@ jobs:
             echo "QWEN_MODEL_DIGEST=$model_digest"
           } >> "$GITHUB_ENV"
           echo "Qwen runtime: $runtime_version"
-          echo "Qwen runtime digest: $runtime_digest"
-          echo "Qwen model manifest: $manifest_file"
-          echo "Qwen model manifest digest: $model_digest"
+          echo "Qwen runtime binary digest: $runtime_digest"
+          echo "Qwen model blob: $model_blob"
+          echo "Qwen model blob digest: $model_digest"
       - name: Execute real Qwen E2E
         run: npm run test:qwen05b:e2e
       - name: Upload Qwen execution evidence
