@@ -1,3 +1,4 @@
+// GOS3 · Vortex Foundation conformance artifact
 /**
  * spec/authorization.md, spec §15 (Approval).
  * "tenho acesso" != "estou autorizada a executar": this module is the

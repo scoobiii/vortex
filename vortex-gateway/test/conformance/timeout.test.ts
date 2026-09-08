@@ -1,3 +1,4 @@
+// GOS3 · Vortex Foundation conformance artifact
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { executeWithTimeout, ExecutionTimeoutError, DEFAULT_EXECUTION_TIMEOUT_MS } from "../../src/executor.js";

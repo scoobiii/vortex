@@ -1,3 +1,4 @@
+// GOS3 · Vortex Foundation conformance artifact
 import type { InvokeRequest } from "./types.js";
 
 export interface ValidationResult {

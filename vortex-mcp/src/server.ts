@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// GOS3 · Vortex Foundation conformance artifact
 /**
  * Vortex MCP server — spec §16/§17. Every tools/call is validated
  * through VortexEngine.handle() before any connector runs; the MCP

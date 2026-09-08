@@ -1,3 +1,4 @@
+// GOS3 · Vortex Foundation conformance artifact
 import { canonicalize, hashValue, sha256Hex } from "./canonicalize.js";
 import type { ExecutionProof, ExecutionStatus } from "./types.js";
 

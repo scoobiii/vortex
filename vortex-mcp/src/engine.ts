@@ -1,3 +1,4 @@
+// GOS3 · Vortex Foundation conformance artifact
 /**
  * VortexEngine — implements spec §4 (REQUEST -> IDENTITY -> AUTHORIZATION
  * -> LIMITS -> ONBOARD -> EXECUTION -> PROOF -> VERIFICATION) as a single
@@ -120,9 +121,12 @@ export class VortexEngine {
       const err = e instanceof VortexError ? e : new VortexError("EXECUTION_ERROR", (e as Error).message);
       output = { error: err.message };
       status = err.status;
-      // executed stays true: dispatch() was called before this branch could
-      // be reached (either it threw synchronously-inside-async, or the
-      // sandbox timeout fired after dispatch had already started).
+      // Sandbox/policy rejection is a pre-execution denial: the connector
+      // could not perform the requested effect. Timeouts and other connector
+      // failures remain executed=true because dispatch had already started.
+      if (err.status === "SANDBOX_DENIED" || err.status === "POLICY_DENIED") {
+        executed = false;
+      }
     }
 
     // request_id was already reserved atomically at step 1 — no separate

@@ -1,3 +1,4 @@
+// GOS3 · Vortex Foundation conformance artifact
 import { randomUUID } from "node:crypto";
 import type {
   Authenticator,

@@ -1,4 +1,5 @@
 {
+  "_gos3_header": "GOS3 · Vortex Foundation conformance artifact",
   "compilerOptions": {
     "target": "ES2022",
     "module": "NodeNext",
@@ -12,7 +13,12 @@
     "sourceMap": false,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "types": ["node"]
+    "types": [
+      "node"
+    ]
   },
-  "include": ["src/**/*.ts", "test/**/*.ts"]
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts"
+  ]
 }

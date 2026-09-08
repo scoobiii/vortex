@@ -1,3 +1,4 @@
+// GOS3 · Vortex Foundation conformance artifact
 import type { ConnectorContext, VortexConnector } from "../src/types.js";
 import { Gateway } from "../src/gateway.js";
 import { StaticTokenAuthenticator } from "../src/auth.js";

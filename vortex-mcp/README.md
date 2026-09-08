@@ -1,3 +1,5 @@
+> **GOS3** · Vortex Foundation conformance artifact
+
 # Vortex MCP — Reference Implementation
 
 TypeScript reference implementation of the **Vortex MCP Execution

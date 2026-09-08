@@ -1,3 +1,5 @@
+> **GOS3** · Vortex Foundation conformance artifact
+
 # Connector
 
 ## Contract

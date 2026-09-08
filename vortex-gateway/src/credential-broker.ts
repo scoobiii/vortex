@@ -1,3 +1,4 @@
+// GOS3 · Vortex Foundation conformance artifact
 import type { CredentialGrant } from "./types.js";
 
 export class UnknownCredentialError extends Error {

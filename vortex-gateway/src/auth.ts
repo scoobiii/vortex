@@ -1,3 +1,4 @@
+// GOS3 · Vortex Foundation conformance artifact
 import type { AuthContext, Authenticator } from "./types.js";
 
 /**

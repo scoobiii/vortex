@@ -1,3 +1,4 @@
+// GOS3 · Vortex Foundation conformance artifact
 /**
  * spec/key-discovery.md — this reference implementation declares the
  * "registry" mechanism: a local JSON-backed map of key_id -> public key.

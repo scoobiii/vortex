@@ -1,3 +1,4 @@
+// GOS3 · Vortex Foundation conformance artifact
 /** Best-effort field extraction from a possibly-malformed raw request, for proof purposes only. */
 export function bestEffortField(raw: unknown, key: string): string {
   if (typeof raw === "object" && raw !== null && !Array.isArray(raw)) {

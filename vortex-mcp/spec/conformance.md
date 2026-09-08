@@ -1,3 +1,5 @@
+> **GOS3** · Vortex Foundation conformance artifact
+
 # Vortex MCP Conformance — v1
 
 ## 1. Conformance rule

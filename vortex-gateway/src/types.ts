@@ -1,3 +1,4 @@
+// GOS3 · Vortex Foundation conformance artifact
 /**
  * Vortex Gateway — core contract types.
  *

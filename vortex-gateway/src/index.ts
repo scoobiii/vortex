@@ -1,3 +1,4 @@
+// GOS3 · Vortex Foundation conformance artifact
 export * from "./types.js";
 export * from "./canonicalize.js";
 export * from "./proof.js";

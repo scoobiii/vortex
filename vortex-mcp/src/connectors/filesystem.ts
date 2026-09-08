@@ -1,3 +1,4 @@
+// GOS3 · Vortex Foundation conformance artifact
 import { readFile, writeFile, stat } from "node:fs/promises";
 import type { VortexConnector } from "../connector.js";
 import type { CapabilityDeclaration, SandboxScope } from "../types.js";

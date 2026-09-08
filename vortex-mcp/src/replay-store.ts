@@ -1,3 +1,4 @@
+// GOS3 · Vortex Foundation conformance artifact
 /**
  * spec §14 Anti-replay: "proof válido != proof executável novamente".
  *

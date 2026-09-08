@@ -1,3 +1,5 @@
+> **GOS3** · Vortex Foundation conformance artifact
+
 # Vortex Foundation Integration Specification v1
 
 ## 1. Purpose

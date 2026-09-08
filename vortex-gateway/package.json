@@ -1,12 +1,16 @@
 {
+  "_gos3_header": "GOS3 · Vortex Foundation conformance artifact",
   "name": "vortex-gateway",
   "version": "1.0.0",
   "description": "Reference implementation of the Vortex Gateway Specification v1 — the controlled execution boundary between governed requests and external or local capabilities.",
   "type": "module",
   "main": "dist/index.js",
-  "engines": { "node": ">=20.0.0" },
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "test": "npm run test:conformance",
     "test:conformance": "node --test dist/test/conformance/*.test.js",
     "test:coverage": "node --experimental-test-coverage --test dist/test/conformance/*.test.js",
     "pretest:conformance": "npm run build",

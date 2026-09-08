@@ -1,3 +1,5 @@
+> **GOS3** · Vortex Foundation conformance artifact
+
 # Vortex MCP Specification v1
 
 > Vortex MCP is the governance profile over MCP. It is a protocol contract, not a claim that every reference handler is already implemented.

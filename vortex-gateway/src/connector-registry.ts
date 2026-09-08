@@ -1,3 +1,4 @@
+// GOS3 · Vortex Foundation conformance artifact
 import type { VortexConnector } from "./types.js";
 
 export class UnknownConnectorError extends Error {

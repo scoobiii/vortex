@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// GOS3 · Vortex Foundation conformance artifact
 import { readFileSync } from "node:fs";
 import { KeyRegistry } from "./key-registry.js";
 import { verifyExecutionProof } from "./verifier.js";

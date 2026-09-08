@@ -1,3 +1,4 @@
+// GOS3 · Vortex Foundation conformance artifact
 import { verifyProofSignature } from "./identity.js";
 import type { KeyRegistry } from "./key-registry.js";
 import type { ExecutionProof } from "./types.js";

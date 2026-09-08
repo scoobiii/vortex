@@ -1,3 +1,5 @@
+> **GOS3** · Vortex Foundation conformance artifact
+
 # Execution Proof — Vortex MCP v1
 
 `ExecutionProof` is the accountability artifact of Vortex MCP. It records the governed request, execution identity, observed outcome, hashes, and cryptographic identity binding.

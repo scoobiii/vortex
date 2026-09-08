@@ -1,3 +1,4 @@
+// GOS3 · Vortex Foundation conformance artifact
 import { randomUUID } from "node:crypto";
 import { jcs, sha256Tagged } from "./canonicalize.js";
 import { signProof } from "./identity.js";

@@ -1,3 +1,4 @@
+// GOS3 · Vortex Foundation conformance artifact
 import { createHash } from "node:crypto";
 
 /**

@@ -1,3 +1,5 @@
+> **GOS3** · Vortex Foundation conformance artifact
+
 # Vortex Gateway
 
 Reference implementation of the **Vortex Gateway Specification v1** — the

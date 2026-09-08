@@ -1,3 +1,4 @@
+// GOS3 · Vortex Foundation conformance artifact
 /**
  * spec/identity.md — cryptographic identity, distinct from
  * human-readable identity ("P0 scoobiii : Agente GPT" is metadata,

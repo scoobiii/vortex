@@ -1,3 +1,4 @@
+// GOS3 · Vortex Foundation conformance artifact
 /**
  * spec/execution-proof.md §11 — Canonicalization.
  * Adopts JSON Canonicalization Scheme (JCS, RFC 8785) rather than a

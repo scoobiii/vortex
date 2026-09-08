@@ -1,3 +1,5 @@
+> **GOS3** · Vortex Foundation conformance artifact
+
 # Key Discovery — spec v1
 
 A verifier must be able to obtain the public key corresponding to an

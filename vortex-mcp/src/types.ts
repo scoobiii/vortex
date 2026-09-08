@@ -1,3 +1,4 @@
+// GOS3 · Vortex Foundation conformance artifact
 /**
  * Vortex MCP — Core normative types.
  * Mirrors spec/execution-proof.md, spec/authorization.md, spec/sandbox.md.

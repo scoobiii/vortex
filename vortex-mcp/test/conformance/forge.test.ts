@@ -1,3 +1,4 @@
+// GOS3 · Vortex Foundation conformance artifact
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { makeEngineFixture, ctxFor } from "../helpers.js";

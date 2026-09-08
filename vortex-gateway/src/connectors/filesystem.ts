@@ -1,3 +1,4 @@
+// GOS3 · Vortex Foundation conformance artifact
 import { readFile, writeFile, mkdir, realpath } from "node:fs/promises";
 import { dirname, resolve, relative, isAbsolute, basename } from "node:path";
 import type { ConnectorContext, VortexConnector } from "../types.js";

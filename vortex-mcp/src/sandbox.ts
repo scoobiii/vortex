@@ -1,3 +1,4 @@
+// GOS3 · Vortex Foundation conformance artifact
 /**
  * spec/sandbox.md §9. The spec deliberately does not mandate Docker,
  * VM, WASM, PRoot, etc. — only the observable property that an
