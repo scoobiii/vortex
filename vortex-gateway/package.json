@@ -1,0 +1,20 @@
+{
+  "name": "vortex-gateway",
+  "version": "1.0.0",
+  "description": "Reference implementation of the Vortex Gateway Specification v1 — the controlled execution boundary between governed requests and external or local capabilities.",
+  "type": "module",
+  "main": "dist/index.js",
+  "engines": { "node": ">=20.0.0" },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test:conformance": "node --test dist/test/conformance/*.test.js",
+    "test:coverage": "node --experimental-test-coverage --test dist/test/conformance/*.test.js",
+    "pretest:conformance": "npm run build",
+    "pretest:coverage": "npm run build"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.5.4",
+    "@types/node": "^22.5.0"
+  }
+}

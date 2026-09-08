@@ -1,0 +1,17 @@
+// GOS3 · Vortex Foundation benchmark gate
+{
+  "version": 1,
+  "baseline": "target base revision measured on the same CI runner",
+  "rules": {
+    "throughput_regression_max": 0.02,
+    "p95_regression_max": 0.05,
+    "p99_regression_max": 0.10,
+    "error_rate_absolute_increase_max": 0.001,
+    "stress_errors": 0,
+    "coverage_lines": 100,
+    "coverage_branches": 100,
+    "coverage_functions": 100
+  },
+  "merge_policy": "PRs must meet or improve the empirical base benchmark; any regression beyond these limits blocks merge.",
+  "provenance": "The baseline is the base commit, never a mutable PR-owned numeric file."
+}
