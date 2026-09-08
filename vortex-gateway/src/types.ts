@@ -28,12 +28,13 @@ export type ExecutionStatus =
   | "INVALID_REQUEST"
   | "UNKNOWN_CONNECTOR"
   | "UNKNOWN_OPERATION"
-  | "CREDENTIAL_DENIED";
+  | "CREDENTIAL_DENIED"
+  | "REPLAY_DENIED";
 
 /**
  * Observable, hash-committed record of what the Gateway did.
  * Produced for every request — including requests that never reached
- * execution (auth/validation/credential failures) — with executed=false
+ * execution (auth/validation/credential/replay failures) — with executed=false
  * in those cases. A proof is always produced; it is never optional.
  */
 export interface ExecutionProof {
