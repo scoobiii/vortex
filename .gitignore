@@ -12,3 +12,7 @@ repo_dump.md
 gos3-audit-vortex/
 gos3-audit-*/
 qwen-evidence.json
+.env.qwen-e2e
+*.zip
+qwen-*.json
+vortex-mcp/dist/
