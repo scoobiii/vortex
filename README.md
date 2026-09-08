@@ -217,16 +217,19 @@ Vortex → Qwen Adapter → Ollama → qwen2.5-coder:0.5b
                        provenance + evidence hash
 ```
 
-O E2E captura, quando disponível no ambiente:
+O E2E captura e exige proveniência operacional mínima:
 
 - modelo e digest;
-- versão do runtime;
+- versão reportada pelo runtime;
 - hash do binário/runtime;
 - execution id;
+- invocation id;
 - stdout/stderr;
 - exit code;
 - duração;
 - hash da evidência.
+
+### E2E real convencional
 
 ```bash
 npm ci
@@ -234,7 +237,46 @@ npm run test:qwen05b:contract
 npm run test:qwen05b:e2e
 ```
 
-O E2E exige Ollama funcional e o modelo `qwen2.5-coder:0.5b`. Mock não classifica esse fluxo como execução real.
+O E2E exige Ollama funcional, o modelo `qwen2.5-coder:0.5b` e `QWEN_MODEL_DIGEST`, `QWEN_RUNTIME_DIGEST` e `QWEN_RUNTIME_VERSION`. Mock não classifica esse fluxo como execução real.
+
+### E2E real com GOS3 sandbox
+
+O sandbox executa o onboarding **antes** da alteração e só aceita a mudança quando o Qwen executou com proveniência completa.
+
+```bash
+npm run test:qwen05b:sandbox:e2e
+```
+
+O fluxo verifica:
+
+- GOS3 onboarding antes da alteração;
+- fase inicial `onboard`;
+- `executed=true` e `exit_code=0`;
+- `invocation_id` e `execution_id`;
+- modelo e digest;
+- versão reportada pelo runtime;
+- hash do runtime/binário;
+- hash SHA-256 do corpo antes/depois;
+- cabeçalho GOS3 preservado;
+- preflight do artefato final;
+- `evidence_hash` de 64 hex caracteres;
+- artefato `qwen-sandbox-evidence.json`.
+
+A ausência de qualquer uma das três variáveis de proveniência (`QWEN_MODEL_DIGEST`, `QWEN_RUNTIME_DIGEST`, `QWEN_RUNTIME_VERSION`) faz o E2E falhar explicitamente.
+
+### Proveniência local
+
+Os valores devem vir do runtime efetivamente executado; não devem ser inventados nem substituídos silenciosamente por valores de outro ambiente.
+
+Exemplo:
+
+```bash
+export QWEN_MODEL_DIGEST="$(curl -fsS http://127.0.0.1:11434/api/tags | python3 -c 'import json,sys; d=json.load(sys.stdin); print(next(m["digest"] for m in d["models"] if m["name"]=="qwen2.5-coder:0.5b"))')"
+export QWEN_RUNTIME_VERSION="$(ollama --version | tr -d '\r')"
+export QWEN_RUNTIME_DIGEST="sha256:$(sha256sum "$(command -v ollama)" | awk '{print $1}')"
+```
+
+> **Importante:** `QWEN_RUNTIME_VERSION` registra a versão reportada pelo binário em execução. Se o pacote da distribuição tiver uma versão diferente, ambas devem ser distinguidas na análise; uma não deve ser apresentada como se fosse a outra.
 
 ---
 
@@ -333,7 +375,8 @@ GitHub Actions valida gates de:
 - Ollama contract;
 - GitHub contract;
 - Product Truth Matrix;
-- E2E real do Qwen com Ollama.
+- E2E real do Qwen com Ollama;
+- E2E real do Qwen no sandbox GOS3.
 
 Principais comandos locais:
 
@@ -476,7 +519,10 @@ npm run test:vua
 
 ```bash
 npm run test:qwen05b:e2e
+npm run test:qwen05b:sandbox:e2e
 ```
+
+Para execução real local, configure primeiro as três variáveis de proveniência descritas na seção **Qwen 0.5B — runtime funcional**.
 
 ### Build
 
