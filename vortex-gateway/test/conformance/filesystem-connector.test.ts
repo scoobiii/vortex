@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, writeFile as writeFileFs } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { FilesystemConnector, SandboxEscapeError } from "../../src/connectors/filesystem.js";
@@ -73,6 +73,57 @@ test("SANDBOX: an absolute path inside the sandbox is allowed", async () => {
     const abs = join(dir, "inside.txt");
     await assert.doesNotReject(() => conn.invoke({ path: abs, content: "x" }, { ...noopCtx, operation: "write" }));
   });
+});
+
+test("SBX-004: a symlink inside the sandbox pointing outside it is rejected on WRITE, and the external target is left untouched", async () => {
+  const { symlink, mkdtemp: mkdtempFs, readFile: readFileFs, rm: rmFs } = await import("node:fs/promises");
+  const outsideDir = await mkdtempFs(join(tmpdir(), "vortex-gw-outside-"));
+  try {
+    await withSandbox(async (dir) => {
+      const conn = new FilesystemConnector(dir);
+      const outsideTarget = join(outsideDir, "secret.txt");
+      await writeFileFs(outsideTarget, "untouched", "utf8");
+
+      const linkPath = join(dir, "escape-link");
+      await symlink(outsideTarget, linkPath);
+
+      await assert.rejects(
+        () => conn.invoke({ path: "escape-link", content: "PWNED" }, { ...noopCtx, operation: "write" }),
+        SandboxEscapeError
+      );
+
+      // The critical assertion: the string-based check alone would have
+      // allowed this (the literal path "escape-link" is inside the
+      // sandbox). Only a realpath-based check catches that the symlink's
+      // TARGET is outside. Prove the external file was never touched.
+      const content = await readFileFs(outsideTarget, "utf8");
+      assert.equal(content, "untouched", "symlink escape must not reach the real external file");
+    });
+  } finally {
+    await rmFs(outsideDir, { recursive: true, force: true });
+  }
+});
+
+test("SBX-004: a symlink inside the sandbox pointing outside it is rejected on READ", async () => {
+  const { symlink, mkdtemp: mkdtempFs, rm: rmFs } = await import("node:fs/promises");
+  const outsideDir = await mkdtempFs(join(tmpdir(), "vortex-gw-outside-"));
+  try {
+    await withSandbox(async (dir) => {
+      const conn = new FilesystemConnector(dir);
+      const outsideTarget = join(outsideDir, "secret.txt");
+      await writeFileFs(outsideTarget, "top secret content", "utf8");
+
+      const linkPath = join(dir, "escape-link-read");
+      await symlink(outsideTarget, linkPath);
+
+      await assert.rejects(
+        () => conn.invoke({ path: "escape-link-read" }, { ...noopCtx, operation: "read" }),
+        SandboxEscapeError
+      );
+    });
+  } finally {
+    await rmFs(outsideDir, { recursive: true, force: true });
+  }
 });
 
 test("SANDBOX: an unsupported operation throws", async () => {

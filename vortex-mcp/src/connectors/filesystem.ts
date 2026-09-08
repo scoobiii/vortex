@@ -1,5 +1,4 @@
 import { readFile, writeFile, stat } from "node:fs/promises";
-import { resolve } from "node:path";
 import type { VortexConnector } from "../connector.js";
 import type { CapabilityDeclaration, SandboxScope } from "../types.js";
 import { assertPathInScope } from "../sandbox.js";
@@ -35,8 +34,7 @@ export class FilesystemConnector implements VortexConnector {
       throw new VortexError("POLICY_DENIED", `connector cannot inspect operation '${operation}'`);
     }
     const path = String(args.path);
-    assertPathInScope(sandbox, path);
-    const abs = resolve(path);
+    const abs = await assertPathInScope(sandbox, path);
     const st = await stat(abs);
     if (st.isDirectory()) {
       return { type: "directory", path: abs };
@@ -62,8 +60,7 @@ export class FilesystemConnector implements VortexConnector {
       throw new VortexError("POLICY_DENIED", `connector cannot execute operation '${operation}'`);
     }
     const path = String(args.path);
-    assertPathInScope(sandbox, path);
-    const abs = resolve(path);
+    const abs = await assertPathInScope(sandbox, path);
     const content = String(args.content ?? "");
     await writeFile(abs, content, "utf8");
     return { path: abs, bytes_written: Buffer.byteLength(content, "utf8") };

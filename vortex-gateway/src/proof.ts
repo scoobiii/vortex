@@ -24,7 +24,10 @@ export interface BuildProofArgs {
  */
 export function buildProof(args: BuildProofArgs): ExecutionProof {
   const input_hash = hashValue(args.input);
-  const output_hash = args.executed && args.output !== undefined ? hashValue(args.output) : null;
+  // output_hash reflects whether real output exists, independent of `executed`.
+  // executed=true with status=ERROR/TIMEOUT still has output=null (the connector
+  // never produced a result) — that must NOT be confused with "no attempt was made".
+  const output_hash = args.output !== null && args.output !== undefined ? hashValue(args.output) : null;
   const duration_ms = args.completed_at.getTime() - args.started_at.getTime();
 
   const body = {

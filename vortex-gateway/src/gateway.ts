@@ -163,6 +163,12 @@ export class Gateway {
       return { ok: true, output, proof };
     } catch (err) {
       const status: ExecutionStatus = err instanceof ExecutionTimeoutError ? "TIMEOUT" : "ERROR";
+      // By this point executeWithTimeout() has already called connector.invoke() —
+      // the invocation genuinely occurred, whether it errored or overran its
+      // deadline. Reporting executed=false here would misrepresent "we never
+      // tried" as identical to "we tried and it failed", which defeats the
+      // accountability the ExecutionProof exists to provide (see spec:
+      // "executed = a execução do connector ocorreu, não status === OK").
       throw this.#reject({
         status,
         message: (err as Error).message,
@@ -172,6 +178,7 @@ export class Gateway {
         input: request.input,
         credential_id,
         started_at,
+        executed: true,
       });
     }
   }
@@ -185,13 +192,15 @@ export class Gateway {
     input: unknown;
     credential_id: string | null;
     started_at: Date;
+    /** True only when connector.invoke() actually ran (ERROR/TIMEOUT paths). */
+    executed?: boolean;
   }): GatewayError {
     const completed_at = new Date();
     const proof: ExecutionProof = buildProof({
       request_id: args.request_id,
       connector_id: args.connector_id,
       operation: args.operation,
-      executed: false,
+      executed: args.executed ?? false,
       status: args.status,
       input: args.input,
       output: null,

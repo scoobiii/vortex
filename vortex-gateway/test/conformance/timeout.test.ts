@@ -44,7 +44,7 @@ test("TIMEOUT: DEFAULT_EXECUTION_TIMEOUT_MS is a sane positive number", () => {
   assert.ok(DEFAULT_EXECUTION_TIMEOUT_MS > 0);
 });
 
-test("TIMEOUT: Gateway reports status TIMEOUT and executed=false when a connector overruns", async () => {
+test("TIMEOUT: Gateway reports status TIMEOUT and executed=TRUE when a connector overruns — the invocation started", async () => {
   const { gateway } = buildTestGateway({ delayMs: 200 });
   await assert.rejects(
     () =>
@@ -55,8 +55,12 @@ test("TIMEOUT: Gateway reports status TIMEOUT and executed=false when a connecto
     (err: unknown) => {
       assert.ok(err instanceof GatewayError);
       assert.equal(err.status, "TIMEOUT");
-      assert.equal(err.proof.executed, false);
+      // connector.invoke() was called and was still running when the deadline
+      // hit — the attempt genuinely happened. executed=false would hide that
+      // a possibly-partial side effect may exist from the abandoned call.
+      assert.equal(err.proof.executed, true, "a connector that started running before timing out DID execute");
       assert.equal(err.proof.status, "TIMEOUT");
+      assert.equal(err.proof.output_hash, null, "no successful output exists even though executed=true");
       return true;
     }
   );

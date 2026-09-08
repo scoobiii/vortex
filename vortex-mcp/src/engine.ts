@@ -62,12 +62,16 @@ export class VortexEngine {
   async handle(req: VortexRequest, connectorId: string): Promise<VortexResponse> {
     const startedAt = new Date();
 
-    // 1. Anti-replay — request_id must not have been consumed before.
+    // 1. Anti-replay — reserve request_id ATOMICALLY before any `await`
+    // below. This must be the very first thing handle() does: reserving
+    // and rejecting in the same synchronous call closes the check-then-act
+    // race that existed when reservation was deferred until after
+    // execution (see replay-store.ts).
     try {
-      this.replay.assertFresh(req.request_id);
+      this.replay.reserve(req.request_id);
     } catch (e) {
       const err = e as VortexError;
-      return this.deny(req, startedAt, err.status, err.message, connectorId, /* alreadyConsumed */ true);
+      return this.deny(req, startedAt, err.status, err.message, connectorId);
     }
 
     // 2. Identity is implicit here (single keypair per runtime); a
@@ -100,21 +104,29 @@ export class VortexEngine {
     // 5. Execution, bounded by sandbox timeout.
     let output: unknown;
     let status: import("./types.js").VortexStatus;
+    // `executed` means "connector.{inspect,propose,execute}() was actually
+    // invoked", NOT "status === success". Once dispatch() starts, the
+    // attempt genuinely happened even if it later throws or times out —
+    // conflating the two hides real (possibly partial) effects behind a
+    // false "nothing was tried" signal (see spec §18, Failure semantics).
     let executed = false;
     try {
-      output = await withTimeout(sandbox, () => this.dispatch(connector, req, sandbox));
-      executed = req.kind === "execute" || req.kind === "branch.write";
-      status = executed ? "EXECUTION_SUCCESS" : "AUTHORIZED";
+      output = await withTimeout(sandbox, () => {
+        executed = true; // dispatch is about to be invoked — mark before awaiting it
+        return this.dispatch(connector, req, sandbox);
+      });
+      status = req.kind === "execute" || req.kind === "branch.write" ? "EXECUTION_SUCCESS" : "AUTHORIZED";
     } catch (e) {
       const err = e instanceof VortexError ? e : new VortexError("EXECUTION_ERROR", (e as Error).message);
       output = { error: err.message };
       status = err.status;
+      // executed stays true: dispatch() was called before this branch could
+      // be reached (either it threw synchronously-inside-async, or the
+      // sandbox timeout fired after dispatch had already started).
     }
 
-    // 6. Consume request_id only after a determined outcome (success or
-    //    a definitive error) so a transient failure before this point
-    //    can be legitimately retried with the same request_id.
-    this.replay.consume(req.request_id);
+    // request_id was already reserved atomically at step 1 — no separate
+    // consume() call here (that gap was the race condition).
 
     const completedAt = new Date();
     const proof = buildAndSignProof({
@@ -157,11 +169,9 @@ export class VortexEngine {
     status: import("./types.js").VortexStatus,
     reason: string,
     connectorId: string,
-    alreadyConsumed = false,
   ): VortexResponse {
-    if (!alreadyConsumed) {
-      this.replay.consume(req.request_id);
-    }
+    // request_id reservation is handled exclusively by reserve() at step 1
+    // of handle() now — deny() never needs to touch the replay store.
     const completedAt = new Date();
     const proof = buildAndSignProof({
       requestId: req.request_id,
