@@ -219,6 +219,24 @@ Commit-base observado no tree da `main`: `3d39ecc2242367d0b0089fdbc5a6a5fba8432e
 - O Git blob SHA é registrado separadamente do hash criptográfico de conteúdo.
 - Nenhum SHA-256 de conteúdo é inventado.
 
+## Verificador reproduzível
+
+O repositório agora contém `scripts/verify-gos3-provenance.mjs`, que lê os bytes locais dos mesmos 10 arquivos, calcula SHA-256 com `node:crypto` e falha se algum arquivo não contiver o marcador `GOS3`.
+
+Executar após `npm ci`:
+
+```bash
+npm run verify:gos3:provenance
+```
+
+A saída produz uma linha por arquivo no formato:
+
+```text
+arquivo\tsha256:<digest>
+```
+
+Esse comando é deliberadamente **calculador/verificador**, e não preenche o inventário com valores que não tenham sido produzidos por execução real do comando sobre os bytes do checkout. Assim, o estado `NOT_CALCULATED` permanece correto até que essa execução seja registrada como evidência.
+
 ## Relação com evidência de execução
 
 Este inventário é **proveniência de artefato**, não `ExecutionEvidence`.
