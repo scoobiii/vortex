@@ -39,6 +39,8 @@ export class Gateway {
   #connectors: ConnectorRegistry;
   #credentials: CredentialBroker;
   #runtime_id: string;
+  /** Process-local reservation set; reservation occurs synchronously before any await. */
+  #reserved_request_ids = new Set<string>();
 
   constructor(opts: GatewayOptions) {
     this.#authenticator = opts.authenticator;
@@ -96,7 +98,24 @@ export class Gateway {
     const request = raw as InvokeRequest;
     const credential_id = request.credential_id ?? null;
 
-    // 3) CAPABILITY / CONNECTOR RESOLUTION
+    // 3) REPLAY — reserve the validated request_id synchronously before any connector execution.
+    // JavaScript's event loop makes this Set check+insert atomic within this process:
+    // there is no await between the duplicate check and reservation.
+    if (this.#reserved_request_ids.has(request.request_id)) {
+      throw this.#reject({
+        status: "REPLAY_DENIED",
+        message: "request_id has already been consumed or reserved",
+        request_id: request.request_id,
+        connector_id: request.connector_id,
+        operation: request.operation,
+        input: request.input,
+        credential_id,
+        started_at,
+      });
+    }
+    this.#reserved_request_ids.add(request.request_id);
+
+    // 4) CAPABILITY / CONNECTOR RESOLUTION
     let connector;
     try {
       connector = this.#connectors.resolve(request.connector_id, request.operation);
@@ -115,7 +134,7 @@ export class Gateway {
       });
     }
 
-    // 4) CREDENTIAL BOUNDARY — the secret itself never leaves this method.
+    // 5) CREDENTIAL BOUNDARY — the secret itself never leaves this method.
     let credentialSecret: unknown = undefined;
     if (credential_id) {
       try {
@@ -135,8 +154,7 @@ export class Gateway {
       }
     }
 
-    // 5) EXECUTION (bounded by timeout) + 6) OBSERVATION
-    const timeout_ms = request.timeout_ms ?? DEFAULT_EXECUTION_TIMEOUT_MS;
+    // 6) EXECUTION (bounded by timeout) + 7) OBSERVATION
     try {
       const { output } = await executeWithTimeout({
         connector,
@@ -144,7 +162,7 @@ export class Gateway {
         input: request.input,
         request_id: request.request_id,
         credential: credentialSecret,
-        timeout_ms,
+        timeout_ms: request.timeout_ms ?? DEFAULT_EXECUTION_TIMEOUT_MS,
       });
 
       const completed_at = new Date();
@@ -213,4 +231,3 @@ export class Gateway {
     return new GatewayError(args.status, args.message, proof);
   }
 }
-
