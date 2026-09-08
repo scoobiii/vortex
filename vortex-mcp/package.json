@@ -1,0 +1,29 @@
+{
+  "_gos3_header": "GOS3 · Vortex Foundation conformance artifact",
+  "name": "vortex-mcp",
+  "version": "0.1.0",
+  "description": "Reference implementation of the Vortex MCP Execution Governance Profile (Core + Governed Execution + Cryptographic Execution conformance levels).",
+  "type": "module",
+  "main": "dist/server.js",
+  "bin": {
+    "vortex-mcp": "dist/server.js",
+    "vortex-verifier": "dist/verifier-cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run test:conformance",
+    "pretest": "npm run build",
+    "start": "node dist/server.js",
+    "verify": "node dist/verifier-cli.js",
+    "test:conformance": "node --test dist/test/conformance/*.test.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "canonicalize": "^2.0.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4",
+    "@types/node": "^22.5.0"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "_gos3_header": "GOS3 · Vortex Foundation conformance artifact",
+  "policy_id": "vortex-development",
+  "policy_version": "1",
+  "rules": {
+    "repository.read": {
+      "approval": "automatic",
+      "allowed_scopes": {
+        "repository": "*"
+      }
+    },
+    "repository.write": {
+      "approval": "required",
+      "allowed_scopes": {
+        "repository": "scoobiii/*",
+        "branch": "feat/*"
+      }
+    },
+    "repository.merge_main": {
+      "approval": "prohibited"
+    },
+    "repository.publish": {
+      "approval": "prohibited"
+    }
+  }
+}
