@@ -1,27 +1,50 @@
-# Contrato de invocação — v0.2 (GOS3 bounded execution)
+# Contrato de invocação — v0.3 (GOS3 bounded execution + semantic verification)
 
-> **GOS3** · agente: `GPT` · papel: `Maintainer / Engineering Agent`
-> fase: `Technical Refinement` · data: `2026-08-25`
-> antes: v0.1 já exigia execução real + evidence_hash, mas não modelava o ciclo bounded de tentativa/rollback/escalonamento.
-> depois: v0.2 adiciona identidade do runtime, limites do loop, estado terminal e evidência para retry/rollback/PR/help.
-> base: commit `bd5a118`
-> assinatura: `GPT · Maintainer / Engineering Agent · GOS3`
+> **GOS3** · Maintainer / Engineering Agent
+> fase: `Runtime Federation / Semantic Verification` · data: `2026-09-09`
+> base: v0.2
+> mudança principal: separa prova de execução, integridade da evidência e correção semântica/determinística.
 
 ## Princípio
 
-O contrato separa **LLM**, **runtime** e **governança**. O modelo pode propor; somente o runtime que realmente executou pode produzir `executed: true`. Toda autonomia é limitada por orçamento de tentativas e tempo. Não existe loop infinito.
+O contrato separa **LLM**, **VUA**, **runtime** e **Vortex**.
+
+O LLM pode propor uma resposta ou ação. O runtime pode executar. O Vortex pode provar a execução e a integridade da evidência. **Nenhuma dessas etapas, isoladamente, prova que o resultado está semanticamente correto.**
+
+```text
+LLM / AGENT
+    ↓ proposal / candidate
+VUA CAPABILITY ROUTER
+    ↓ select verifier when required
+VORTEX GATEWAY
+    ↓ identity + authorization + policy + scope + limits
+RUNTIME / ADAPTER
+    ↓ real execution
+EVIDENCE
+    ↓
+INDEPENDENT VERIFICATION
+    ├── execution integrity
+    ├── evidence integrity
+    └── semantic / deterministic verification (when applicable)
+```
 
 ## Request
 
 ```json
 {
-  "contract_version": "0.2",
+  "contract_version": "0.3",
   "invocation_id": "uuid-v4",
-  "agent": "claude | gemini | gpt | grok | qwen | deepseek | manus | perplexity | ...",
+  "agent": "string",
   "task": {
-    "kind": "code_exec | shell | tool_call",
-    "payload": "string",
+    "kind": "code_exec | shell | tool_call | llm_inference | image_measurement | data_transform",
+    "payload": "string | object",
     "language": "string opcional"
+  },
+  "verification": {
+    "required": false,
+    "mode": "none | schema | deterministic | specialized | tests | domain_rule",
+    "capability_id": "string opcional",
+    "policy": "string opcional"
   },
   "limits": {
     "timeout_seconds": "int, obrigatório",
@@ -30,7 +53,7 @@ O contrato separa **LLM**, **runtime** e **governança**. O modelo pode propor; 
     "max_duration_ms": "int > 0, obrigatório"
   },
   "context_ref": "string opcional",
-  "env_tag": "browser-v8-isolate | node-linux | node-android-termux | unknown",
+  "env_tag": "string",
   "runtime_id": "string opcional na request; obrigatório quando fornecido pelo scheduler"
 }
 ```
@@ -39,13 +62,23 @@ O contrato separa **LLM**, **runtime** e **governança**. O modelo pode propor; 
 
 ```json
 {
-  "contract_version": "0.2",
+  "contract_version": "0.3",
   "invocation_id": "uuid-v4",
   "agent": "string",
-  "status": "success | error | partial | timeout",
+  "status": "success | error | partial | timeout | blocked",
   "executed": true,
   "claim": "executed | not_executed | failed | blocked",
-  "evidence_hash": "sha256 obrigatório quando executed=true",
+  "verification": {
+    "execution_verified": true,
+    "evidence_integrity_verified": true,
+    "semantic_verified": false,
+    "verification_status": "NOT_REQUESTED | PASS | FAIL | NOT_PROVABLE",
+    "mode": "none | schema | deterministic | specialized | tests | domain_rule",
+    "capability_id": "string opcional",
+    "check_id": "string opcional",
+    "reason": "string opcional"
+  },
+  "evidence_hash": "sha256 obrigatório quando houver evidência verificável",
   "runtime": {
     "runtime_id": "string",
     "execution_id": "string"
@@ -69,47 +102,68 @@ O contrato separa **LLM**, **runtime** e **governança**. O modelo pode propor; 
 }
 ```
 
-## Regras obrigatórias
+## Regras normativas
 
-1. `executed:false` **nunca** pode ser `status:success`.
-2. `executed:true` exige `runtime.runtime_id`, `runtime.execution_id` e `evidence_hash` verificável.
-3. `evidence_hash = sha256(stdout + stderr + str(exit_code) + str(duration_ms))`, hex lowercase.
-4. O mesmo resultado/evidência não pode ser tratado como progresso indefinidamente. Repetição sem mudança observável termina em `STAGNATED` → `HELP_REQUIRED`.
-5. `regression` exige preservação de `last_good_commit`; o próximo estado é `ROLLBACK` antes de nova tentativa.
-6. `pass` somente pode produzir `PR_READY` quando execução real, testes/verificação e evidência forem válidos.
-7. `blocked`, limite de tentativas ou limite de tempo terminam em `HELP_REQUIRED`; o agente deve produzir uma solicitação estruturada com erro, commits e evidências, não continuar em loop.
-8. `max_attempts` e `max_duration_ms` são hard limits do runtime/orquestrador, não sugestões para o LLM.
-9. `env_tag` descreve o ambiente real fornecido pelo adapter/scheduler. O modelo não pode inventá-lo.
-10. `browser-v8-isolate` não pode alegar shell/Node/SO execution. Referências a APIs incompatíveis devem ser recusadas antes da execução.
-11. Mock/simulação deve ser explicitamente identificada e nunca pode produzir `executed:true`.
-12. Git/PR é proveniência e publicação; não é prova de execução por si só. A prova vem do runtime + testes + evidência.
+1. `executed:false` nunca pode ser `status:success`.
+2. `executed:true` exige `runtime.runtime_id`, `runtime.execution_id` e evidência verificável.
+3. `execution_verified:true` significa somente que a execução observada e sua cadeia de evidência passaram os checks definidos pelo verificador.
+4. `semantic_verified:true` **não pode** ser inferido de `execution_verified:true`, assinatura, hash, `status:success` ou resposta do LLM.
+5. Quando `verification.required:true`, `semantic_verified:true` exige um verificador compatível, identificável por `capability_id`/`check_id`, e resultado `PASS`.
+6. Se uma tarefa exige verificação semântica mas não existe capacidade verificadora adequada, o resultado deve ser `NOT_PROVABLE`, não `VERIFIED`.
+7. `semantic_verified:false` não significa necessariamente que o resultado está errado; significa que a correção não foi provada pelo mecanismo especificado.
+8. Para operações determinísticas, o verificador deve preferir cálculo, parser, schema validator, testes, compilador ou regra de domínio em vez de pedir ao mesmo LLM para certificar sua própria resposta.
+9. Para medições de imagem, o pipeline deve separar percepção (`measurement_candidate`) de conversão/consistência determinística. Exemplo: `28 mm / 25.4 = 1.10236 in`; não é permitido normalizar automaticamente para `1 in` sem regra explícita.
+10. Para perguntas de lógica, matemática e unidades, uma resposta plausível do LLM não é evidência suficiente de correção.
+11. Mock/simulação nunca pode produzir `executed:true`.
+12. `evidence_hash` identifica a evidência; não é um certificado de verdade semântica.
+13. A assinatura Ed25519 prova autoria/integridade da prova conforme a política; não prova que o conteúdo do resultado é verdadeiro.
+14. O VUA deve selecionar capacidades de verificação antes da execução quando a política determinar que a tarefa exige verificação.
+15. Autorização, política, escopo e limites devem ser avaliados antes do adapter produzir qualquer side-effect.
+16. `duration_ms` usado para benchmark deve representar explicitamente a janela medida. Quando houver latência do provider/LLM fora da janela de execução governada, ela deve ser registrada separadamente como `provider_duration_ms`/`wall_duration_ms`, evitando comparar métricas semanticamente diferentes.
+17. `PR_READY` exige execução real, checks aplicáveis, verificação exigida pela política e evidência válida. `EXECUTION_SUCCESS` sozinho não autoriza `PR_READY`.
 
-## Máquina de estados GOS3
+## Exemplo: problema das 17 ovelhas
 
 ```text
-READY → RUNNING → VERIFYING
-                    │
-       ┌────────────┼─────────────┐
-       ▼            ▼             ▼
-   PASS/PR_READY  RETRY       REGRESSION
-                     │             │
-                     └─────────────┘
-                           ▼
-                       ROLLBACK
-                           │
-                        RETRY
-
-VERIFYING → STAGNATED → HELP_REQUIRED
-VERIFYING → BLOCKED   → HELP_REQUIRED
-VERIFYING → time/attempt limit → HELP_REQUIRED
+LLM → "8"
+ ↓
+VUA → deterministic/domain-rule verifier
+ ↓
+FAIL
+ ↓
+semantic_verified=false
+ ↓
+não promover para VERIFIED-CORRECT / PR_READY
 ```
 
-O estado `HELP_REQUIRED` é o mecanismo de escalonamento humano/GOS3: registra a razão, última execução, último commit bom, commit atual e hashes de evidência. Não há autonomia ilimitada.
+## Exemplo: conversão de unidade
 
-## Modelo operacional de agente pequeno
+```text
+measurement_candidate = 28 mm
+conversion = 28 / 25.4
+result = 1.102362... in
+```
 
-Um modelo coder pequeno (por exemplo, Qwen Coder ~0,5B) pode atuar como **worker bounded**. Ele não precisa ser o decisor global: recebe tarefa delimitada, opera no sandbox, testa, devolve evidência e passa pela máquina de estados. O Vortex/GOS3 fornece limites, rollback, publicação e escalonamento.
+A conversão deve ser executada por uma capacidade determinística. A interpretação visual da imagem pode permanecer probabilística, mas a transformação e a regra de consistência não.
 
-## Próximo passo
+## Regra de verdade
 
-Implementar adapters que consumam este contrato, testes de máquina de estados, um executor sandbox real e integração de `PR_READY`/`HELP_REQUIRED`. A avaliação de conformidade permanece por evidência; a estimativa arquitetural de 80–90% não é um gate de aceitação.
+```text
+PROMISED → IMPLEMENTED → EXECUTED → EXECUTION_VERIFIED
+                                             ↓
+                         SEMANTIC_VERIFIED (quando aplicável)
+```
+
+Não usar `VERIFIED` como rótulo único quando o claim mistura integridade de execução e correção semântica.
+
+## Critério de conformidade
+
+Um implementation conforme deve possuir testes que demonstrem:
+
+- execução válida → `execution_verified=true`;
+- prova adulterada → falha de integridade;
+- resposta semanticamente errada com execução íntegra → `semantic_verified=false`;
+- ausência de verificador obrigatório → `NOT_PROVABLE`;
+- verificador determinístico correto → `semantic_verified=true`;
+- autorização avaliada antes do adapter com side-effect;
+- benchmark separando `wall_duration_ms` da duração interna quando necessário.
