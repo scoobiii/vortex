@@ -1,16 +1,26 @@
-# GOS3 · agente: GPT · papel: Maintainer / Engineering Agent
-# fase: Technical Refinement → Governance Enforcement · data: 2026-09-05
-# antes: o workflow validava headers e contrato, mas não verificava a existência das invariantes do protocolo de mudança.
-# depois: o workflow também executa o teste automatizado da política Mexeu → Testa → Valida → Publica.
-# base: commit `main`
-# assinatura: GPT · Maintainer / Engineering Agent · GOS3
-
-name: gos3-compliance
+# GOS3
+# arquivo: .github/workflows/gos3-compliance.yml
+# responsabilidade: gates de governança, contratos, onboarding e E2E do Vortex
+# agente: agent/llm
+# papel: Engineering Agent
+# fase: implementation
+# data: 2026-09-07
+# hora: 18:09
+# antes: sha256:e2a4eff7180944edb7d591200c664ce4e4d01076
+# depois: sha256:pending
+# base: commit:1a4f271425f6ce8ebbad8c8aae0bd75a59a9c787
+# assinatura: P0 scoobiii : Agente GPT
+# commit: pending
+name: GOS3 Compliance
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   pull_request:
+    branches:
+      - main
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -34,18 +44,13 @@ jobs:
           if [[ -z "${BASE_SHA:-}" ]]; then
             BASE_SHA="$(git rev-parse HEAD^ 2>/dev/null || true)"
           fi
-          if [[ -z "${BASE_SHA:-}" ]]; then
-            echo "No base commit available; cannot verify changed files."
-            exit 1
-          fi
-
+          [[ -n "${BASE_SHA:-}" ]] || { echo "No base commit available"; exit 1; }
           mapfile -t files < <(git diff --name-only "$BASE_SHA"...HEAD)
           failures=0
           for file in "${files[@]}"; do
             [[ -f "$file" ]] || continue
             case "$file" in
               *.png|*.jpg|*.jpeg|*.gif|*.webp|*.ico|*.zip|*.gz|*.tar|*.pdf|*.woff|*.woff2)
-                echo "SKIP binary: $file"
                 continue
                 ;;
             esac
@@ -56,21 +61,143 @@ jobs:
               failures=$((failures + 1))
             fi
           done
-
-          if (( failures > 0 )); then
-            echo "check-headers: FAIL ($failures file(s))"
-            exit 1
-          fi
+          (( failures == 0 )) || exit 1
           echo "check-headers: PASS"
 
   contract-gate:
+    name: GOS3 compliance
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
       - name: Governance policy gate
         run: python3 tests/change_validation_policy_test.py
-      - name: Gate 1
+
+      - name: Contract gate
         run: python3 tests/contract_test.py
+
+      - name: Runtime and orchestration tests
+        run: |
+          npm run test:runtime-loop
+          npm run test:orchestrator
+          npm run test:grok
+          npm run test:qwen05b:contract
+          npm run test:gos3:onboard
+          npm run test:vua
+          npm run test:ollama:contract
+          npm run test:github:contract
+
+      - name: Validate repository truth
+        shell: bash
+        run: |
+          set -euo pipefail
+          fail() { echo "::error::$1"; exit 1; }
+          test -f spec/invocation-contract.md || fail "spec/invocation-contract.md missing"
+          test -f docs/agents/gpt/TRUTH-MATRIX.md || fail "GPT truth matrix missing"
+          test -f src/agents/gpt/adapter/index.ts || fail "GPT adapter missing"
+          test -f src/vortex/vua/types.ts || fail "VUA types missing"
+          test -f connectors/ollama/install/install.sh || fail "Ollama Linux installer missing"
+          test -f connectors/ollama/install/install.ps1 || fail "Ollama Windows installer missing"
+          test -f connectors/github/mcp/index.ts || fail "GitHub MCP boundary missing"
+          grep -q "49/49 coverage.*NOT CLAIMED" docs/PRODUCT-TRUTH.md || fail "49/49 coverage is not explicitly marked NOT CLAIMED"
+          grep -q "GPT runtime is operational in Vortex.*NOT PROVEN" docs/PRODUCT-TRUTH.md || fail "GPT runtime truth classification is not conservative"
+          echo "GOS3 COMPLIANCE: PASS"
+
+  qwen-real-e2e:
+    name: qwen-real-e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Ollama runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://ollama.com/install.sh | sh
+          command -v ollama
+          ollama --version
+
+      - name: Start Ollama
+        shell: bash
+        run: |
+          set -euo pipefail
+          nohup ollama serve > ollama.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:11434/api/tags >/dev/null; then break; fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:11434/api/tags >/dev/null
+
+      - name: Pull Qwen 0.5B
+        shell: bash
+        run: |
+          set -euo pipefail
+          ollama pull qwen2.5-coder:0.5b
+
+      - name: Capture Qwen provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          OLLAMA_VERSION="$(ollama --version | tr -d '\r')"
+          OLLAMA_BIN="$(command -v ollama)"
+          OLLAMA_BIN_SHA256="$(sha256sum "$OLLAMA_BIN" | awk '{print $1}')"
+          MODEL_JSON="$(curl -fsS http://127.0.0.1:11434/api/tags)"
+          MODEL_DIGEST="$(printf '%s' "$MODEL_JSON" | python3 -c 'import json,sys; data=json.load(sys.stdin); matches=[m for m in data.get("models",[]) if m.get("name")=="qwen2.5-coder:0.5b"]; print(matches[0].get("digest","") if matches else "")')"
+          test -n "$MODEL_DIGEST"
+          {
+            echo "QWEN_RUNTIME_VERSION=$OLLAMA_VERSION"
+            echo "QWEN_RUNTIME_DIGEST=sha256:$OLLAMA_BIN_SHA256"
+            echo "QWEN_MODEL_DIGEST=$MODEL_DIGEST"
+          } >> "$GITHUB_ENV"
+
+      - name: Run real Qwen E2E
+        env:
+          QWEN_BASE_URL: http://127.0.0.1:11434/v1
+          QWEN_MODEL: qwen2.5-coder:0.5b
+          QWEN_TIMEOUT_MS: 120000
+        run: npm run test:qwen05b:e2e
+
+      - name: Run real Qwen sandbox E2E
+        env:
+          QWEN_BASE_URL: http://127.0.0.1:11434/v1
+          QWEN_MODEL: qwen2.5-coder:0.5b
+          QWEN_TIMEOUT_MS: 120000
+          QWEN_SANDBOX_EVIDENCE_FILE: qwen-sandbox-evidence.json
+        run: npm run test:qwen05b:sandbox:e2e
+
+      - name: Upload Qwen evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qwen-real-evidence
+          path: |
+            qwen-evidence.json
+            qwen-sandbox-evidence.json
+            ollama.log
+          if-no-files-found: ignore

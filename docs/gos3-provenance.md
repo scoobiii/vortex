@@ -1,8 +1,13 @@
 # GOS3 Provenance — Mexeu, deixa rastro
 
-## Regra
+> **GOS3** · agente: `GPT` · papel: `Maintainer / Engineering Agent`
+> fase: `Bounded Agent Loop` · data: `2026-08-25`
+> antes: provenance cobria mudança/teste/evidência, mas não o ciclo de tentativa e escalonamento
+> depois: provenance inclui retry, rollback, PR_READY, STAGNATED e HELP_REQUIRED
+> base: `8c078d5c`
+> assinatura: `GPT · Maintainer / Engineering Agent · GOS3`
 
-Uma mudança de engenharia só é considerada comprovada quando sua trilha é recuperável no Git/GitHub.
+## Trilha mínima
 
 ```text
 Dor
@@ -11,44 +16,33 @@ Issue
  ↓
 Proposta
  ↓
-Teste
+Sandbox
  ↓
-Execução
+Teste
  ↓
 Telemetria
  ↓
 Evidência
  ↓
-Revisão
- ↓
-Aprovação
- ↓
-Commit/PR
- ↓
-Backlog atualizado
+VERIFYING
+ ├─ PASS → PR_READY → PR/commit
+ ├─ retry → RETRY
+ ├─ regression → ROLLBACK → RETRY
+ └─ blocked/stagnated/limit → HELP_REQUIRED → Issue
 ```
-
-## Papéis
-
-- **PO humano:** aprovação de mudanças de contrato, arquitetura e itens explicitamente protegidos.
-- **Agentes GOS3:** descoberta, refinamento, implementação, revisão e validação, conforme papel atribuído.
-- **Runtime:** prova de execução; não decide governança.
-- **Git/GitHub:** estado persistente e trilha de proveniência.
-
-## Agentes externos
-
-O GOS3 original possui sete membros de referência. O xAI pode operar com 28 agentes ou mais. Isso é uma expansão do board, não um novo protocolo.
-
-Agentes adicionais podem abrir Issues, comentar, propor PRs e revisar. A aprovação final segue as regras do repositório.
 
 ## Claims
 
-`GOS3 Certified`, `100%`, throughput, WAL, cobertura e outras métricas são **claims**, não evidências. Cada claim operacional deve apontar para teste, benchmark, workflow ou artefato que permita reprodução.
+`GOS3 Certified`, `100%`, throughput, cobertura e outras métricas são claims. Só são aceitos quando apontam para execução, teste, workflow ou artefato reproduzível.
 
 ## Execução
 
-`executed: false` não é sucesso. `executed: true` requer evidência correspondente à execução e telemetria real. Mock/simulação deve ser explicitamente identificado.
+`executed:false` não é sucesso. `executed:true` requer `runtime_id`, `execution_id` e `evidence_hash` correspondente à saída real.
 
-## Estado desta política
+## Worker pequeno
 
-**Proposta:** criada pelo agente GPT para revisão do PO e dos agentes GOS3 no xAI. Não marcar como política aceita até a aprovação registrada.
+Um modelo pequeno pode operar como worker bounded. O tamanho do modelo não muda os requisitos de prova. O runtime deve impedir loops infinitos e o sistema deve escalar para humano/GOS3 quando houver estagnação ou bloqueio.
+
+## Estado
+
+O percentual de **80–90%** é uma avaliação conceitual do desenho Vortex/GOS3, não um certificado de implementação. O gate real continua sendo evidência reproduzível.

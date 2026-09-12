@@ -1,181 +1,105 @@
 # Runtime Execution Model — Vortex
 
-> **GOS3** · processo: Agile/Scrum · status: **proposta / Technical Refinement** · data: 2026-08-23
->
+> **GOS3** · processo: Agile/Scrum · status: **Bounded Agent Loop / Technical Refinement** · data: 2026-08-26
 > Regra: **LLM propõe; compilador/runtime decide.** Texto não é execução.
 
-## 1. O que mudou
+## 1. Modelo atualizado
 
-Antes, o fluxo prático era:
-
-```text
-baixar repo → instalar dependências → testar localmente
-                         │
-                         └→ ou executar no GAISTUDIO/Gemini
-```
-
-Isso continua válido. O Vortex adiciona uma camada acima desse fluxo: o agente não precisa assumir previamente onde o código será executado. Ele produz uma invocação conforme o contrato; um runtime compatível executa; a execução devolve telemetria e evidência.
+O Vortex separa Agent, Scheduler, Runtime e Git/GitHub. A execução de um agente é sempre bounded: existe orçamento de tentativas e tempo, estados explícitos e escalonamento quando não há progresso.
 
 ```text
-LLM / Agent
-    │
-    │ proposta + código + constraints
+LLM / Worker
+    │ proposta + patch
     ▼
-Vortex invocation-contract
-    │
-    ▼
-Capability discovery / scheduler
-    │
-    ├── A23 / Termux
-    ├── VPS / Linux
-    ├── GCloud VM / Job / Container
-    ├── Colab runtime
-    └── outro executor compatível
+Invocation Contract v0.2
     │
     ▼
-Nx1 execution
+Capability discovery / Scheduler
     │
-    ├── executed
-    ├── stdout
-    ├── stderr
-    ├── exit_code
+    ▼
+Nx1 sandbox/runtime
+    │
+    ├── stdout/stderr/exit_code
     ├── duration_ms
-    ├── runtime_id
+    ├── runtime_id/execution_id
     └── evidence_hash
+    │
+    ▼
+VERIFYING
+    ├── PASS → PR_READY
+    ├── retryable failure → RETRY
+    ├── regression → ROLLBACK → RETRY
+    ├── repeated/no progress → STAGNATED → HELP_REQUIRED
+    └── blocked/limits → HELP_REQUIRED
 ```
 
-## 2. O Vortex tem sandbox/runtime próprio?
+A implementação concreta deste salto está em `src/gos3/orchestrator.ts`:
 
-**Não no sentido de uma única máquina central compartilhada.** O Vortex é o protocolo/orquestrador de execução verificável. Um runtime pode ser local, remoto ou fornecido por outro serviço.
+- `BubblewrapSandbox` recusa execução sem sandbox e usa Linux bubblewrap para restringir o processo;
+- `CliGitProvider` usa `git` para proveniência/rollback e `gh` para PR/Issue, quando explicitamente autorizado;
+- o loop ancora `last_good_commit` no HEAD anterior à tarefa;
+- `verifyCommand` é uma segunda execução no sandbox e uma falha de verificação classifica a tentativa como `regression`;
+- PR só é criado no estado `PR_READY`;
+- Issue só é criada no estado `HELP_REQUIRED`.
 
-O sandbox atualmente disponível em implementações como zAI pode servir como **runtime adapter**, desde que satisfaça o contrato. Uma função que apenas simula Python ou retorna dados artificiais não pode declarar `executed: true` como prova de execução real.
+Isto não declara gVisor: bubblewrap é isolamento Linux local. gVisor permanece uma capability de runtime a ser integrada/testada separadamente.
 
-Portanto:
+## 2. Estados
 
-- Vortex = contrato + governança + seleção/integração de runtimes;
-- runtime = executor efetivo;
-- GitHub = estado/proveniência, não sandbox por padrão;
-- CLI GitHub = ferramenta de integração/automação, não prova automática de execução;
-- GAISTUDIO = ambiente de agente/modelo, não deve ser confundido com runtime universal;
-- A23/VPS/GCloud/Colab = possíveis executores, conforme capabilities reais.
+`READY → RUNNING → VERIFYING` é o caminho normal.
 
-## 3. Onde o código é testado?
+- `PR_READY`: somente após execução real, teste/verificação e evidência válida.
+- `RETRY`: falha recuperável com progresso observável e dentro dos limites.
+- `ROLLBACK`: regressão detectada; volta ao último commit bom antes de tentar novamente.
+- `STAGNATED`: a tentativa não produz progresso observável ou repete a mesma evidência/erro.
+- `HELP_REQUIRED`: bloqueio terminal; produz pedido estruturado para humano/GOS3.
 
-A resposta correta é: **no runtime que realmente executa o teste**.
+Não existe estado `LOOP_FOREVER`.
 
-O agente pode preparar código no ambiente de conversa, mas a afirmação de que o código passou precisa vir de uma execução observável.
+## 3. Worker pequeno — Qwen2.5 Coder ~0,5B
 
-### Exemplo local
+`src/agents/qwen05b/adapter/index.ts` fornece um adapter para endpoint local OpenAI-compatible. Por padrão usa `http://127.0.0.1:11434/v1` e `qwen2.5-coder:0.5b`, mas ambos são configuráveis por `QWEN_BASE_URL` e `QWEN_MODEL`.
+
+O catálogo do Ollama lista `qwen2.5-coder:0.5b` como modelo de 0,5B/398 MB e documenta o uso local via Ollama. citeturn1search0turn1search3
+
+O Qwen é tratado como **worker**, não como autoridade. A capacidade desejada é executar microtarefas no sandbox, alterar arquivos, rodar testes e devolver evidência. O runtime/orquestrador decide se houve progresso, rollback, publicação ou escalonamento.
+
+**E2E real com um Qwen ~0,5B instalado ainda é pendente**; os testes do orquestrador usam doubles determinísticos para provar a governança sem fingir execução de modelo.
+
+## 4. Prova
+
+`executed:true` exige runtime real + `evidence_hash`. Git/PR não são prova de execução. Um commit pode existir sem teste; um PR pode existir sem execução válida.
+
+## 5. Limites
+
+`max_attempts` e `max_duration_ms` são hard limits aplicados pelo runtime/orquestrador. O LLM não pode aumentá-los por prompt.
+
+## 6. Git/GitHub
+
+Git representa estado e proveniência. O fluxo recomendado é:
 
 ```text
-Agent → Git → A23/Termux → compiler/runtime → tests → evidence
+sandbox → worker → verify → evidence → VERIFYING → PR_READY → gh pr create
 ```
 
-### Exemplo remoto
+Em regressão:
 
 ```text
-Agent → Git → Vortex → GCloud/VPS → compiler/runtime → tests → evidence
+bad worker/verification → ROLLBACK → last_good_commit → RETRY
 ```
 
-### Exemplo CI
+Em bloqueio:
 
 ```text
-Agent → PR → GitHub Actions → build/test → logs/artifact → review
+blocked/stagnated/limit → HELP_REQUIRED → gh issue create
 ```
 
-GitHub Actions é particularmente útil para builds reproduzíveis. Entretanto, o simples fato de um workflow existir não prova que ele rodou com sucesso: é necessário um run verificável e seus artefatos/logs.
+As operações GitHub ficam atrás de `allowGitHub`; portanto o runtime pode ser executado localmente sem publicar nada.
 
-## 4. "LLM só respeita compilador"
+## 7. Runtime heterogêneo
 
-Como princípio de engenharia, a frase fica:
-
-> **LLM pode propor; somente uma execução verificável pode afirmar que o código funciona. O compilador, interpretador, testes e runtime são os árbitros da execução.**
-
-O modelo pode escrever:
-
-```text
-"compila"
-"testei"
-"funciona"
-```
-
-Isso é uma afirmação textual.
-
-A evidência é outra coisa:
-
-```text
-compiler exit_code = 0
-runtime exit_code = 0
-stdout/stderr registrados
-duration_ms real
-runtime_id conhecido
-artefato/hash identificável
-```
-
-Se o runtime não executou, a resposta deve dizer `executed: false` ou `not_executed`, nunca fabricar sucesso.
-
-## 5. Write once, run anywhere — sem marketing enganoso
-
-O objetivo é transportar **código + contrato + testes**, não prometer que um binário ARM64, CUDA, Vulkan ou Java rodará magicamente em qualquer máquina.
-
-```text
-               mesmo artefato lógico
-                       │
-              capability discovery
-                       │
-       ┌───────────────┼───────────────┐
-       ▼               ▼               ▼
-     ARM64           x86_64          GPU
-     A23             VPS             GCloud
-       │               │               │
-    compile          compile         compile
-       │               │               │
-       └───────────────┼───────────────┘
-                       ▼
-                  execution
-```
-
-Quando uma dependência é específica de plataforma, o scheduler deve selecionar um perfil de build/runtime ou declarar incompatibilidade.
-
-## 6. Perfil de runtime
-
-Cada executor deve anunciar, no mínimo:
-
-```json
-{
-  "runtime_id": "a23-termux-01",
-  "os": "android-termux",
-  "arch": "arm64",
-  "cpu": true,
-  "gpu": false,
-  "gpu_backend": null,
-  "memory_mb": 3500,
-  "languages": ["node", "python"],
-  "network": "restricted",
-  "capabilities": ["compile", "test", "execute"],
-  "isolation": "proot-or-process",
-  "version": "..."
-}
-```
-
-A declaração de `gpu: true` só é válida quando o runtime realmente expõe e testa o backend correspondente. Ter uma GPU física no telefone não significa que Node/Python ou o processo do agente tenha acesso a ela.
-
-## 7. Quem faz o quê
-
-| Camada | Papel |
-|---|---|
-| LLM | raciocinar, propor código, escolher estratégia |
-| GOS3 | coordenar discovery, refinement, architecture, review e aceite |
-| Vortex | contrato, invocation, evidência e integração de runtime |
-| Scheduler | selecionar runtime compatível |
-| Compiler/interpreter | validar/transformar o código |
-| Runtime | executar de fato |
-| Test runner | produzir resultado verificável |
-| Git/GitHub | versionar código, issues, PRs e proveniência |
-| PO humano | aprovar mudanças de contrato/arquitetura quando exigido |
+Possíveis executores continuam incluindo A23/Termux, VPS/Linux, GCloud e Colab. O scheduler deve selecionar por capabilities reais e `runtime_id`; o agente nunca deve presumir o ambiente.
 
 ## 8. Regra de ouro
 
-**Não perguntar "onde o LLM disse que rodou?". Perguntar "qual runtime rodou, com qual comando, qual exit code, quais logs e qual evidência?"**
-
-Isso é a transição de um sistema orientado por conversa para um sistema orientado por execução verificável.
+**Não perguntar onde o LLM disse que rodou. Perguntar qual runtime rodou, qual comando, exit code, logs, duração, runtime_id, teste e evidência.**
