@@ -1,5 +1,8 @@
 # Git log
 ```
+20821a1 Merge pull request #68 from scoobiii/fix/gateway-security-hardening
+a5f2c15 Merge branch 'main' into fix/gateway-security-hardening
+0ae3085 fix(gateway): harden authentication replay and operation scope
 3d39ecc Merge pull request #55 from scoobiii/feat/gos3-onboard-sandbox-qwen
 4982ef4 fix(gos3): construct typed onboarding header
 93106b5 refactor(qwen): remove duplicate onboard invocation surface
@@ -17,9 +20,6 @@ a9e16aa feat(gos3): add onboarding contract test script
 aa41f13 fix(gos3): parse hash-style onboarding headers
 a817f22 feat(gos3): add pre-CI sandbox onboarding gate
 7919290 Merge pull request #54 from scoobiii/scoobiii-patch-3
-60d8843 Add GOS3 header to README
-bdfecd4 Merge pull request #53 from scoobiii/scoobiii-patch-2
-c171ae0 Update README header format and content
 ```
 
 # Git status
