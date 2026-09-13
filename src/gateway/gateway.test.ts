@@ -24,6 +24,10 @@ async function request(port: number, path: string, body?: unknown, token?: strin
     assert.equal((await request(port, "/v1/connectors")).status, 401);
     const result = await request(port, "/v1/invoke", { request_id: "test-1", connector_id: "vortex.connector.echo", operation: "echo", input: { ok: true } }, "test-token");
     assert.equal(result.status, 200); assert.equal(result.json.executed, true); assert.equal(result.json.proof.connector_id, "vortex.connector.echo");
+    const replay = await request(port, "/v1/invoke", { request_id: "test-1", connector_id: "vortex.connector.echo", operation: "echo", input: { ok: true } }, "test-token");
+    assert.equal(replay.status, 409); assert.equal(replay.json.error.code, "replay_detected");
+    const unauthorizedOperation = await request(port, "/v1/invoke", { request_id: "test-3", connector_id: "vortex.connector.echo", operation: "delete", input: {} }, "test-token");
+    assert.equal(unauthorizedOperation.status, 403); assert.equal(unauthorizedOperation.json.error.code, "operation_not_authorized");
     const rejected = await request(port, "/v1/invoke", { request_id: "test-2", connector_id: "vortex.connector.unknown", operation: "echo" }, "test-token");
     assert.equal(rejected.status, 400);
     console.log("gateway tests: PASS");

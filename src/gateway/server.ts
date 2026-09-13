@@ -9,15 +9,23 @@ import { ExecutionProof, InvokeRequest, InvokeResponse } from "./types";
 
 const MAX_BODY_BYTES = 1_000_000;
 const DEFAULT_TIMEOUT_MS = 30_000;
+const MAX_REQUESTS_PER_MINUTE = 120;
+const requestCounts = new Map<string, { count: number; resetAt: number }>();
+const seenRequests = new Set<string>();
 
 function hash(value: unknown): string { return createHash("sha256").update(JSON.stringify(value)).digest("hex"); }
 function json(res: ServerResponse, status: number, body: unknown): void { res.writeHead(status, { "content-type": "application/json", "cache-control": "no-store" }); res.end(JSON.stringify(body)); }
 function authOk(req: IncomingMessage): boolean {
   const expected = process.env.VORTEX_GATEWAY_TOKEN;
-  if (!expected) return process.env.NODE_ENV !== "production";
+  if (!expected) return false;
   const supplied = req.headers.authorization?.startsWith("Bearer ") ? req.headers.authorization.slice(7) : "";
   const a = Buffer.from(supplied); const b = Buffer.from(expected);
   return a.length === b.length && timingSafeEqual(a, b);
+}
+function rateOk(req: IncomingMessage): boolean {
+  const key = req.socket.remoteAddress ?? "unknown"; const now = Date.now(); const current = requestCounts.get(key);
+  if (!current || current.resetAt <= now) { requestCounts.set(key, { count: 1, resetAt: now + 60_000 }); return true; }
+  current.count += 1; return current.count <= Number(process.env.VORTEX_GATEWAY_RATE_LIMIT ?? MAX_REQUESTS_PER_MINUTE);
 }
 function readBody(req: IncomingMessage): Promise<unknown> {
   return new Promise((resolve, reject) => {
@@ -42,6 +50,7 @@ function validRequest(raw: unknown): InvokeRequest {
 export function createGatewayServer(registry: ConnectorRegistry, broker = new EnvironmentCredentialBroker()): Server {
   return createServer(async (req, res) => {
     try {
+      if (!rateOk(req)) return json(res, 429, { error: { code: "rate_limited", message: "too many requests" } });
       if (req.method === "GET" && req.url === "/health") return json(res, 200, { status: "ok", runtime_id: process.env.VORTEX_RUNTIME_ID ?? "local" });
       if (req.method === "GET" && req.url === "/v1/connectors") {
         if (!authOk(req)) return json(res, 401, { error: { code: "unauthorized", message: "authentication required" } });
@@ -52,6 +61,10 @@ export function createGatewayServer(registry: ConnectorRegistry, broker = new En
       if (!authOk(req)) return json(res, 401, { error: { code: "unauthorized", message: "authentication required" } });
       const request = validRequest(await readBody(req));
       const connector = registry.get(request.connector_id);
+      if (!connector.manifest().operations.includes(request.operation)) return json(res, 403, { error: { code: "operation_not_authorized", message: "operation is not declared by connector" } });
+      const replayKey = `${request.connector_id}:${request.request_id}`;
+      if (seenRequests.has(replayKey)) return json(res, 409, { error: { code: "replay_detected", message: "request_id was already used" } });
+      seenRequests.add(replayKey);
       const started = Date.now(); const startedAt = new Date(started).toISOString();
       const lease = broker.issue(request.credential_id, request.connector_id);
       const credential = lease && lease.expiresAt > Date.now() ? lease.value : undefined;
