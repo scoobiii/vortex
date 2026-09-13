@@ -1,10 +1,7 @@
 # GOS3 · agente: GPT · papel: Maintainer / Engineering Agent
-# fase: Technical Refinement → Governance Enforcement · data: 2026-09-07 · hora: 00:00
-# antes: documento modificado no branch sem marcador GOS3 exigido pelo checker.
-# depois: conteúdo permanece inalterado e recebe apenas o header de governança obrigatório.
-# base: feat/gos3-runtime-orchestration
+# fase: Runtime Federation → Semantic Verification · data: 2026-09-09
+# base: spec/semantic-verification-2026
 # assinatura: GPT · Maintainer / Engineering Agent · GOS3
-# commit: registered by Git
 
 # PRODUCT-TRUTH Matrix
 
@@ -12,60 +9,59 @@ Status: conservative audit baseline.
 
 | Claim | Evidence | Status |
 |---|---|---|
-| `spec/invocation-contract.md` exists | file present | 🟡 SPECIFICATION |
-| `main` protected | GitHub branch protection API returned required PR approval = 1 and enforce_admins = true | 🟢 VERIFIED |
-| `src/agents/claude` exists | repository tree | 🟢 IMPLEMENTED |
-| `src/agents/grok` exists | repository tree | 🟢 IMPLEMENTED |
-| `src/agents/manus` exists | repository tree | 🟡 PARTIAL |
-| `src/agents/metaai` exists | repository tree / commit `058e3cf` | 🟠 IMPLEMENTED / EXECUTION UNPROVEN |
-| `src/agents/gpt` exists | `ls` returned `No such file or directory` | ⚫ NOT IMPLEMENTED |
-| `docs/agents/gpt` exists | repository tree | 🟠 PROPOSAL / AUDIT DOCUMENTATION |
-| GPT runtime is operational in Vortex | no runtime evidence | ⚫ NOT PROVEN |
-| 49/49 coverage | no reproducible evidence in Vortex | ⚫ NOT CLAIMED |
-| Issue #7-10 spam incident | documented external evidence | 🔴 OPEN / UNRESOLVED |
+| `spec/invocation-contract.md` v0.3 exists | contract updated with semantic verification boundary | 🟡 SPECIFICATION |
+| `execution_verified` is distinct from `semantic_verified` | invocation contract v0.3 | 🟡 SPECIFICATION |
+| LLM execution can produce cryptographically valid evidence while being semantically wrong | live sheep test: Qwen returned `8` for “all except 9” | 🟢 OBSERVED |
+| semantic correctness is independently verified by Vortex | deterministic verifier implementation not yet evidenced in this repo snapshot | ⚫ NOT IMPLEMENTED / NOT PROVEN |
+| `evidence_hash` proves semantic truth | contract explicitly rejects this interpretation | 🔴 PROHIBITED CLAIM |
+| side-effect is automatically proven by `executed:true` | contract explicitly rejects this interpretation | 🔴 PROHIBITED CLAIM |
+| benchmark duration always equals provider wall-clock duration | contract requires measurement-window separation | 🔴 PROHIBITED CLAIM |
+| Gateway authorization occurs before adapter side-effect | required by contract; implementation conformance test still required | 🟡 REQUIRED / NOT PROVEN |
 
-## MetaAI evidence limitation
+## Truth boundary
 
-The MetaAI adapter currently creates its own:
+The canonical chain is:
 
-- `runtime_id`
-- `execution_id`
-- `recorded_at`
-- `result_hash`
+```text
+PROMISED
+  ↓
+IMPLEMENTED
+  ↓
+EXECUTED
+  ↓
+EXECUTION_VERIFIED
+  ↓
+SEMANTIC_VERIFIED (when required and independently proven)
+  ↓
+SIDE_EFFECT_VERIFIED (only when external effect has independent evidence)
+```
 
-The adapter therefore demonstrates that an evidence envelope can be produced, but does not independently prove that an external runtime executed the requested operation.
+A cryptographic proof establishes integrity/authorship of the evidence under its declared policy. It does not establish that the LLM answer is factually correct.
 
-Classification:
+## Live evidence incorporated
 
-`IMPLEMENTED / EXECUTION UNPROVEN`
+The local MCP foundation server has demonstrated the path:
 
-It must not be promoted to `REAL EXECUTION` until runtime-observed evidence exists.
+```text
+MCP → Vortex → Ollama/Qwen → ExecutionProof → independent verification
+```
 
-## GPT truth
+The factual Canberra test succeeded. The 17-sheep test deliberately exposed the semantic boundary: the model produced `8`, while the proof remained valid. Therefore the proof system is functioning as an execution/evidence verifier, not yet as a universal semantic truth engine.
 
-`src/agents/gpt/` is intentionally absent.
+## Engineering rule
 
-`docs/agents/gpt/` is documentation/proposal material and must not be interpreted as an implemented GPT adapter.
+For mathematics, units, schemas, source code, tests, measurements and domain safety rules, use a deterministic or specialized verifier whenever one is available.
 
-## Governance rule
+```text
+LLM candidate
+   ↓
+VUA capability router
+   ↓
+specialized / deterministic verifier
+   ↓
+Vortex independent verification
+   ↓
+proof
+```
 
-A claim becomes REAL only when:
-
-Human/Policy
-→ Agent identity
-→ Authorization
-→ Capability
-→ Tool
-→ Runtime
-→ Execution
-→ Observed result
-→ Evidence
-→ Test
-→ Review
-
-is traceable.
-
-Manifesto:
-
-**xAI shows what the agent does.
-Vortex proves what it did.**
+The absence of a suitable verifier produces `NOT_PROVABLE`, not an implicit `PASS`.
