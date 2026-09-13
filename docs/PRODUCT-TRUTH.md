@@ -1,71 +1,46 @@
 # GOS3 · agente: GPT · papel: Maintainer / Engineering Agent
-# fase: Technical Refinement → Governance Enforcement · data: 2026-09-07 · hora: 00:00
-# antes: documento modificado no branch sem marcador GOS3 exigido pelo checker.
-# depois: conteúdo permanece inalterado e recebe apenas o header de governança obrigatório.
-# base: feat/gos3-runtime-orchestration
+# fase: Technical Refinement → Governance Enforcement · data: 2026-09-13 · hora: 00:00
+# antes: matriz de verdade atualizada com claims operacionais e gaps de maturidade.
+# depois: claims classificados por evidência observável, com baseline por ambiente e limites explícitos.
+# base: main
 # assinatura: GPT · Maintainer / Engineering Agent · GOS3
 # commit: registered by Git
 
-# PRODUCT-TRUTH Matrix
+# Vortex Product Truth Matrix
 
 Status: conservative audit baseline.
 
-| Claim | Evidence | Status |
+## Regra de interpretação
+
+O Vortex distingue **PROMISED**, **IMPLEMENTED**, **EXECUTED** e **VERIFIED**. Um arquivo, uma interface ou um teste unitário não é evidência de execução real em um serviço externo. Um execution proof assinado confirma a integridade do envelope produzido; não é, sozinho, uma prova de segurança ou de side effect externo.
+
+## Claims auditáveis
+
+| Claim | Evidência exigida | Status operacional |
 |---|---|---|
-| `spec/invocation-contract.md` exists | file present | 🟡 SPECIFICATION |
-| `main` protected | GitHub branch protection API returned required PR approval = 1 and enforce_admins = true | 🟢 VERIFIED |
-| `src/agents/claude` exists | repository tree | 🟢 IMPLEMENTED |
-| `src/agents/grok` exists | repository tree | 🟢 IMPLEMENTED |
-| `src/agents/manus` exists | repository tree | 🟡 PARTIAL |
-| `src/agents/metaai` exists | repository tree / commit `058e3cf` | 🟠 IMPLEMENTED / EXECUTION UNPROVEN |
-| `src/agents/gpt` exists | `ls` returned `No such file or directory` | ⚫ NOT IMPLEMENTED |
-| `docs/agents/gpt` exists | repository tree | 🟠 PROPOSAL / AUDIT DOCUMENTATION |
-| GPT runtime is operational in Vortex | no runtime evidence | ⚫ NOT PROVEN |
-| 49/49 coverage | no reproducible evidence in Vortex | ⚫ NOT CLAIMED |
-| Issue #7-10 spam incident | documented external evidence | 🔴 OPEN / UNRESOLVED |
+| Invocation Contract existe | arquivo de especificação e testes de contrato | IMPLEMENTED / TESTED |
+| Gateway rejeita ausência de bearer | teste HTTP de produção com token ausente | MUST VERIFY PER DEPLOYMENT |
+| Gateway impede replay | teste de request id repetido e prova de rejeição | IMPLEMENTED / TESTED |
+| Operação pertence ao manifesto do connector | allowlist do manifesto + teste negativo | IMPLEMENTED / TESTED |
+| Qwen local funciona | E2E com Ollama e modelo real | EXECUTION-SPECIFIC |
+| GitHub/Android/Windows funcionam end-to-end | execução real no respectivo ambiente | NOT PROVEN UNTIL EXECUTED |
+| 100% quality gates | log completo, commit, CI run, fingerprint e evidence hash | VERIFIED PER RUN |
+| Segurança de produção | deployment testado, threat model, bearer, policy, sandbox e observabilidade | NOT A LOCAL-GATE CLAIM |
+| Segunda implementação independente | verifier Go/Rust validando os mesmos proofs | OPEN |
+| Descoberta pública de chaves | endpoint `.well-known/vortex-keys` com rotação | OPEN |
 
-## MetaAI evidence limitation
+## Performance
 
-The MetaAI adapter currently creates its own:
+O baseline de benchmark deve ser selecionado por fingerprint de ambiente, construído a partir de arquitetura, CPU e versão do Node. A tolerância (`BASELINE_TOLERANCE`) é um parâmetro de decisão registrado no relatório; não deve ser usada para esconder regressões nem para converter dados sintéticos em produção comprovada.
 
-- `runtime_id`
-- `execution_id`
-- `recorded_at`
-- `result_hash`
+## O que falta para indústria
 
-The adapter therefore demonstrates that an evidence envelope can be produced, but does not independently prove that an external runtime executed the requested operation.
+Os próximos gates de maturidade são: um verificador independente, especificação publicada com estabilidade de interoperabilidade, key discovery com rotação, casos de uso externos observados e testes end-to-end para os adaptadores não-Linux. Até lá, o projeto é uma fundação técnica auditável e um protótipo de runtime governado, não uma garantia universal de produção.
 
-Classification:
+## Regra para agentes
 
-`IMPLEMENTED / EXECUTION UNPROVEN`
+```text
+DOCUMENTADO ≠ IMPLEMENTADO ≠ EXECUTADO ≠ VERIFICADO
+```
 
-It must not be promoted to `REAL EXECUTION` until runtime-observed evidence exists.
-
-## GPT truth
-
-`src/agents/gpt/` is intentionally absent.
-
-`docs/agents/gpt/` is documentation/proposal material and must not be interpreted as an implemented GPT adapter.
-
-## Governance rule
-
-A claim becomes REAL only when:
-
-Human/Policy
-→ Agent identity
-→ Authorization
-→ Capability
-→ Tool
-→ Runtime
-→ Execution
-→ Observed result
-→ Evidence
-→ Test
-→ Review
-
-is traceable.
-
-Manifesto:
-
-**xAI shows what the agent does.
-Vortex proves what it did.**
+O agente deve sempre declarar o nível de evidência disponível e não transformar um log local, benchmark ou fixture em afirmação de produção.
