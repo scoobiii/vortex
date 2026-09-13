@@ -12,6 +12,8 @@ docs/
 ├── BACKLOG.md                                 # Backlog e status dos sprints (GOS3 v2.4)
 ├── CHANGELOG.md                               # Histórico de alterações e auditoria de testes
 ├── PLAYBOOK.md                                # Regras e convenções do time NxN (GOS3)
+├── PRODUCT-TRUTH.md                            # Claims classificados por evidência observável
+├── s0-baseline-verification.md                  # Baseline e verificação de ambiente
 ├── team.md                                    # Mapa de agentes no board e Runtime References
 ├── handoff.md                                 # Handoff consolidado entre agentes e sessões
 ├── SWOT-UX-GUI.md                             # Auditoria comparativa UX/GUI: vortex (CLI) vs Molt Hub

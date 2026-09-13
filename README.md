@@ -143,6 +143,12 @@ VERIFICADO
 
 O agente não deve declarar uma tarefa concluída além do nível de evidência disponível.
 
+## Baseline e limites de produção
+
+Os gates de performance devem ser lidos junto com o fingerprint do ambiente e o `evidence_hash`. O baseline por arquitetura, CPU e versão do Node reduz falsos negativos em hardware heterogêneo; ainda assim, um gate verde é evidência daquela execução, não uma garantia universal de segurança em produção. O endpoint `/mcp`, os adapters externos e os efeitos colaterais precisam de testes end-to-end no deployment correspondente.
+
+Para maturidade de indústria ainda são necessários um verificador independente em Go/Rust, descoberta pública e rotação de chaves (`/.well-known/vortex-keys`), especificação interoperável estável e casos de uso externos observados.
+
 ---
 
 # Modelo de verdade
