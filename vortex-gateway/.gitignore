@@ -1,0 +1,4 @@
+# GOS3 · Vortex Foundation conformance artifact
+node_modules/
+dist/
+*.tsbuildinfo
