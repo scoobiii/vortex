@@ -4,12 +4,12 @@
  * responsabilidade: E2E real do Qwen no sandbox após onboarding GOS3
  * agente: agent/llm
  * papel: Engineering Agent
- * fase: onboard
+ * fase: implementation
  * data: 2026-09-07
- * hora: 18:08
- * antes: sha256:pending
- * depois: pending
- * base: commit:1a4f271425f6ce8ebbad8c8aae0bd75a59a9c787
+ * hora: 21:45
+ * antes: sha256:3eae13b4d58343b548351699d1552d960001a747
+ * depois: sha256:pending
+ * base: commit:main
  * assinatura: P0 scoobiii : Agente GPT
  * commit: pending
  */
@@ -46,6 +46,14 @@ async function main(): Promise<void> {
 
   assert.equal(result.evidence.executed, true, `Qwen did not execute: ${result.evidence.stderr}`);
   assert.equal(result.evidence.exit_code, 0);
+  assert.ok(result.evidence.stdout.trim().length > 0, "Qwen returned empty stdout");
+  assert.match(result.evidence.runtime_id, /^qwen-local-/);
+  assert.match(result.evidence.execution_id, /^exec-/);
+  assert.match(result.evidence.evidence_hash, /^[0-9a-f]{64}$/);
+  assert.equal(result.evidence.model, process.env.QWEN_MODEL ?? "qwen2.5-coder:0.5b");
+  assert.ok(result.evidence.model_digest, "QWEN_MODEL_DIGEST is required for real sandbox provenance");
+  assert.ok(result.evidence.runtime_digest, "QWEN_RUNTIME_DIGEST is required for real sandbox provenance");
+  assert.ok(result.evidence.runtime_version, "QWEN_RUNTIME_VERSION is required for real sandbox provenance");
   assert.ok(result.change, "Qwen executed but sandbox change was not produced");
   assert.equal(result.change?.header.fase, "implementation");
   assert.equal(result.change?.header.commit, "pending");
