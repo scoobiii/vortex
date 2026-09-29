@@ -14,6 +14,9 @@
 
 # Vortex
 
+![Vortex](docs/images/use-vortex-cover.png)
+
+
 > **Proof over prose. HASH + TEMPO + LOG.**
 
 Vortex é a **arquitetura e o protocolo de execução governada** para agentes, runtimes e conectores.
