@@ -1,5 +1,7 @@
 # Git log
 ```
+29d2fa9 Merge pull request #71 from scoobiii/docs/readme-onboarding-main
+41535c0 docs: add onboarding for child dev and agent users
 3257215 Merge pull request #70 from scoobiii/docs/readme-vortex-vuc-canonical
 e1d10bd fix: restore required GOS3 README header
 be62b7b docs: make Vortex README canonical for Vortex and VUC
@@ -18,8 +20,6 @@ a5f2c15 Merge branch 'main' into fix/gateway-security-hardening
 4982ef4 fix(gos3): construct typed onboarding header
 93106b5 refactor(qwen): remove duplicate onboard invocation surface
 6a011a7 fix(gos3): reject artifact identity mismatch during onboard
-f031619 build(qwen): expose sandbox E2E command
-02471d9 ci(qwen): execute real GOS3 sandbox E2E with Ollama
 ```
 
 # Git status
@@ -29,6 +29,19 @@ f031619 build(qwen): expose sandbox E2E command
 
 ## README.md
 ```.md
+# GOS3 Maintainer / Engineering Agent
+# arquivo: README.md
+# responsabilidade: documentação canônica do Vortex
+# agente: agent/llm
+# papel: Engineering Agent
+# fase: Runtime Federation → VUC canonicalization
+# data: 2026-09-29
+# antes: README sem onboarding explícito por nível de usuário.
+# depois: README explica uso para criança, Dev Jr, Dev Sênior e Agent.
+# base: main
+# assinatura: GOS3 Maintainer / Engineering Agent · GOS3
+# commit: pending
+
 # GOS3 Maintainer / Engineering Agent
 # arquivo: README.md
 # responsabilidade: documentação canônica do Vortex
@@ -276,6 +289,106 @@ vuc
 Os aliases `vua` e `vortex` podem existir por compatibilidade de distribuição, mas **VUC é o nome canônico do runtime**.
 
 Para instalação, testes e comandos atuais, consulte o README do VUC.
+
+---
+
+## Como usar: criança, Dev e Agent
+
+### Criança
+
+Eu peço uma tarefa.
+
+VUC tenta executar.
+
+VUC mostra o resultado e a prova disponível.
+
+```text
+PEDIR → EXECUTAR → MOSTRAR → PROVAR
+```
+
+### Dev Jr
+
+Comece pelo discovery:
+
+```bash
+vuc --version
+vuc status
+vuc adapters
+vuc conformance
+```
+
+Depois:
+
+```text
+DESCOBRIR → ESCOLHER → EXECUTAR → VERIFICAR
+```
+
+### Dev Sênior
+
+Valide o contrato completo:
+
+```text
+IDENTIDADE
+  ↓
+AUTORIDADE
+  ↓
+CAPACIDADE
+  ↓
+INVOCATION CONTRACT
+  ↓
+EXECUÇÃO
+  ↓
+RESULTADO
+  ↓
+PROVENANCE / EVIDENCE
+  ↓
+VERIFICAÇÃO
+```
+
+Código existente não é prova de execução.
+
+Execução observada não é automaticamente prova de efeito externo.
+
+### Agent / LLM
+
+O agente deve fazer discovery antes de invocar:
+
+```text
+1. Discover VUC
+2. Discover capability
+3. Read contract
+4. Check authority
+5. Invoke
+6. Capture result
+7. Capture evidence
+8. Verify
+9. Report only the verified claim
+```
+
+Estados:
+
+```text
+PASS     = executou e passou
+FAIL     = executou e falhou
+RUNNING  = ainda executando
+UNKNOWN  = evidência insuficiente
+```
+
+`UNKNOWN` não é `PASS`.
+
+### Regra
+
+```text
+PROMETIDO
+    ↓
+IMPLEMENTADO
+    ↓
+EXECUTADO
+    ↓
+VERIFICADO
+```
+
+Nunca pule uma etapa sem evidência.
 
 ---
 
