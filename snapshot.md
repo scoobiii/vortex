@@ -1,5 +1,7 @@
 # Git log
 ```
+610a1c7 Merge pull request #72 from scoobiii/docs/readme-vuc-installation
+f9df0e3 docs: document VUC installation and onboarding
 29d2fa9 Merge pull request #71 from scoobiii/docs/readme-onboarding-main
 41535c0 docs: add onboarding for child dev and agent users
 3257215 Merge pull request #70 from scoobiii/docs/readme-vortex-vuc-canonical
@@ -18,8 +20,6 @@ a5f2c15 Merge branch 'main' into fix/gateway-security-hardening
 86a298b docs: define gateway MCP agent authority contract
 3d39ecc Merge pull request #55 from scoobiii/feat/gos3-onboard-sandbox-qwen
 4982ef4 fix(gos3): construct typed onboarding header
-93106b5 refactor(qwen): remove duplicate onboard invocation surface
-6a011a7 fix(gos3): reject artifact identity mismatch during onboard
 ```
 
 # Git status
@@ -451,6 +451,138 @@ A documentação do Vortex deve responder:
 O VUC é a referência operacional para instalação e execução.
 
 ---
+
+## Como instalar e usar o VUC
+
+O Vortex é a arquitetura/protocolo.  
+O VUC é o runtime executável e a distribuição de referência.
+
+### Criança
+
+Não é necessário instalar nada para entender o Vortex.
+
+Para usar o VUC de verdade, um adulto ou responsável técnico instala o runtime no computador ou ambiente de execução.
+
+Depois:
+
+```text
+PEDIR → VUC EXECUTA → VER RESULTADO → VER PROVA
+```
+
+### Dev Jr
+
+Instalação pelo npm:
+
+```bash
+npm install -g @vucfoundation/vuc@1.0.2
+```
+
+Verifique:
+
+```bash
+vuc --version
+vuc status
+vuc adapters
+vuc conformance
+```
+
+O executável canônico é:
+
+```text
+vuc
+```
+
+Os aliases `vua` e `vortex` só devem ser usados quando a instalação do pacote os disponibilizar.
+
+### Dev Sênior
+
+Valide a distribuição instalada:
+
+```bash
+which vuc
+vuc --version
+vuc status
+vuc adapters
+vuc conformance
+```
+
+Para testar o artefato antes de publicá-lo:
+
+```bash
+npm pack
+npm install -g ./vucfoundation-vuc-1.0.2.tgz
+```
+
+O teste deve validar o artefato distribuído, não somente o código-fonte:
+
+```text
+SOURCE
+  ↓
+BUILD
+  ↓
+PACKAGE
+  ↓
+INSTALL
+  ↓
+vuc
+  ↓
+EXECUTE
+  ↓
+EVIDENCE
+```
+
+### Agent / LLM
+
+O agente deve descobrir primeiro o runtime instalado:
+
+```bash
+vuc --version
+vuc status
+vuc adapters
+vuc conformance
+```
+
+Fluxo:
+
+```text
+1. Discover VUC
+2. Read version
+3. Discover capabilities
+4. Check authority
+5. Select capability
+6. Invoke
+7. Capture result
+8. Capture evidence
+9. Verify
+10. Report only what was verified
+```
+
+Não trate a existência do pacote como prova de execução:
+
+```text
+npm installed
+    ≠
+capability executed
+    ≠
+external effect verified
+```
+
+### Instalação oficial
+
+```bash
+npm install -g @vucfoundation/vuc@1.0.2
+```
+
+Depois:
+
+```bash
+vuc --version
+vuc status
+vuc adapters
+vuc conformance
+```
+
+Para a documentação completa de instalação, comandos e capacidades, consulte o README do VUC.
 
 ## Regra final
 
