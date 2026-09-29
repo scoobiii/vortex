@@ -1,3 +1,17 @@
+# GOS3 Maintainer / Engineering Agent
+# arquivo: README.md
+# responsabilidade: documentação canônica do Vortex
+# agente: agent/llm
+# papel: Engineering Agent
+# fase: Runtime Federation → VUC canonicalization
+# data: 2026-09-29
+# hora: 12:03
+# antes: README misturava Vortex, VUC e VUA como camadas atuais.
+# depois: Vortex é arquitetura/protocolo; VUC é implementação executável; VUA é legado.
+# base: main
+# assinatura: GOS3 Maintainer / Engineering Agent · GOS3
+# commit: pending
+
 # Vortex
 
 > **Proof over prose. HASH + TEMPO + LOG.**
