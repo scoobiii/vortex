@@ -85,6 +85,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Documentation integrity gate
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: python3 scripts/verify-documentation-contract.py
+
       - name: Governance policy gate
         run: python3 tests/change_validation_policy_test.py
 
