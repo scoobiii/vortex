@@ -14,7 +14,7 @@
 
 # Vortex
 
-![Vortex](docs/images/use-vortex-cover.png)
+![USE VORTEX! - Python, LLMs, Sandbox & Runtime](docs/images/use-vortex-cover.png)
 
 
 > **Proof over prose. HASH + TEMPO + LOG.**
