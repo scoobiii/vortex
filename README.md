@@ -251,6 +251,106 @@ Para instalação, testes e comandos atuais, consulte o README do VUC.
 
 ---
 
+## Como usar: criança, Dev e Agent
+
+### Criança
+
+Eu peço uma tarefa.
+
+VUC tenta executar.
+
+VUC mostra o resultado e a prova disponível.
+
+```text
+PEDIR → EXECUTAR → MOSTRAR → PROVAR
+```
+
+### Dev Jr
+
+Comece pelo discovery:
+
+```bash
+vuc --version
+vuc status
+vuc adapters
+vuc conformance
+```
+
+Depois:
+
+```text
+DESCOBRIR → ESCOLHER → EXECUTAR → VERIFICAR
+```
+
+### Dev Sênior
+
+Valide o contrato completo:
+
+```text
+IDENTIDADE
+  ↓
+AUTORIDADE
+  ↓
+CAPACIDADE
+  ↓
+INVOCATION CONTRACT
+  ↓
+EXECUÇÃO
+  ↓
+RESULTADO
+  ↓
+PROVENANCE / EVIDENCE
+  ↓
+VERIFICAÇÃO
+```
+
+Código existente não é prova de execução.
+
+Execução observada não é automaticamente prova de efeito externo.
+
+### Agent / LLM
+
+O agente deve fazer discovery antes de invocar:
+
+```text
+1. Discover VUC
+2. Discover capability
+3. Read contract
+4. Check authority
+5. Invoke
+6. Capture result
+7. Capture evidence
+8. Verify
+9. Report only the verified claim
+```
+
+Estados:
+
+```text
+PASS     = executou e passou
+FAIL     = executou e falhou
+RUNNING  = ainda executando
+UNKNOWN  = evidência insuficiente
+```
+
+`UNKNOWN` não é `PASS`.
+
+### Regra
+
+```text
+PROMETIDO
+    ↓
+IMPLEMENTADO
+    ↓
+EXECUTADO
+    ↓
+VERIFICADO
+```
+
+Nunca pule uma etapa sem evidência.
+
+---
+
 ## Quality gate
 
 A definição operacional de DONE é:
